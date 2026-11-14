@@ -1422,8 +1422,8 @@
     "examples": {
       "title": "Példa kipróbálása",
       "webpage": "Videó egy weboldalon",
-      "hint": "Válassz egy példát a hivatkozás beillesztéséhez, majd kattints a „{{download}}” gombra.",
-      "ready": "A hivatkozás bekerült a fenti mezőbe. Ha készen állsz, kattints a „{{download}}” gombra."
+      "hint": "Válassz egy példát a hivatkozás beillesztéséhez, majd kattints a „{{action}}” gombra.",
+      "ready": "A hivatkozás bekerült a fenti mezőbe. Ha készen állsz, kattints a „{{action}}” gombra."
     }
   },
   "workspace": {
@@ -1713,5 +1713,17 @@
     "pending": "Ellenőrzésre váró sorok: {{remaining}}. A lefordított feliratok már használhatók.",
     "resume": "Ellenőrzés folytatása",
     "keepDraft": "Piszkozat megtartása"
+  },
+  "downloadHandoff": {
+    "title": "Nézd meg <lang>{{language}}</lang> felirattal",
+    "cta": "Megnézés {{language}} felirattal",
+    "ctaPreviewFree": "Az első {{minutes}} perc ingyen",
+    "ctaPreview": "Az első {{minutes}} perc felirattal",
+    "coveredFree": "Ingyenes: ez a videó ({{duration}}) belefér az ingyenes perceidbe (maradt {{balance}}).",
+    "covered": "Ez a videó ({{duration}}) belefér a perceidbe (maradt {{balance}}).",
+    "previewFree": "Az ingyenes perceid az első {{minutes}} percre elegendők. Felirat a teljes videóhoz: {{price}}.",
+    "preview": "A perceid az első {{minutes}} percre elegendők. Felirat a teljes videóhoz: {{price}}.",
+    "offer": "A perceid nem elegendők ehhez a videóhoz ({{duration}}). Felirat a teljes videóhoz: {{price}}.",
+    "savedTo": "Mentve ide: {{folder}}"
   }
 }

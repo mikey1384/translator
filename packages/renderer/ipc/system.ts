@@ -15,6 +15,7 @@ import type {
   CreditTransferRedeemResult,
   PurchaseFailureReason,
   PurchaseFunnelEvent,
+  HandoffFunnelEvent,
   PurchasePlacement,
   Stage5VideoSuggestionMode,
   VideoSuggestionModelPreference,
@@ -35,6 +36,13 @@ export function trackPurchaseEvent(
   }
 ): Promise<{ success: boolean; error?: string }> {
   return window.electron.trackPurchaseEvent(event, context);
+}
+
+/** An anonymous daily count (event name only); main allow-lists it. */
+export function trackHandoffEvent(
+  event: HandoffFunnelEvent
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.trackHandoffEvent(event);
 }
 
 export function getAgentControlEnabled(): Promise<boolean> {

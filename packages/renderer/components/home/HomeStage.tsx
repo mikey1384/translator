@@ -18,6 +18,7 @@ import {
   rememberRecentTargetLanguage,
 } from '../../constants/translation-language-native-names';
 import { logButton } from '../../utils/logger';
+import * as SystemIPC from '../../ipc/system';
 import { openSubtitleFileIntoStore } from '../../utils/open-subtitle-file';
 import HomeLanguagePicker from './HomeLanguagePicker';
 import HomeRecentRow from './HomeRecentRow';
@@ -400,6 +401,11 @@ export default function HomeStage() {
     logButton(
       target === 'download' ? 'home_download_only' : 'home_make_it_speak_url'
     );
+    void SystemIPC.trackHandoffEvent(
+      target === 'download'
+        ? 'home_download_only_clicked'
+        : 'home_translate_clicked'
+    ).catch(() => {});
     if (target === 'translate') ensureLanguage();
     useUIStore.getState().requestHomeRun({ kind: 'url', url, target });
   };
@@ -641,6 +647,11 @@ export default function HomeStage() {
         </div>
 
         <HomeExamples
+          // Point at the main button; selecting an example never starts it.
+          actionLabel={t('home.makeItSpeak', 'Translate to {{language}}', {
+            language: languageName,
+            languageInto,
+          })}
           hasRecentVideos={recentItems.length > 0}
           urlInput={urlInput}
           disabled={downloadInProgress}

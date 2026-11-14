@@ -1420,8 +1420,8 @@
     "examples": {
       "title": "Thử video mẫu",
       "webpage": "Video trên trang web",
-      "hint": "Chọn một video mẫu để điền liên kết, rồi nhấn {{download}}.",
-      "ready": "Đã điền liên kết ở trên. Khi sẵn sàng, hãy nhấn {{download}}."
+      "hint": "Chọn một video mẫu để điền liên kết, rồi nhấn {{action}}.",
+      "ready": "Đã điền liên kết ở trên. Khi sẵn sàng, hãy nhấn {{action}}."
     }
   },
   "workspace": {
@@ -1701,5 +1701,17 @@
     "pending": "Số dòng đang chờ kiểm tra: {{remaining}}. Phụ đề đã dịch có thể sử dụng ngay.",
     "resume": "Tiếp tục kiểm tra",
     "keepDraft": "Giữ bản nháp"
+  },
+  "downloadHandoff": {
+    "title": "Xem với phụ đề <lang>{{language}}</lang>",
+    "cta": "Xem với phụ đề {{language}}",
+    "ctaPreviewFree": "Xem miễn phí {{minutes}} phút đầu",
+    "ctaPreview": "Xem {{minutes}} phút đầu với phụ đề",
+    "coveredFree": "Miễn phí: video {{duration}} này nằm trong số phút miễn phí của bạn (còn {{balance}}).",
+    "covered": "Video {{duration}} này nằm trong số phút của bạn (còn {{balance}}).",
+    "previewFree": "Số phút miễn phí của bạn đủ cho {{minutes}} phút đầu. Phụ đề cho cả video: {{price}}.",
+    "preview": "Số phút của bạn đủ cho {{minutes}} phút đầu. Phụ đề cho cả video: {{price}}.",
+    "offer": "Số phút của bạn không đủ cho video {{duration}} này. Phụ đề cho cả video: {{price}}.",
+    "savedTo": "Đã lưu vào {{folder}}"
   }
 }

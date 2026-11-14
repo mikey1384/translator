@@ -1432,8 +1432,8 @@
     "examples": {
       "title": "Bir örnek deneyin",
       "webpage": "Web sayfasındaki video",
-      "hint": "Bağlantıyı doldurmak için bir örnek seçin, ardından {{download}} düğmesine tıklayın.",
-      "ready": "Bağlantı yukarıya eklendi. Hazır olduğunuzda {{download}} düğmesine tıklayın."
+      "hint": "Bağlantıyı doldurmak için bir örnek seçin, ardından {{action}} düğmesine tıklayın.",
+      "ready": "Bağlantı yukarıya eklendi. Hazır olduğunuzda {{action}} düğmesine tıklayın."
     }
   },
   "workspace": {
@@ -1729,5 +1729,17 @@
     "pending": "İncelenmeyi bekleyen satır sayısı: {{remaining}}. Çevrilen altyazılar kullanıma hazır.",
     "resume": "İncelemeye devam et",
     "keepDraft": "Taslağı koru"
+  },
+  "downloadHandoff": {
+    "title": "<lang>{{language}}</lang> altyazıyla izle",
+    "cta": "{{language}} altyazıyla izle",
+    "ctaPreviewFree": "İlk {{minutes}} dakikayı ücretsiz izle",
+    "ctaPreview": "İlk {{minutes}} dakikayı altyazıyla izle",
+    "coveredFree": "Ücretsiz: bu video ({{duration}}) ücretsiz dakikalarınıza sığıyor ({{balance}} kaldı).",
+    "covered": "Bu video ({{duration}}) dakikalarınıza sığıyor ({{balance}} kaldı).",
+    "previewFree": "Ücretsiz dakikalarınız ilk {{minutes}} dakikaya yetiyor. Videonun tamamı için altyazı: {{price}}.",
+    "preview": "Dakikalarınız ilk {{minutes}} dakikaya yetiyor. Videonun tamamı için altyazı: {{price}}.",
+    "offer": "Dakikalarınız bu videoya ({{duration}}) yetmiyor. Videonun tamamı için altyazı: {{price}}.",
+    "savedTo": "{{folder}} klasörüne kaydedildi"
   }
 }

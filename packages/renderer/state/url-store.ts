@@ -44,6 +44,10 @@ import {
   shouldDiscoverWebVideo,
 } from '../../shared/helpers/web-video.js';
 import { chooseWebVideo } from './web-video-store';
+import {
+  downloadHandoffKey,
+  useDownloadHandoffStore,
+} from './download-handoff-store';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
 const QUALITY_VALUES: VideoQuality[] = [
@@ -1116,6 +1120,11 @@ async function downloadMediaInternal(
           }
         }
         useUIStore.getState().setInputMode('file');
+        // The "download finished, watch it with subtitles" moment.
+        const handoffKey = downloadHandoffKey({
+          sourceUrl: useVideoStore.getState().sourceUrl,
+        });
+        if (handoffKey) useDownloadHandoffStore.getState().arm(handoffKey);
       } catch (err: any) {
         console.warn('[url-store] Opening the downloaded video failed:', err);
         mountErrorMessage = i18n.t(

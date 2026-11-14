@@ -48,6 +48,20 @@ declare module '@shared-types/app' {
     | 'free_preview_completed'
     | 'free_preview_failed';
 
+  /**
+   * Anonymous daily counts the renderer may add: which home link button was
+   * used, and the download handoff card's lifecycle. Event names only.
+   */
+  export type HandoffFunnelEvent =
+    | 'home_translate_clicked'
+    | 'home_download_only_clicked'
+    | 'download_handoff_shown'
+    | 'download_handoff_clicked'
+    | 'download_handoff_dismissed';
+
+  /** Where a transcription/translation run was started from, when tracked. */
+  export type ProductStartTrigger = 'download_handoff';
+
   export type CreditPackId = 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO';
 
   export type PurchasePlacement =
@@ -1071,6 +1085,8 @@ declare module '@shared-types/app' {
     sourceLanguage?: string;
     targetLanguage: string;
     operationId?: string;
+    /** Anonymous counts only: where this run was started from. */
+    analyticsTrigger?: ProductStartTrigger;
     qualityTranslation?: boolean; // true = include review, false = skip review
     /** Resume only pending review cues, without translating completed drafts. */
     reviewOnly?: boolean;
@@ -1753,6 +1769,9 @@ declare module '@shared-types/app' {
         placement?: PurchasePlacement;
         failureReason?: PurchaseFailureReason;
       }
+    ) => Promise<{ success: boolean; error?: string }>;
+    trackHandoffEvent: (
+      event: HandoffFunnelEvent
     ) => Promise<{ success: boolean; error?: string }>;
     onHeartbeatPing: (callback: () => void) => (() => void) | undefined;
     getAnalyticsPrivacy: () => Promise<AnalyticsPrivacyState>;

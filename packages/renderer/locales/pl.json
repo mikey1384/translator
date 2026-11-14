@@ -1438,8 +1438,8 @@
     "examples": {
       "title": "Wypróbuj przykład",
       "webpage": "Film na stronie internetowej",
-      "hint": "Wybierz przykład, aby wstawić link, a potem kliknij „{{download}}”.",
-      "ready": "Link jest już wpisany powyżej. Gdy będziesz gotowy, kliknij „{{download}}”."
+      "hint": "Wybierz przykład, aby wstawić link, a potem kliknij „{{action}}”.",
+      "ready": "Link jest już wpisany powyżej. Gdy będziesz gotowy, kliknij „{{action}}”."
     }
   },
   "workspace": {
@@ -1760,5 +1760,17 @@
     "pending": "Wiersze oczekujące na sprawdzenie: {{remaining}}. Przetłumaczone napisy są gotowe do użycia.",
     "resume": "Wznów sprawdzanie",
     "keepDraft": "Zachowaj wersję roboczą"
+  },
+  "downloadHandoff": {
+    "title": "Obejrzyj z tłumaczeniem na <lang>{{language}}</lang>",
+    "cta": "Obejrzyj z tłumaczeniem na {{language}}",
+    "ctaPreviewFree": "Obejrzyj pierwsze {{minutes}} min za darmo",
+    "ctaPreview": "Obejrzyj pierwsze {{minutes}} min z napisami",
+    "coveredFree": "Za darmo: ten film ({{duration}}) mieści się w twoich darmowych minutach (zostało {{balance}}).",
+    "covered": "Ten film ({{duration}}) mieści się w twoich minutach (zostało {{balance}}).",
+    "previewFree": "Twoje darmowe minuty wystarczą na pierwsze {{minutes}} min. Napisy do całego filmu: {{price}}.",
+    "preview": "Twoje minuty wystarczą na pierwsze {{minutes}} min. Napisy do całego filmu: {{price}}.",
+    "offer": "Twoje minuty nie wystarczą na ten film ({{duration}}). Napisy do całego filmu: {{price}}.",
+    "savedTo": "Zapisano w folderze {{folder}}"
   }
 }

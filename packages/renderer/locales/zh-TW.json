@@ -1420,8 +1420,8 @@
     "examples": {
       "title": "試試範例",
       "webpage": "網頁上的影片",
-      "hint": "選擇範例後，連結會填入上方輸入框，再點選「{{download}}」。",
-      "ready": "連結已填入上方輸入框。準備好後，點選「{{download}}」。"
+      "hint": "選擇範例後，連結會填入上方輸入框，再點選「{{action}}」。",
+      "ready": "連結已填入上方輸入框。準備好後，點選「{{action}}」。"
     }
   },
   "workspace": {
@@ -1701,5 +1701,17 @@
     "pending": "待檢查字幕：{{remaining}}行。翻譯後的字幕已可使用。",
     "resume": "繼續檢查",
     "keepDraft": "保留初稿"
+  },
+  "downloadHandoff": {
+    "title": "加上<lang>{{language}}</lang>字幕觀看",
+    "cta": "加上{{language}}字幕觀看",
+    "ctaPreviewFree": "免費觀看前 {{minutes}} 分鐘",
+    "ctaPreview": "加上字幕觀看前 {{minutes}} 分鐘",
+    "coveredFree": "免費：這部 {{duration}} 的影片用你的免費時數就夠了（剩餘 {{balance}}）。",
+    "covered": "這部 {{duration}} 的影片用你的時數就夠了（剩餘 {{balance}}）。",
+    "previewFree": "你的免費時數夠翻前 {{minutes}} 分鐘。整部影片的字幕：{{price}}。",
+    "preview": "你的時數夠翻前 {{minutes}} 分鐘。整部影片的字幕：{{price}}。",
+    "offer": "你的時數不夠這部 {{duration}} 的影片。整部影片的字幕：{{price}}。",
+    "savedTo": "已儲存到 {{folder}}"
   }
 }

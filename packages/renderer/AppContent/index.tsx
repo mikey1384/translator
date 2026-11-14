@@ -37,8 +37,10 @@ import {
   WorkspaceActionBar,
   WorkspaceExportSheet,
   WorkspaceIdleStatus,
+  useDownloadHandoffShowing,
   useWorkspaceBusy,
 } from '../components/workspace/WorkspaceActions';
+import DownloadHandoffCard from '../components/workspace/DownloadHandoffCard';
 import {
   WorkspaceNoVideo,
   WorkspaceReadOnlyArea,
@@ -233,6 +235,7 @@ export default function AppContent() {
   const subtitleEditMode = useUIStore(s => s.subtitleEditMode);
   const workspaceToolsOpen = useUIStore(s => s.workspaceToolsOpen);
   const freePreviewOfferShowing = useFreePreviewOfferShowing();
+  const downloadHandoffShowing = useDownloadHandoffShowing();
   const workspaceBusy = useWorkspaceBusy();
   // A video or subtitles on screen means the video workspace layout.
   const inWorkspace = Boolean(videoUrl) || hasMountedSubtitles;
@@ -525,8 +528,11 @@ export default function AppContent() {
                 {progressAreas}
               </ProgressPresentationContext.Provider>
               <FreePreviewOffer />
+              <DownloadHandoffCard />
               <TranslationReviewNotice />
-              {workspaceBusy || freePreviewOfferShowing ? null : (
+              {workspaceBusy ||
+              freePreviewOfferShowing ||
+              downloadHandoffShowing ? null : (
                 <WorkspaceIdleStatus />
               )}
               <WorkspaceActionBar />

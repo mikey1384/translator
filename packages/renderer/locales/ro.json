@@ -1440,8 +1440,8 @@
     "examples": {
       "title": "Încearcă un exemplu",
       "webpage": "Video pe o pagină web",
-      "hint": "Alege un exemplu pentru a completa linkul, apoi apasă pe „{{download}}”.",
-      "ready": "Linkul a fost introdus mai sus. Când ești gata, apasă pe „{{download}}”."
+      "hint": "Alege un exemplu pentru a completa linkul, apoi apasă pe „{{action}}”.",
+      "ready": "Linkul a fost introdus mai sus. Când ești gata, apasă pe „{{action}}”."
     }
   },
   "workspace": {
@@ -1748,5 +1748,17 @@
     "pending": "Rânduri care așteaptă verificarea: {{remaining}}. Subtitrările traduse sunt gata de utilizare.",
     "resume": "Reia verificarea",
     "keepDraft": "Păstrează ciorna"
+  },
+  "downloadHandoff": {
+    "title": "Urmărește-l cu subtitrări în <lang>{{language}}</lang>",
+    "cta": "Urmărește cu subtitrări în {{language}}",
+    "ctaPreviewFree": "Urmărește gratuit primele {{minutes}} min",
+    "ctaPreview": "Urmărește primele {{minutes}} min cu subtitrări",
+    "coveredFree": "Gratuit: acest videoclip de {{duration}} intră în minutele tale gratuite (au rămas {{balance}}).",
+    "covered": "Acest videoclip de {{duration}} intră în minutele tale (au rămas {{balance}}).",
+    "previewFree": "Minutele tale gratuite acoperă primele {{minutes}} min. Subtitrări pentru tot videoclipul: {{price}}.",
+    "preview": "Minutele tale acoperă primele {{minutes}} min. Subtitrări pentru tot videoclipul: {{price}}.",
+    "offer": "Minutele tale nu ajung pentru acest videoclip de {{duration}}. Subtitrări pentru tot videoclipul: {{price}}.",
+    "savedTo": "Salvat în {{folder}}"
   }
 }

@@ -1432,8 +1432,8 @@
     "examples": {
       "title": "Subukan ang halimbawa",
       "webpage": "Video sa isang webpage",
-      "hint": "Pumili ng halimbawa para mailagay ang link, saka pindutin ang {{download}}.",
-      "ready": "Nailagay na ang link sa itaas. Pindutin ang {{download}} kapag handa ka na."
+      "hint": "Pumili ng halimbawa para mailagay ang link, saka pindutin ang {{action}}.",
+      "ready": "Nailagay na ang link sa itaas. Pindutin ang {{action}} kapag handa ka na."
     }
   },
   "workspace": {
@@ -1729,5 +1729,17 @@
     "pending": "Mga linyang naghihintay ng pagsusuri: {{remaining}}. Maaari nang gamitin ang mga isinaling subtitle.",
     "resume": "Ipagpatuloy ang pagsusuri",
     "keepDraft": "Panatilihin ang burador"
+  },
+  "downloadHandoff": {
+    "title": "Panoorin ito nang may subtitle sa <lang>{{language}}</lang>",
+    "cta": "Panoorin nang may subtitle sa {{language}}",
+    "ctaPreviewFree": "Panoorin nang libre ang unang {{minutes}} min",
+    "ctaPreview": "Panoorin ang unang {{minutes}} min nang may subtitle",
+    "coveredFree": "Libre: sakop ng libreng minuto mo ang {{duration}} na video na ito ({{balance}} pa ang natitira).",
+    "covered": "Sakop ng minuto mo ang {{duration}} na video na ito ({{balance}} pa ang natitira).",
+    "previewFree": "Sakop ng libreng minuto mo ang unang {{minutes}} min. Subtitle para sa buong video: {{price}}.",
+    "preview": "Sakop ng minuto mo ang unang {{minutes}} min. Subtitle para sa buong video: {{price}}.",
+    "offer": "Hindi sapat ang minuto mo para sa {{duration}} na video na ito. Subtitle para sa buong video: {{price}}.",
+    "savedTo": "Na-save sa {{folder}}"
   }
 }

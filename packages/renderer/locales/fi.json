@@ -1432,8 +1432,8 @@
     "examples": {
       "title": "Kokeile esimerkkiä",
       "webpage": "Video verkkosivulla",
-      "hint": "Valitse esimerkki, niin linkki täytetään kenttään. Napsauta sitten {{download}}.",
-      "ready": "Linkki on nyt yllä olevassa kentässä. Kun olet valmis, napsauta {{download}}."
+      "hint": "Valitse esimerkki, niin linkki täytetään kenttään. Napsauta sitten {{action}}.",
+      "ready": "Linkki on nyt yllä olevassa kentässä. Kun olet valmis, napsauta {{action}}."
     }
   },
   "workspace": {
@@ -1729,5 +1729,17 @@
     "pending": "Tarkistusta odottavia rivejä: {{remaining}}. Käännetyt tekstitykset ovat käyttövalmiita.",
     "resume": "Jatka tarkistusta",
     "keepDraft": "Säilytä luonnos"
+  },
+  "downloadHandoff": {
+    "title": "Katso se <lang>{{languageInto}}</lang> tekstitettynä",
+    "cta": "Katso {{languageInto}} tekstitettynä",
+    "ctaPreviewFree": "Katso {{minutes}} ensimmäistä minuuttia ilmaiseksi",
+    "ctaPreview": "Katso {{minutes}} ensimmäistä minuuttia tekstitettynä",
+    "coveredFree": "Ilmainen: ilmaiset minuuttisi riittävät tähän videoon ({{duration}}, jäljellä {{balance}}).",
+    "covered": "Minuuttisi riittävät tähän videoon ({{duration}}, jäljellä {{balance}}).",
+    "previewFree": "Ilmaiset minuuttisi riittävät {{minutes}} ensimmäiseen minuuttiin. Tekstitys koko videoon: {{price}}.",
+    "preview": "Minuuttisi riittävät {{minutes}} ensimmäiseen minuuttiin. Tekstitys koko videoon: {{price}}.",
+    "offer": "Minuuttisi eivät riitä tähän videoon ({{duration}}). Tekstitys koko videoon: {{price}}.",
+    "savedTo": "Tallennettu kansioon {{folder}}"
   }
 }

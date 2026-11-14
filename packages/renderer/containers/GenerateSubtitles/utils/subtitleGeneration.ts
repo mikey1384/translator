@@ -10,6 +10,7 @@ import * as FileIPC from '../../../ipc/file';
 import * as SubtitlesIPC from '../../../ipc/subtitles';
 import { parseSrt } from '../../../../shared/helpers';
 import type {
+  ProductStartTrigger,
   SrtSegment,
   SubtitleSourceProvenance,
   TranslationReviewOutcome,
@@ -126,10 +127,13 @@ export async function executeSrtTranslation({
   segments,
   targetLanguage,
   operationId,
+  analyticsTrigger,
 }: {
   segments: any[];
   targetLanguage: string;
   operationId: string;
+  /** Anonymous counts only: where this run was started from. */
+  analyticsTrigger?: ProductStartTrigger;
 }): Promise<{
   success: boolean;
   subtitles?: string;
@@ -193,6 +197,7 @@ export async function executeSrtTranslation({
       targetLanguage,
       operationId,
       qualityTranslation,
+      ...(analyticsTrigger ? { analyticsTrigger } : {}),
     });
     await flushTranslationCheckpoints(operationId);
     if (!translationDocumentIsCurrent(operationId))

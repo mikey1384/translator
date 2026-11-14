@@ -1432,8 +1432,8 @@
     "examples": {
       "title": "Probeer een voorbeeld",
       "webpage": "Video op een webpagina",
-      "hint": "Kies een voorbeeld om de link in te vullen en klik daarna op {{download}}.",
-      "ready": "De link staat hierboven. Klik op {{download}} wanneer je klaar bent."
+      "hint": "Kies een voorbeeld om de link in te vullen en klik daarna op {{action}}.",
+      "ready": "De link staat hierboven. Klik op {{action}} wanneer je klaar bent."
     }
   },
   "workspace": {
@@ -1729,5 +1729,17 @@
     "pending": "Regels die nog gecontroleerd moeten worden: {{remaining}}. De vertaalde ondertitels zijn klaar voor gebruik.",
     "resume": "Controle hervatten",
     "keepDraft": "Concept behouden"
+  },
+  "downloadHandoff": {
+    "title": "Bekijk hem met ondertitels in het <lang>{{language}}</lang>",
+    "cta": "Bekijken met ondertitels in het {{language}}",
+    "ctaPreviewFree": "Bekijk de eerste {{minutes}} min gratis",
+    "ctaPreview": "Bekijk de eerste {{minutes}} min met ondertitels",
+    "coveredFree": "Gratis: deze video van {{duration}} valt binnen je gratis minuten (nog {{balance}} over).",
+    "covered": "Deze video van {{duration}} valt binnen je minuten (nog {{balance}} over).",
+    "previewFree": "Je gratis minuten dekken de eerste {{minutes}} min. Ondertitels voor de hele video: {{price}}.",
+    "preview": "Je minuten dekken de eerste {{minutes}} min. Ondertitels voor de hele video: {{price}}.",
+    "offer": "Je minuten zijn niet genoeg voor deze video van {{duration}}. Ondertitels voor de hele video: {{price}}.",
+    "savedTo": "Opgeslagen in {{folder}}"
   }
 }

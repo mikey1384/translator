@@ -4,13 +4,14 @@ import { i18n } from '../i18n';
 import { syncSavedVideoSuggestionHistoryPath } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage.js';
 import { syncStoredSubtitleVideoAssociationPath } from './subtitle-library';
 import { useSubStore } from '../state/subtitle-store';
-import { useVideoStore } from '../state/video-store';
+import { probeMountedFile, useVideoStore } from '../state/video-store';
 import { getNativePlayerInstance } from '../native-player';
 import {
   getSourceVideoUnavailableMessage,
   isSourceVideoPathAccessible,
 } from './sourceVideoErrors';
 import { toFileUrl } from '../../shared/helpers/file-url.js';
+import { carryProbeToSavedCopy, pathsMatch } from './savedCopyProbe';
 
 const VIDEO_FILE_EXTENSIONS = ['mp4', 'mkv', 'webm', 'mov', 'avi'];
 
@@ -40,6 +41,8 @@ async function saveVideoCopy(options: {
   extensions: string[];
   successMessage: string;
   errorLabel: string;
+  /** Shows the confirmation inline instead; false falls back to the dialog. */
+  confirmInline?: (savedPath: string) => boolean;
 }): Promise<string | null> {
   let savedPath: string;
   try {
@@ -69,6 +72,7 @@ async function saveVideoCopy(options: {
 
   // The saved file is authoritative even if the confirmation cannot be shown.
   // Keep history and the mounted source pointed at the completed save.
+  if (options.confirmInline?.(savedPath)) return savedPath;
   await SystemIPC.showMessage(
     options.successMessage.replace('{{path}}', savedPath)
   ).catch(error => {
@@ -77,16 +81,7 @@ async function saveVideoCopy(options: {
   return savedPath;
 }
 
-export function pathsMatch(a: string | null, b: string | null): boolean {
-  if (!a || !b) {
-    return false;
-  }
-
-  const normalize = (value: string) =>
-    value.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
-
-  return normalize(a) === normalize(b);
-}
+export { pathsMatch, carryProbeToSavedCopy } from './savedCopyProbe';
 
 export function isManagedTempOriginalVideoPath(
   originalVideoPath: string | null
@@ -118,7 +113,8 @@ export function isManagedTempOriginalVideoPath(
 }
 
 export async function saveOriginalVideoFile(
-  originalVideoPath: string | null
+  originalVideoPath: string | null,
+  options: { confirmInline?: (savedPath: string) => boolean } = {}
 ): Promise<boolean> {
   if (!originalVideoPath) {
     return false;
@@ -139,6 +135,7 @@ export async function saveOriginalVideoFile(
     extensions: VIDEO_FILE_EXTENSIONS,
     successMessage: i18n.t('messages.videoSaved', { path: '{{path}}' }),
     errorLabel: 'save original video failed',
+    confirmInline: options.confirmInline,
   });
   if (!savedPath) return false;
 
@@ -174,7 +171,10 @@ export async function saveOriginalVideoFile(
     if (typeof window !== 'undefined' && typeof resumeAt === 'number') {
       (window as any)._videoLastValidTime = resumeAt;
     }
+    let needsProbe = false;
     useVideoStore.setState(state => {
+      const probe = carryProbeToSavedCopy(state, originalVideoPath, savedPath);
+      needsProbe = probe.needsProbe;
       const nextFile =
         state.file &&
         typeof state.file === 'object' &&
@@ -196,9 +196,12 @@ export async function saveOriginalVideoFile(
         originalUrl: savedUrl,
         path: state.activeTrack === 'original' ? savedPath : state.path,
         url: state.activeTrack === 'original' ? savedUrl : state.url,
+        metaPath: probe.metaPath,
+        metaError: probe.metaError,
         resumeAt,
       };
     });
+    if (needsProbe) probeMountedFile(savedPath);
     if (shouldRefreshPositionSaver) {
       useVideoStore.getState().stopPositionSaving();
       useVideoStore.getState().startPositionSaving();

@@ -993,6 +993,11 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
   }))
 );
 
+/** Probe the mounted file again (its path changed but it was not re-opened). */
+export function probeMountedFile(path: string): void {
+  void analyse(path);
+}
+
 async function analyse(path: string) {
   try {
     const [hasVideo, metaRes] = await Promise.all([

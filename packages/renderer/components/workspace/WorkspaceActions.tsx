@@ -58,6 +58,12 @@ import {
   useInterruptedJobsStore,
 } from '../../state/interrupted-jobs';
 import { freePreviewKey } from '../../state/free-preview-store';
+import {
+  downloadHandoffKey,
+  useDownloadHandoffStore,
+  type DownloadHandoff,
+} from '../../state/download-handoff-store';
+import { shouldShowDownloadHandoff } from '../../utils/downloadHandoff';
 import { mountSubtitleDocument } from '../../utils/subtitle-library';
 import UnreadableFileNotice, {
   CheckingFileNotice,
@@ -393,11 +399,41 @@ const stopsEarlyStyles = css`
  * A paid job for this video was still running when Translator quit or
  * crashed: say so, and pick it up again in one click.
  */
-function useInterruptedJob() {
+export function useInterruptedJob() {
   const key = useCurrentSourceKey();
   const record = useInterruptedJobsStore(s => (key ? s.items[key] : null));
   const busy = useWorkspaceBusy();
   return record && key && !busy ? { key, record } : null;
+}
+
+/** The download handoff record for what is open, if any. */
+export function useDownloadHandoff(): DownloadHandoff | null {
+  const key = useVideoStore(s =>
+    downloadHandoffKey({ sourceUrl: s.sourceUrl })
+  );
+  return useDownloadHandoffStore(s => (key ? (s.items[key] ?? null) : null));
+}
+
+/** True while the download handoff card carries the screen's yellow action. */
+export function useDownloadHandoffShowing(): boolean {
+  const handoff = useDownloadHandoff();
+  const hasVideo = useVideoStore(s => Boolean(s.path));
+  const subtitleCount = useSubStore(s => s.order.length);
+  const busy = useWorkspaceBusy();
+  const previewStands = Boolean(useActiveFreePreview());
+  const interrupted = Boolean(useInterruptedJob());
+  const unreadable = useMountedFileUnreadable();
+  const checking = useMountedFileChecking();
+  return shouldShowDownloadHandoff({
+    handoff,
+    hasVideo,
+    subtitleCount,
+    busy,
+    previewStands,
+    interrupted,
+    unreadable,
+    checking,
+  });
 }
 
 function InterruptedJobNotice() {
@@ -1004,7 +1040,9 @@ export function WorkspaceActionBar() {
   const hasSubs = count > 0;
   // While a free-preview offer stands it carries the screen's yellow action.
   const offerShowing = useFreePreviewOfferShowing();
-  const previewStands = Boolean(useActiveFreePreview());
+  // The download handoff card carries "watch with subtitles" while it shows.
+  const handoffShowing = useDownloadHandoffShowing();
+  const previewStands = Boolean(useActiveFreePreview()) || handoffShowing;
   // A tools panel open beside the video has its own yellow action.
   const toolsOpen = useUIStore(s => s.workspaceToolsOpen);
 

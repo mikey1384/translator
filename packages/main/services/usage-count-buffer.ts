@@ -44,8 +44,12 @@ export function addCount(
   return { ...pending, [key]: (pending[key] ?? 0) + 1 };
 }
 
-export function takeBatch(pending: PendingCounts): UsageCountEntry[] {
+export function takeBatch(
+  pending: PendingCounts,
+  include: (event: string) => boolean = () => true
+): UsageCountEntry[] {
   return Object.entries(pending)
+    .filter(([key]) => include(key.slice(11)))
     .slice(0, MAX_ENTRIES_PER_REQUEST)
     .map(([key, n]) => ({
       key,

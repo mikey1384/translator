@@ -1434,8 +1434,8 @@
     "examples": {
       "title": "Prova un esempio",
       "webpage": "Video su una pagina web",
-      "hint": "Scegli un esempio per inserire il link, poi fai clic su {{download}}.",
-      "ready": "Il link è stato inserito qui sopra. Quando vuoi, fai clic su {{download}}."
+      "hint": "Scegli un esempio per inserire il link, poi fai clic su {{action}}.",
+      "ready": "Il link è stato inserito qui sopra. Quando vuoi, fai clic su {{action}}."
     }
   },
   "workspace": {
@@ -1741,5 +1741,17 @@
     "pending": "Righe da rivedere: {{remaining}}. I sottotitoli tradotti sono pronti all’uso.",
     "resume": "Riprendi revisione",
     "keepDraft": "Mantieni la bozza"
+  },
+  "downloadHandoff": {
+    "title": "Guardalo con i sottotitoli in <lang>{{language}}</lang>",
+    "cta": "Guarda con sottotitoli in {{language}}",
+    "ctaPreviewFree": "Guarda gratis i primi {{minutes}} min",
+    "ctaPreview": "Guarda i primi {{minutes}} min con i sottotitoli",
+    "coveredFree": "Gratis: questo video di {{duration}} rientra nei tuoi minuti gratuiti (rimangono {{balance}}).",
+    "covered": "Questo video di {{duration}} rientra nei tuoi minuti (rimangono {{balance}}).",
+    "previewFree": "I tuoi minuti gratuiti coprono i primi {{minutes}} min. Sottotitoli per tutto il video: {{price}}.",
+    "preview": "I tuoi minuti coprono i primi {{minutes}} min. Sottotitoli per tutto il video: {{price}}.",
+    "offer": "I tuoi minuti non bastano per questo video di {{duration}}. Sottotitoli per tutto il video: {{price}}.",
+    "savedTo": "Salvato in {{folder}}"
   }
 }

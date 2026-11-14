@@ -1432,8 +1432,8 @@
     "examples": {
       "title": "Jaribu mfano",
       "webpage": "Video kwenye ukurasa wa wavuti",
-      "hint": "Chagua mfano ili kujaza kiungo, kisha ubofye {{download}}.",
-      "ready": "Kiungo kimewekwa hapo juu. Ukiwa tayari, bofya {{download}}."
+      "hint": "Chagua mfano ili kujaza kiungo, kisha ubofye {{action}}.",
+      "ready": "Kiungo kimewekwa hapo juu. Ukiwa tayari, bofya {{action}}."
     }
   },
   "workspace": {
@@ -1729,5 +1729,17 @@
     "pending": "Mistari inayosubiri ukaguzi: {{remaining}}. Manukuu yaliyotafsiriwa yako tayari kutumiwa.",
     "resume": "Endelea na ukaguzi",
     "keepDraft": "Hifadhi rasimu"
+  },
+  "downloadHandoff": {
+    "title": "Itazame na manukuu ya <lang>{{language}}</lang>",
+    "cta": "Tazama na manukuu ya {{language}}",
+    "ctaPreviewFree": "Tazama dakika {{minutes}} za kwanza bure",
+    "ctaPreview": "Tazama dakika {{minutes}} za kwanza na manukuu",
+    "coveredFree": "Bure: video hii ya {{duration}} inatosha kwa dakika zako za bure (zimebaki {{balance}}).",
+    "covered": "Video hii ya {{duration}} inatosha kwa dakika zako (zimebaki {{balance}}).",
+    "previewFree": "Dakika zako za bure zinatosha dakika {{minutes}} za kwanza. Manukuu ya video nzima: {{price}}.",
+    "preview": "Dakika zako zinatosha dakika {{minutes}} za kwanza. Manukuu ya video nzima: {{price}}.",
+    "offer": "Dakika zako hazitoshi kwa video hii ya {{duration}}. Manukuu ya video nzima: {{price}}.",
+    "savedTo": "Imehifadhiwa kwenye {{folder}}"
   }
 }

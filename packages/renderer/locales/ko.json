@@ -1420,8 +1420,8 @@
     "examples": {
       "title": "예시로 시작하기",
       "webpage": "웹페이지의 영상",
-      "hint": "예시를 고르면 위에 링크가 들어가요. {{download}} 버튼을 눌러 시작하세요.",
-      "ready": "위에 링크를 넣었어요. 준비되면 {{download}} 버튼을 누르세요."
+      "hint": "예시를 고르면 위에 링크가 들어가요. {{action}} 버튼을 눌러 시작하세요.",
+      "ready": "위에 링크를 넣었어요. 준비되면 {{action}} 버튼을 누르세요."
     }
   },
   "workspace": {
@@ -1701,5 +1701,17 @@
     "pending": "검토가 남은 자막: {{remaining}}개. 번역된 자막은 바로 사용할 수 있습니다.",
     "resume": "검토 계속",
     "keepDraft": "초안 유지"
+  },
+  "downloadHandoff": {
+    "title": "<lang>{{language}}</lang> 자막으로 보기",
+    "cta": "{{language}} 자막으로 보기",
+    "ctaPreviewFree": "앞부분 {{minutes}}분 무료로 보기",
+    "ctaPreview": "앞부분 {{minutes}}분 자막으로 보기",
+    "coveredFree": "무료: 이 영상({{duration}})은 무료 시간으로 충분해요 ({{balance}} 남음).",
+    "covered": "이 영상({{duration}})은 남은 시간으로 충분해요 ({{balance}} 남음).",
+    "previewFree": "무료 시간으로 앞부분 {{minutes}}분까지 자막을 만들 수 있어요. 영상 전체 자막: {{price}}.",
+    "preview": "남은 시간으로 앞부분 {{minutes}}분까지 자막을 만들 수 있어요. 영상 전체 자막: {{price}}.",
+    "offer": "이 영상({{duration}})에는 남은 시간이 부족해요. 영상 전체 자막: {{price}}.",
+    "savedTo": "{{folder}}에 저장했어요"
   }
 }

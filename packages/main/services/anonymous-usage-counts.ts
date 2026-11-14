@@ -14,6 +14,7 @@ import {
   takeBatch,
   type PendingCounts,
 } from './usage-count-buffer.js';
+import { PROVISIONAL_USAGE_EVENTS } from './handoff-funnel.js';
 
 // Anonymous step counts ("+1 app_open on 2026-10-13, win32, 1.25.0"). They
 // carry no device id, token, content or settings and are sent without auth
@@ -95,34 +96,59 @@ export function countAnonymousAppOpen(): void {
   countAnonymousUsage('app_open');
 }
 
+/**
+ * One request per group. Established names go first and are dropped on a
+ * 400, as before. Names the server may not know yet (provisional) go in a
+ * request of their own, so a refusal can never take the established counts
+ * with it, and they stay pending (inside the 14-day window) until accepted.
+ */
+async function postBatch(
+  include: (event: string) => boolean,
+  dropOnRefusal: boolean
+): Promise<boolean> {
+  const batch = takeBatch(readPending(), include);
+  if (batch.length === 0) return false;
+  try {
+    await axios.post(
+      `${STAGE5_API_URL}/usage/counts`,
+      {
+        appVersion: app.getVersion(),
+        platform: platform(),
+        counts: batch.map(({ event, day, n }) => ({ event, day, n })),
+      },
+      { timeout: 10_000 }
+    );
+  } catch (error) {
+    const status = (error as { response?: { status?: number } })?.response
+      ?.status;
+    // A 400 means the server will never accept these; drop them. Anything
+    // else (offline, 5xx) keeps them for the next flush.
+    if (status !== 400 || !dropOnRefusal) return false;
+  }
+  store.set('pending', removeSent(readPending(), batch));
+  return true;
+}
+
 export function flushAnonymousUsageCounts(): Promise<void> {
   if (!available()) return Promise.resolve();
   if (flushing) return flushing;
   flushing = (async () => {
-    const pending = readPending();
-    store.set('pending', pending);
-    const batch = takeBatch(pending);
-    if (batch.length === 0) return;
-    try {
-      await axios.post(
-        `${STAGE5_API_URL}/usage/counts`,
-        {
-          appVersion: app.getVersion(),
-          platform: platform(),
-          counts: batch.map(({ event, day, n }) => ({ event, day, n })),
-        },
-        { timeout: 10_000 }
-      );
-    } catch (error) {
-      const status = (error as { response?: { status?: number } })?.response
-        ?.status;
-      // A 400 means the server will never accept these; drop them. Anything
-      // else (offline, 5xx) keeps them for the next flush.
-      if (status !== 400) return;
-    }
-    const left = removeSent(readPending(), batch);
-    store.set('pending', left);
-    if (Object.keys(left).length > 0) scheduleFlush();
+    store.set('pending', readPending());
+    const establishedSent = await postBatch(
+      event => !PROVISIONAL_USAGE_EVENTS.has(event),
+      true
+    );
+    await postBatch(event => PROVISIONAL_USAGE_EVENTS.has(event), false);
+    const left = readPending();
+    // More established counts than one request holds: send the rest soon.
+    // Provisional ones wait for the regular flushes instead of retrying hot.
+    if (
+      establishedSent &&
+      Object.keys(left).some(
+        key => !PROVISIONAL_USAGE_EVENTS.has(key.slice(11))
+      )
+    )
+      scheduleFlush();
   })().finally(() => {
     flushing = null;
   });

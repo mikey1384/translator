@@ -1420,8 +1420,8 @@
     "examples": {
       "title": "Cuba contoh",
       "webpage": "Video pada halaman web",
-      "hint": "Pilih contoh untuk mengisi pautan, kemudian klik {{download}}.",
-      "ready": "Pautan sudah diisi di atas. Klik {{download}} apabila anda bersedia."
+      "hint": "Pilih contoh untuk mengisi pautan, kemudian klik {{action}}.",
+      "ready": "Pautan sudah diisi di atas. Klik {{action}} apabila anda bersedia."
     }
   },
   "workspace": {
@@ -1701,5 +1701,17 @@
     "pending": "Baris yang menunggu semakan: {{remaining}}. Sari kata yang diterjemahkan sedia digunakan.",
     "resume": "Sambung semakan",
     "keepDraft": "Simpan draf"
+  },
+  "downloadHandoff": {
+    "title": "Tonton dengan sari kata <lang>{{language}}</lang>",
+    "cta": "Tonton dengan sari kata {{language}}",
+    "ctaPreviewFree": "Tonton {{minutes}} minit pertama secara percuma",
+    "ctaPreview": "Tonton {{minutes}} minit pertama dengan sari kata",
+    "coveredFree": "Percuma: video {{duration}} ini cukup dengan minit percuma anda (baki {{balance}}).",
+    "covered": "Video {{duration}} ini cukup dengan minit anda (baki {{balance}}).",
+    "previewFree": "Minit percuma anda cukup untuk {{minutes}} minit pertama. Sari kata untuk seluruh video: {{price}}.",
+    "preview": "Minit anda cukup untuk {{minutes}} minit pertama. Sari kata untuk seluruh video: {{price}}.",
+    "offer": "Minit anda tidak mencukupi untuk video {{duration}} ini. Sari kata untuk seluruh video: {{price}}.",
+    "savedTo": "Disimpan dalam {{folder}}"
   }
 }

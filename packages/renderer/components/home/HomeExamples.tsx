@@ -98,8 +98,11 @@ export default function HomeExamples({
   urlInput,
   disabled,
   onChoose,
+  actionLabel,
 }: {
   hasRecentVideos: boolean;
+  /** The main button's own words ("Translate to Spanish"). */
+  actionLabel: string;
   urlInput: string;
   disabled: boolean;
   onChoose: (example: HomeVideoExample, pointerActivation: boolean) => void;
@@ -151,13 +154,13 @@ export default function HomeExamples({
             {selected
               ? t(
                   'home.examples.ready',
-                  'Link added above. Click {{download}} when you’re ready.',
-                  { download: t('home.downloadOnly', 'Download only') }
+                  'Link added above. Click {{action}} when you’re ready.',
+                  { action: actionLabel }
                 )
               : t(
                   'home.examples.hint',
-                  'Choose an example to fill in the link, then click {{download}}.',
-                  { download: t('home.downloadOnly', 'Download only') }
+                  'Choose an example to fill in the link, then click {{action}}.',
+                  { action: actionLabel }
                 )}
           </p>
           <p className={credit}>

@@ -1438,8 +1438,8 @@
     "examples": {
       "title": "Vyzkoušet ukázku",
       "webpage": "Video na webové stránce",
-      "hint": "Vyberte ukázku, tím se vyplní odkaz. Potom klikněte na „{{download}}“.",
-      "ready": "Odkaz je vyplněný výše. Až budete připraveni, klikněte na „{{download}}“."
+      "hint": "Vyberte ukázku, tím se vyplní odkaz. Potom klikněte na „{{action}}“.",
+      "ready": "Odkaz je vyplněný výše. Až budete připraveni, klikněte na „{{action}}“."
     }
   },
   "workspace": {
@@ -1754,5 +1754,17 @@
     "pending": "Řádky čekající na kontrolu: {{remaining}}. Přeložené titulky jsou připravené k použití.",
     "resume": "Pokračovat v kontrole",
     "keepDraft": "Ponechat koncept"
+  },
+  "downloadHandoff": {
+    "title": "Sledujte s překladem do <lang>{{languageInto}}</lang>",
+    "cta": "Sledovat s překladem do {{languageInto}}",
+    "ctaPreviewFree": "Prvních {{minutes}} min zdarma",
+    "ctaPreview": "Prvních {{minutes}} min s titulky",
+    "coveredFree": "Zdarma: toto video ({{duration}}) pokryjí vaše bezplatné minuty (zbývá {{balance}}).",
+    "covered": "Toto video ({{duration}}) pokryjí vaše minuty (zbývá {{balance}}).",
+    "previewFree": "Vaše bezplatné minuty pokryjí prvních {{minutes}} min. Titulky k celému videu: {{price}}.",
+    "preview": "Vaše minuty pokryjí prvních {{minutes}} min. Titulky k celému videu: {{price}}.",
+    "offer": "Vaše minuty na toto video ({{duration}}) nestačí. Titulky k celému videu: {{price}}.",
+    "savedTo": "Uloženo do složky {{folder}}"
   }
 }

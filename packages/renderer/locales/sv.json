@@ -1432,8 +1432,8 @@
     "examples": {
       "title": "Prova ett exempel",
       "webpage": "Video på en webbsida",
-      "hint": "Välj ett exempel för att fylla i länken och klicka sedan på {{download}}.",
-      "ready": "Länken finns nu ovanför. Klicka på {{download}} när du är redo."
+      "hint": "Välj ett exempel för att fylla i länken och klicka sedan på {{action}}.",
+      "ready": "Länken finns nu ovanför. Klicka på {{action}} när du är redo."
     }
   },
   "workspace": {
@@ -1729,5 +1729,17 @@
     "pending": "Rader som väntar på granskning: {{remaining}}. De översatta undertexterna är klara att använda.",
     "resume": "Fortsätt granskningen",
     "keepDraft": "Behåll utkastet"
+  },
+  "downloadHandoff": {
+    "title": "Se den med undertexter på <lang>{{language}}</lang>",
+    "cta": "Se med undertexter på {{language}}",
+    "ctaPreviewFree": "Se de första {{minutes}} min gratis",
+    "ctaPreview": "Se de första {{minutes}} min med undertexter",
+    "coveredFree": "Gratis: den här videon på {{duration}} ryms i dina gratisminuter ({{balance}} kvar).",
+    "covered": "Den här videon på {{duration}} ryms i dina minuter ({{balance}} kvar).",
+    "previewFree": "Dina gratisminuter räcker till de första {{minutes}} min. Undertexter för hela videon: {{price}}.",
+    "preview": "Dina minuter räcker till de första {{minutes}} min. Undertexter för hela videon: {{price}}.",
+    "offer": "Dina minuter räcker inte till den här videon på {{duration}}. Undertexter för hela videon: {{price}}.",
+    "savedTo": "Sparad i {{folder}}"
   }
 }

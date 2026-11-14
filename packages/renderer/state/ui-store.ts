@@ -110,7 +110,13 @@ function writeSubtitleEditMode(on: boolean): void {
 export type HomeRunRequestInput =
   | { kind: 'url'; url: string; target?: 'download' | 'translate' }
   // target: stop after transcription instead of translating (default).
-  | { kind: 'mounted'; path: string; target?: 'transcribe' | 'translate' };
+  | {
+      kind: 'mounted';
+      path: string;
+      target?: 'transcribe' | 'translate';
+      /** Analytics only: the run was started from the download handoff. */
+      trigger?: 'download_handoff';
+    };
 export type HomeRunRequest = HomeRunRequestInput & { id: number };
 let homeRunRequestSeq = 0;
 

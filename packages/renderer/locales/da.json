@@ -1432,8 +1432,8 @@
     "examples": {
       "title": "Prøv et eksempel",
       "webpage": "Video på en webside",
-      "hint": "Vælg et eksempel for at indsætte linket, og klik derefter på {{download}}.",
-      "ready": "Linket er indsat ovenfor. Klik på {{download}}, når du er klar."
+      "hint": "Vælg et eksempel for at indsætte linket, og klik derefter på {{action}}.",
+      "ready": "Linket er indsat ovenfor. Klik på {{action}}, når du er klar."
     }
   },
   "workspace": {
@@ -1729,5 +1729,17 @@
     "pending": "Linjer, der afventer gennemgang: {{remaining}}. De oversatte undertekster er klar til brug.",
     "resume": "Fortsæt gennemgangen",
     "keepDraft": "Behold kladden"
+  },
+  "downloadHandoff": {
+    "title": "Se den med undertekster på <lang>{{language}}</lang>",
+    "cta": "Se med undertekster på {{language}}",
+    "ctaPreviewFree": "Se de første {{minutes}} min gratis",
+    "ctaPreview": "Se de første {{minutes}} min med undertekster",
+    "coveredFree": "Gratis: denne video på {{duration}} dækkes af dine gratis minutter ({{balance}} tilbage).",
+    "covered": "Denne video på {{duration}} dækkes af dine minutter ({{balance}} tilbage).",
+    "previewFree": "Dine gratis minutter dækker de første {{minutes}} min. Undertekster til hele videoen: {{price}}.",
+    "preview": "Dine minutter dækker de første {{minutes}} min. Undertekster til hele videoen: {{price}}.",
+    "offer": "Dine minutter rækker ikke til denne video på {{duration}}. Undertekster til hele videoen: {{price}}.",
+    "savedTo": "Gemt i {{folder}}"
   }
 }

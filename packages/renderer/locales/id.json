@@ -1420,8 +1420,8 @@
     "examples": {
       "title": "Coba contoh",
       "webpage": "Video di halaman web",
-      "hint": "Pilih contoh untuk mengisi tautan, lalu klik {{download}}.",
-      "ready": "Tautan sudah diisi di atas. Klik {{download}} saat siap."
+      "hint": "Pilih contoh untuk mengisi tautan, lalu klik {{action}}.",
+      "ready": "Tautan sudah diisi di atas. Klik {{action}} saat siap."
     }
   },
   "workspace": {
@@ -1701,5 +1701,17 @@
     "pending": "Baris yang menunggu pemeriksaan: {{remaining}}. Subtitle terjemahan sudah dapat digunakan.",
     "resume": "Lanjutkan pemeriksaan",
     "keepDraft": "Simpan draf"
+  },
+  "downloadHandoff": {
+    "title": "Tonton dengan subtitle <lang>{{language}}</lang>",
+    "cta": "Tonton dengan subtitle {{language}}",
+    "ctaPreviewFree": "Tonton {{minutes}} menit pertama gratis",
+    "ctaPreview": "Tonton {{minutes}} menit pertama dengan subtitle",
+    "coveredFree": "Gratis: video {{duration}} ini cukup dengan menit gratis Anda (sisa {{balance}}).",
+    "covered": "Video {{duration}} ini cukup dengan menit Anda (sisa {{balance}}).",
+    "previewFree": "Menit gratis Anda cukup untuk {{minutes}} menit pertama. Subtitle untuk seluruh video: {{price}}.",
+    "preview": "Menit Anda cukup untuk {{minutes}} menit pertama. Subtitle untuk seluruh video: {{price}}.",
+    "offer": "Menit Anda tidak cukup untuk video {{duration}} ini. Subtitle untuk seluruh video: {{price}}.",
+    "savedTo": "Disimpan di {{folder}}"
   }
 }

@@ -1434,8 +1434,8 @@
     "examples": {
       "title": "Experimente um exemplo",
       "webpage": "Vídeo em uma página da web",
-      "hint": "Escolha um exemplo para preencher o link. Depois, clique em {{download}}.",
-      "ready": "O link já está no campo acima. Quando quiser, clique em {{download}}."
+      "hint": "Escolha um exemplo para preencher o link. Depois, clique em {{action}}.",
+      "ready": "O link já está no campo acima. Quando quiser, clique em {{action}}."
     }
   },
   "workspace": {
@@ -1741,5 +1741,17 @@
     "pending": "Linhas aguardando revisão: {{remaining}}. As legendas traduzidas já podem ser usadas.",
     "resume": "Retomar revisão",
     "keepDraft": "Manter rascunho"
+  },
+  "downloadHandoff": {
+    "title": "Assista com legendas em <lang>{{language}}</lang>",
+    "cta": "Assistir com legendas em {{language}}",
+    "ctaPreviewFree": "Assistir grátis aos primeiros {{minutes}} min",
+    "ctaPreview": "Assistir aos primeiros {{minutes}} min com legendas",
+    "coveredFree": "Grátis: este vídeo de {{duration}} cabe nos seus minutos grátis (restam {{balance}}).",
+    "covered": "Este vídeo de {{duration}} cabe nos seus minutos (restam {{balance}}).",
+    "previewFree": "Seus minutos grátis cobrem os primeiros {{minutes}} min. Legendas para o vídeo inteiro: {{price}}.",
+    "preview": "Seus minutos cobrem os primeiros {{minutes}} min. Legendas para o vídeo inteiro: {{price}}.",
+    "offer": "Seus minutos não são suficientes para este vídeo de {{duration}}. Legendas para o vídeo inteiro: {{price}}.",
+    "savedTo": "Salvo em {{folder}}"
   }
 }

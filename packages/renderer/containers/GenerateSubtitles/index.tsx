@@ -5,6 +5,8 @@ import {
   decideFreePreview,
   recordFreePreview,
 } from '../../utils/freePreviewRun';
+import { confirmSaveInDownloadHandoff } from '../../utils/downloadHandoffRun';
+import type { ProductStartTrigger } from '@shared-types/app';
 import Section from '../../components/Section.js';
 import { useTranslation } from 'react-i18next';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -383,6 +385,8 @@ export default function GenerateSubtitles() {
   } | null>(null);
   // The continuation still owed once the download mounts ('download' = none).
   const pendingAutoRunTargetRef = useRef<AutoRunTarget>('download');
+  // Analytics only: where the pending auto-run was started from.
+  const pendingRunTriggerRef = useRef<ProductStartTrigger | null>(null);
   // The chain a download stopped by a human check would have continued.
   const cookieRetryChainRef = useRef<DownloadRunOptions | null>(null);
   // The source path the pending auto-run is bound to. Bound (as state, not a ref)
@@ -462,10 +466,12 @@ export default function GenerateSubtitles() {
       // from task-completion flags (which mark error stages as "complete" and
       // leave cancellations stuck). The intermediate transcribing → translating
       // animation is handled by the phase-advance effect below.
+      const trigger = pendingRunTriggerRef.current;
+      pendingRunTriggerRef.current = null;
       const runChain =
         target === 'transcribe'
           ? handleTranscribeOnly
-          : handleTranslateFromScratch;
+          : () => handleTranslateFromScratch(trigger);
       // On failure, mark the step that was active when it failed (transcribe, or
       // translate once the chain advanced) — never the already-finished download.
       const markError = () =>
@@ -830,7 +836,11 @@ export default function GenerateSubtitles() {
       !typedResult.cancelled &&
       downloadedPath
     ) {
-      await saveOriginalVideoFile(downloadedPath);
+      // The handoff card says "Saved to …" instead of a native OK box.
+      await saveOriginalVideoFile(downloadedPath, {
+        confirmInline: savedPath =>
+          confirmSaveInDownloadHandoff(downloadedPath, savedPath),
+      });
     }
     return result;
   }
@@ -886,6 +896,8 @@ export default function GenerateSubtitles() {
       return;
     }
     const language = ui.targetLanguage;
+    pendingRunTriggerRef.current =
+      request.kind === 'mounted' ? (request.trigger ?? null) : null;
     if (request.kind === 'url') {
       const target = request.target ?? 'translate';
       if (target === 'translate') setAutoRunLanguage(language);
@@ -1146,7 +1158,7 @@ export default function GenerateSubtitles() {
                       <TranscribeOnlyPanel
                         className={workflowPanelFlushStyles}
                         onTranscribe={handleTranscribeOnly}
-                        onTranslate={handleTranslateFromScratch}
+                        onTranslate={() => handleTranslateFromScratch()}
                         onCreateHighlight={handleCreateHighlight}
                         processingLanguage={preTranscriptProcessingLanguage}
                         onProcessingLanguageChange={language => {
@@ -1662,7 +1674,10 @@ export default function GenerateSubtitles() {
 
   // 'offer': the balance covers none of the video, so nothing ran and the
   // free-preview offer is showing instead.
-  async function handleTranslateFromScratch(): Promise<boolean | 'offer'> {
+  async function handleTranslateFromScratch(
+    trigger: ProductStartTrigger | null = null
+  ): Promise<boolean | 'offer'> {
+    const analyticsTrigger = trigger ?? undefined;
     if (
       highlightWorkflowRunning ||
       stepTwoWorkflowActive ||
@@ -1784,6 +1799,7 @@ export default function GenerateSubtitles() {
         segments: finalSegments,
         targetLanguage: requestedLanguage,
         operationId: translationOperationId,
+        analyticsTrigger,
       });
       if (translationResult?.success && previewEndSec && durationSecs) {
         recordFreePreview({

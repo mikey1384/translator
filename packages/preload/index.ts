@@ -58,6 +58,10 @@ const electronAPI = {
     }
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('track-purchase-event', event, context),
+  trackHandoffEvent: async (
+    event: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('track-handoff-event', event),
 
   // ---------------------- Subtitle Generation ----------------------
   generateSubtitles: async (options: any) => {

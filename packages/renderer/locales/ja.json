@@ -1420,8 +1420,8 @@
     "examples": {
       "title": "サンプルを試す",
       "webpage": "ウェブページの動画",
-      "hint": "サンプルを選ぶとリンクが入力されます。その後「{{download}}」を押してください。",
-      "ready": "上の欄にリンクを入力しました。準備ができたら「{{download}}」を押してください。"
+      "hint": "サンプルを選ぶとリンクが入力されます。その後「{{action}}」を押してください。",
+      "ready": "上の欄にリンクを入力しました。準備ができたら「{{action}}」を押してください。"
     }
   },
   "workspace": {
@@ -1701,5 +1701,17 @@
     "pending": "未確認の字幕：{{remaining}}行。翻訳済みの字幕はそのまま使えます。",
     "resume": "チェックを再開",
     "keepDraft": "下訳を使用"
+  },
+  "downloadHandoff": {
+    "title": "<lang>{{language}}</lang>字幕で観る",
+    "cta": "{{language}}字幕で観る",
+    "ctaPreviewFree": "最初の{{minutes}}分を無料で観る",
+    "ctaPreview": "最初の{{minutes}}分を字幕で観る",
+    "coveredFree": "無料：この動画（{{duration}}）は無料分の時間で足ります（残り{{balance}}）。",
+    "covered": "この動画（{{duration}}）は残り時間で足ります（残り{{balance}}）。",
+    "previewFree": "無料分の時間で最初の{{minutes}}分まで字幕にできます。動画全体の字幕：{{price}}。",
+    "preview": "残り時間で最初の{{minutes}}分まで字幕にできます。動画全体の字幕：{{price}}。",
+    "offer": "この動画（{{duration}}）には残り時間が足りません。動画全体の字幕：{{price}}。",
+    "savedTo": "{{folder}}に保存しました"
   }
 }

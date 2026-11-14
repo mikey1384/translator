@@ -143,6 +143,11 @@ import {
   trackUrlDownloadFunnelEvent,
 } from './services/product-analytics.js';
 import {
+  handoffTranslationStartEvent,
+  isRendererHandoffFunnelEvent,
+} from './services/handoff-funnel.js';
+import { countAnonymousUsage } from './services/anonymous-usage-counts.js';
+import {
   classifyTranslationOutcome,
   isTranslationMeaningfulUse,
 } from './services/translation-funnel.js';
@@ -852,6 +857,10 @@ try {
       `[main.ts/translate-subtitles] Starting operation: ${operationId}`
     );
     void trackTranslationFunnelEvent('translation_started');
+    const handoffStart = handoffTranslationStartEvent(
+      options?.analyticsTrigger
+    );
+    if (handoffStart) countAnonymousUsage(handoffStart);
     try {
       const result = await subtitleHandlers.handleTranslateSubtitles(
         event,
@@ -1314,6 +1323,15 @@ try {
       }
     }
   );
+  // Home link buttons and the download handoff card: anonymous daily
+  // counts (event names only), allow-listed.
+  ipcMain.handle('track-handoff-event', (_event, eventName: unknown) => {
+    if (!isRendererHandoffFunnelEvent(eventName)) {
+      return { success: false, error: 'Unknown handoff event' };
+    }
+    countAnonymousUsage(eventName);
+    return { success: true };
+  });
   ipcMain.handle('reset-credits', handleResetCredits);
   ipcMain.handle('reset-credits-to-zero', handleResetCreditsToZero);
   ipcMain.handle('is-admin-mode', () => hasConfiguredAdminSecret());
