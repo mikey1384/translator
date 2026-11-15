@@ -21,7 +21,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useSubStore } from '../state/subtitle-store';
 import { useWorkspaceBusy } from './workspace/WorkspaceActions';
 import LogsModal from './LogsModal';
-import LongDownloadConfirmDialog from './LongDownloadConfirmDialog';
 import WebVideoPicker from './WebVideoPicker';
 import UrlCookieBanner from '../containers/GenerateSubtitles/UrlCookieBanner';
 import Modal from './Modal';
@@ -327,7 +326,6 @@ export default function GlobalModals() {
           {notice?.message}
         </div>
       </Modal>
-      <LongDownloadConfirmDialog />
       <WebVideoPicker />
       <CreditRanOutDialog
         open={creditOpen}

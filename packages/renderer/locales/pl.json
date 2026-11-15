@@ -368,13 +368,6 @@
       "collection": "To link do kanału lub playlisty. Wklej link do jednego filmu albo użyj „Znajdź filmy”.",
       "live": "To transmisja na żywo. Translator może ją pobrać, gdy się zakończy."
     },
-    "longDownload": {
-      "title": "Pobrać długi film?",
-      "body": "Ten film jest długi, więc pobieranie może potrwać i zająć sporo miejsca na dysku. Niższa jakość pobierania przyspieszy je i zmniejszy plik.",
-      "duration": "Długość: {{duration}}",
-      "size": "Około {{size}}",
-      "confirm": "Pobierz"
-    },
     "dropWhileDownloading": "Trwa pobieranie. Upuść plik ponownie, gdy się skończy.",
     "dropWhileBusy": "Translator pracuje nad tym filmem. Upuść plik ponownie, gdy skończy.",
     "dropNotSupported": "Upuść film, plik audio lub plik napisów .srt.",

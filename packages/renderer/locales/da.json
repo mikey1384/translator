@@ -368,13 +368,6 @@
       "collection": "Det er et link til en kanal eller playliste. Indsæt et link til en enkelt video, eller brug Find videoer.",
       "live": "Det er en livestream. Translator kan downloade den, når udsendelsen er slut."
     },
-    "longDownload": {
-      "title": "Download en lang video?",
-      "body": "Videoen er lang, så downloaden kan tage et stykke tid og fylde meget på disken. Med en lavere downloadkvalitet går det hurtigere, og filen bliver mindre.",
-      "duration": "Længde: {{duration}}",
-      "size": "Ca. {{size}}",
-      "confirm": "Download"
-    },
     "dropWhileDownloading": "En download er i gang. Slip filen igen, når den er færdig.",
     "dropWhileBusy": "Translator arbejder på denne video. Slip filen igen, når den er færdig.",
     "dropNotSupported": "Slip en video, en lydfil eller en .srt-undertekstfil.",

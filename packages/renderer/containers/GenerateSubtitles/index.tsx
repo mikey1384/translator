@@ -860,7 +860,6 @@ export default function GenerateSubtitles() {
           replaceCurrent: request.replaceCurrent,
           webVideo: request.webVideo,
           webVideoId: request.webVideoId,
-          allowLongVideo: request.allowLongVideo,
           interactive: request.interactive,
         }),
       chain ?? { target: 'download', language: autoRunLanguage }

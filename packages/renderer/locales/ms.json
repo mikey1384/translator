@@ -366,13 +366,6 @@
       "collection": "Ini pautan saluran atau senarai main. Tampal pautan satu video sahaja, atau gunakan Cari video.",
       "live": "Ini strim langsung. Translator boleh memuat turunnya selepas siaran tamat."
     },
-    "longDownload": {
-      "title": "Muat turun video yang panjang?",
-      "body": "Video ini panjang, jadi muat turun mungkin mengambil masa dan menggunakan banyak ruang cakera. Kualiti muat turun yang lebih rendah menjadikannya lebih cepat dan lebih kecil.",
-      "duration": "Tempoh: {{duration}}",
-      "size": "Kira-kira {{size}}",
-      "confirm": "Muat turun"
-    },
     "dropWhileDownloading": "Muat turun sedang berjalan. Lepaskan fail sekali lagi selepas ia selesai.",
     "dropWhileBusy": "Translator sedang memproses video ini. Lepaskan fail sekali lagi selepas ia selesai.",
     "dropNotSupported": "Lepaskan video, fail audio atau fail sari kata .srt.",

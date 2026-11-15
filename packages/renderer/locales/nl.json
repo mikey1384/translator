@@ -368,13 +368,6 @@
       "collection": "Dit is een link naar een kanaal of afspeellijst. Plak een link naar één video, of gebruik Video’s zoeken.",
       "live": "Dit is een livestream. Translator kan hem downloaden als de uitzending voorbij is."
     },
-    "longDownload": {
-      "title": "Lange video downloaden?",
-      "body": "Deze video is lang, dus de download kan even duren en veel schijfruimte innemen. Met een lagere downloadkwaliteit gaat het sneller en wordt het bestand kleiner.",
-      "duration": "Duur: {{duration}}",
-      "size": "Ongeveer {{size}}",
-      "confirm": "Downloaden"
-    },
     "dropWhileDownloading": "Er loopt een download. Sleep het bestand opnieuw hierheen als die klaar is.",
     "dropWhileBusy": "Translator is bezig met deze video. Sleep het bestand opnieuw hierheen als het klaar is.",
     "dropNotSupported": "Sleep een video, een audiobestand of een .srt-ondertitelbestand hierheen.",

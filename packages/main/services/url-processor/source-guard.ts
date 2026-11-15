@@ -1,38 +1,23 @@
 // Refuses sources a single-video download should never fetch: channels and
-// playlists (every entry would download), live broadcasts (they record until
-// the stream ends) and, unless the user confirmed, very long videos. Checks
-// ride on yt-dlp's own extraction through --print, so they cost no extra
-// network request.
+// playlists (every entry would download) and live broadcasts (they record
+// until the stream ends). Checks ride on yt-dlp's own extraction through
+// --print, so they cost no extra network request.
 
-export type UrlSourceRejectionCode =
-  | 'collection_url'
-  | 'live_stream'
-  | 'long_video';
-
-/** Videos at least this long ask for confirmation before downloading. */
-export const LONG_VIDEO_CONFIRM_SECONDS = 60 * 60;
+export type UrlSourceRejectionCode = 'collection_url' | 'live_stream';
 
 const REJECTION_MESSAGES: Record<UrlSourceRejectionCode, string> = {
   collection_url:
     'This is a channel or playlist link. Paste a link to a single video.',
   live_stream: 'This is a live stream. It can be downloaded after it ends.',
-  long_video: 'This video is long. Confirm to download it.',
 };
 
 export class UrlSourceRejectedError extends Error {
   readonly code: UrlSourceRejectionCode;
-  readonly durationSec?: number;
-  readonly estimatedBytes?: number;
 
-  constructor(
-    code: UrlSourceRejectionCode,
-    details: { durationSec?: number; estimatedBytes?: number } = {}
-  ) {
+  constructor(code: UrlSourceRejectionCode) {
     super(REJECTION_MESSAGES[code]);
     this.name = 'UrlSourceRejectedError';
     this.code = code;
-    this.durationSec = details.durationSec;
-    this.estimatedBytes = details.estimatedBytes;
   }
 }
 
@@ -51,8 +36,7 @@ const GUARD_PREFIX = '__stage5_guard__';
 
 /**
  * `pre_process` runs once per video right after extraction, before format
- * selection; `before_dl` runs after format selection, before any media
- * bytes are fetched, so the chosen format's size is known there.
+ * selection and before any media bytes are fetched.
  */
 export function buildSourceGuardPrintArgs(): string[] {
   return [
@@ -60,10 +44,6 @@ export function buildSourceGuardPrintArgs(): string[] {
     `pre_process:${GUARD_PREFIX}playlist_id\t%(playlist_id)s`,
     '--print',
     `pre_process:${GUARD_PREFIX}live_status\t%(live_status)s`,
-    '--print',
-    `pre_process:${GUARD_PREFIX}duration\t%(duration)s`,
-    '--print',
-    `before_dl:${GUARD_PREFIX}filesize\t%(filesize,filesize_approx)s`,
   ];
 }
 
@@ -74,32 +54,16 @@ function printedValue(value: string): string | null {
     : null;
 }
 
-function positiveNumber(value: string | null): number | undefined {
-  if (!value) return undefined;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
-}
-
 export type SourceGuard = {
   /** True when the line was a guard line (consumed, not progress output). */
   applyLine: (line: string) => boolean;
-  /**
-   * Called for every non-guard line. A long video whose size never printed
-   * is still stopped once media bytes start flowing.
-   */
-  noteOutputLine: (line: string) => void;
   readonly rejection: UrlSourceRejectedError | null;
 };
 
 export function createSourceGuard(options: {
   isYouTube: boolean;
-  allowLongVideo?: boolean;
-  longVideoSeconds?: number;
 }): SourceGuard {
-  const longVideoSeconds =
-    options.longVideoSeconds ?? LONG_VIDEO_CONFIRM_SECONDS;
   let rejection: UrlSourceRejectedError | null = null;
-  let pendingLongDurationSec: number | null = null;
 
   const reject = (error: UrlSourceRejectedError) => {
     if (!rejection) rejection = error;
@@ -132,41 +96,10 @@ export function createSourceGuard(options: {
             reject(new UrlSourceRejectedError('live_stream'));
           }
           break;
-        case 'duration': {
-          const durationSec = positiveNumber(value);
-          if (
-            !options.allowLongVideo &&
-            durationSec !== undefined &&
-            durationSec >= longVideoSeconds
-          ) {
-            pendingLongDurationSec = durationSec;
-          }
-          break;
-        }
-        case 'filesize':
-          if (pendingLongDurationSec !== null) {
-            reject(
-              new UrlSourceRejectedError('long_video', {
-                durationSec: pendingLongDurationSec,
-                estimatedBytes: positiveNumber(value),
-              })
-            );
-          }
-          break;
         default:
           break;
       }
       return true;
-    },
-    noteOutputLine(line) {
-      if (pendingLongDurationSec === null || rejection) return;
-      if (/^\[download\]\s+[\d.]+%/.test(line)) {
-        reject(
-          new UrlSourceRejectedError('long_video', {
-            durationSec: pendingLongDurationSec,
-          })
-        );
-      }
     },
     get rejection() {
       return rejection;

@@ -368,13 +368,6 @@
       "collection": "Hiki ni kiungo cha chaneli au orodha ya kucheza. Bandika kiungo cha video moja, au tumia Tafuta video.",
       "live": "Haya ni matangazo ya moja kwa moja. Translator inaweza kuyapakua baada ya matangazo kuisha."
     },
-    "longDownload": {
-      "title": "Upakue video ndefu?",
-      "body": "Video hii ni ndefu, kwa hivyo upakuaji unaweza kuchukua muda na kutumia nafasi kubwa ya diski. Ubora wa chini wa upakuaji huifanya iwe ya haraka zaidi na ndogo zaidi.",
-      "duration": "Urefu: {{duration}}",
-      "size": "Takriban {{size}}",
-      "confirm": "Pakua"
-    },
     "dropWhileDownloading": "Upakuaji unaendelea. Dondosha faili tena ukikamilika.",
     "dropWhileBusy": "Translator inashughulikia video hii. Dondosha faili tena kazi ikikamilika.",
     "dropNotSupported": "Dondosha video, faili la sauti au faili la manukuu la .srt.",

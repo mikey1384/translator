@@ -319,7 +319,6 @@ export async function downloadVideoFromPlatform(
   signal?: AbortSignal,
   dependencies: DownloadVideoFromPlatformDependencies = {},
   options: {
-    allowLongVideo?: boolean;
     infoJsonPath?: string;
     cookieSourceUrl?: string;
   } = {}
@@ -537,10 +536,7 @@ export async function downloadVideoFromPlatform(
     }
   })();
   let effectiveQuality = quality;
-  const sourceGuard = createSourceGuard({
-    isYouTube,
-    allowLongVideo: options.allowLongVideo,
-  });
+  const sourceGuard = createSourceGuard({ isYouTube });
 
   // If we have an app-managed session for this site, export cookies and use them by default.
   try {
@@ -1053,9 +1049,6 @@ export async function downloadVideoFromPlatform(
                 stopIfSourceRejected();
                 continue;
               }
-              sourceGuard.noteOutputLine(line);
-              stopIfSourceRejected();
-
               if (attempt === 1 && debugLines < 3 && line) {
                 log.debug('[yt-dlp:first] Output received.');
                 debugLines++;

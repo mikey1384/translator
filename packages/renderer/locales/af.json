@@ -368,13 +368,6 @@
       "collection": "Dit is ’n kanaal- of snitlysskakel. Plak ’n skakel na ’n enkele video, of gebruik Soek video’s.",
       "live": "Dit is ’n regstreekse uitsending. Translator kan dit aflaai nadat die uitsending verby is."
     },
-    "longDownload": {
-      "title": "Laai ’n lang video af?",
-      "body": "Hierdie video is lank, dus kan die aflaai ’n ruk duur en baie skyfspasie gebruik. ’n Laer aflaaigehalte maak dit vinniger en kleiner.",
-      "duration": "Lengte: {{duration}}",
-      "size": "Ongeveer {{size}}",
-      "confirm": "Laai af"
-    },
     "dropWhileDownloading": "’n Aflaai is besig. Los die lêer weer wanneer dit klaar is.",
     "dropWhileBusy": "Translator werk aan hierdie video. Los die lêer weer wanneer dit klaar is.",
     "dropNotSupported": "Los ’n video, ’n klanklêer of ’n .srt-onderskriflêer.",

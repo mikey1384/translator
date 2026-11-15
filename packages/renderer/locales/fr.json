@@ -368,13 +368,6 @@
       "collection": "C’est le lien d’une chaîne ou d’une playlist. Collez le lien d’une seule vidéo, ou utilisez Chercher des vidéos.",
       "live": "C’est un direct. Translator pourra le télécharger une fois la diffusion terminée."
     },
-    "longDownload": {
-      "title": "Télécharger une longue vidéo ?",
-      "body": "Cette vidéo est longue : le téléchargement peut prendre du temps et beaucoup d’espace disque. Une qualité de téléchargement plus basse le rend plus rapide et plus léger.",
-      "duration": "Durée : {{duration}}",
-      "size": "Environ {{size}}",
-      "confirm": "Télécharger"
-    },
     "dropWhileDownloading": "Un téléchargement est en cours. Déposez à nouveau le fichier quand il sera terminé.",
     "dropWhileBusy": "Translator travaille sur cette vidéo. Déposez à nouveau le fichier quand ce sera terminé.",
     "dropNotSupported": "Déposez une vidéo, un fichier audio ou un fichier de sous-titres .srt.",

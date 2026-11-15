@@ -366,13 +366,6 @@
       "collection": "這是頻道或播放清單的連結。請貼上單一影片的連結，或使用「找影片」。",
       "live": "這是直播。直播結束後，Translator 就能下載。"
     },
-    "longDownload": {
-      "title": "要下載長影片嗎？",
-      "body": "這部影片比較長，下載可能要花一些時間，也會佔用不少磁碟空間。調低下載畫質會更快、檔案也更小。",
-      "duration": "長度：{{duration}}",
-      "size": "約 {{size}}",
-      "confirm": "下載"
-    },
     "dropWhileDownloading": "正在下載中。下載完成後，請再拖入一次檔案。",
     "dropWhileBusy": "Translator 正在處理這部影片。完成後，請再拖入一次檔案。",
     "dropNotSupported": "請拖入影片、音訊檔或 .srt 字幕檔。",

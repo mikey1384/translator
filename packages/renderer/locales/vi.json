@@ -366,13 +366,6 @@
       "collection": "Đây là liên kết kênh hoặc danh sách phát. Hãy dán liên kết của một video, hoặc dùng Tìm video.",
       "live": "Đây là buổi phát trực tiếp. Translator có thể tải về sau khi buổi phát kết thúc."
     },
-    "longDownload": {
-      "title": "Tải video dài?",
-      "body": "Video này dài nên việc tải có thể mất khá lâu và tốn nhiều dung lượng. Chọn chất lượng tải thấp hơn sẽ nhanh hơn và nhẹ hơn.",
-      "duration": "Thời lượng: {{duration}}",
-      "size": "Khoảng {{size}}",
-      "confirm": "Tải về"
-    },
     "dropWhileDownloading": "Đang có video được tải xuống. Hãy thả lại tệp khi tải xong.",
     "dropWhileBusy": "Translator đang xử lý video này. Hãy thả lại tệp khi xử lý xong.",
     "dropNotSupported": "Hãy thả tệp video, tệp âm thanh hoặc tệp phụ đề .srt.",

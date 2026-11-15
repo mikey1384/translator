@@ -368,13 +368,6 @@
       "collection": "This is a channel or playlist link. Paste a link to a single video, or use Find videos.",
       "live": "This is a live stream. Translator can download it after the broadcast ends."
     },
-    "longDownload": {
-      "title": "Download a long video?",
-      "body": "This video is long, so the download can take a while and use a lot of disk space. A lower download quality makes it faster and smaller.",
-      "duration": "Length: {{duration}}",
-      "size": "About {{size}}",
-      "confirm": "Download"
-    },
     "dropWhileDownloading": "A download is running. Drop the file again when it finishes.",
     "dropWhileBusy": "Translator is working on this video. Drop the file again when it finishes.",
     "dropNotSupported": "Drop a video, an audio file or an .srt subtitle file.",

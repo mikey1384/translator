@@ -368,13 +368,6 @@
       "collection": "Link ito ng channel o playlist. Mag-paste ng link ng isang video, o gamitin ang Maghanap ng video.",
       "live": "Live stream ito. Mada-download ito ng Translator pagkatapos ng broadcast."
     },
-    "longDownload": {
-      "title": "I-download ang mahabang video?",
-      "body": "Mahaba ang video na ito, kaya puwedeng matagal ang download at kumain ng maraming disk space. Mas mabilis at mas maliit kung mas mababa ang download quality.",
-      "duration": "Haba: {{duration}}",
-      "size": "Mga {{size}}",
-      "confirm": "I-download"
-    },
     "dropWhileDownloading": "May download na tumatakbo. I-drop ulit ang file kapag tapos na ito.",
     "dropWhileBusy": "May ginagawa ang Translator sa video na ito. I-drop ulit ang file kapag tapos na.",
     "dropNotSupported": "Mag-drop ng video, audio file, o .srt na subtitle file.",

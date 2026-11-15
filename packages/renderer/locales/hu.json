@@ -366,13 +366,6 @@
       "collection": "Ez egy csatorna vagy lejátszási lista linkje. Illessz be egyetlen videóra mutató linket, vagy használd a „Videók keresése” gombot.",
       "live": "Ez élő közvetítés. A Translator az adás vége után tudja letölteni."
     },
-    "longDownload": {
-      "title": "Letöltöd a hosszú videót?",
-      "body": "Ez a videó hosszú, ezért a letöltés eltarthat egy ideig, és sok helyet foglalhat a lemezen. Alacsonyabb letöltési minőséggel gyorsabb és kisebb lesz.",
-      "duration": "Hossz: {{duration}}",
-      "size": "Kb. {{size}}",
-      "confirm": "Letöltés"
-    },
     "dropWhileDownloading": "Letöltés folyik. Ha befejeződött, húzd ide újra a fájlt.",
     "dropWhileBusy": "A Translator épp ezen a videón dolgozik. Ha végzett, húzd ide újra a fájlt.",
     "dropNotSupported": "Videót, hangfájlt vagy .srt feliratfájlt húzz ide.",

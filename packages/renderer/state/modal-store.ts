@@ -11,10 +11,6 @@ export type UnsavedSrtContext =
   /** Edited subtitles are about to be replaced (another .srt, another video). */
   | 'replace';
 export type DownloadSwitchContext = 'downloaded_video' | 'caption_recovery';
-export type LongDownloadDetails = {
-  durationSec?: number;
-  estimatedBytes?: number;
-};
 /** A plain in-app message with its own buttons (see `openNotice`). */
 export type AppNoticeButton = {
   id: string;
@@ -40,9 +36,6 @@ interface State {
   downloadSwitchOpen: boolean;
   downloadSwitchContext: DownloadSwitchContext;
   _downloadSwitchResolver?: (choice: boolean) => void;
-  // Long video download confirmation
-  longDownload: LongDownloadDetails | null;
-  _longDownloadResolver?: (choice: boolean) => void;
   // Credit ran out modal
   creditRanOutOpen: boolean;
   creditRefusal: CreditRefusal | null;
@@ -75,8 +68,6 @@ interface Actions {
     context?: DownloadSwitchContext
   ) => Promise<boolean>;
   resolveDownloadSwitch: (choice: boolean) => void;
-  openLongDownloadConfirm: (details: LongDownloadDetails) => Promise<boolean>;
-  resolveLongDownload: (choice: boolean) => void;
   openCreditRanOut: (
     refusal?: CreditRefusal | null
   ) => Promise<'settings' | 'ok'>;
@@ -102,8 +93,6 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     downloadSwitchOpen: false,
     downloadSwitchContext: 'downloaded_video',
     _downloadSwitchResolver: undefined,
-    longDownload: null,
-    _longDownloadResolver: undefined,
     creditRanOutOpen: false,
     creditRefusal: null,
     _creditResolver: undefined,
@@ -155,25 +144,6 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
         s.downloadSwitchContext = 'downloaded_video';
         s._downloadSwitchResolver = undefined;
       });
-    },
-
-    openLongDownloadConfirm: details =>
-      new Promise<boolean>(resolve => {
-        // A newer request supersedes one still on screen.
-        get()._longDownloadResolver?.(false);
-        set(s => {
-          s.longDownload = details;
-          s._longDownloadResolver = resolve;
-        });
-      }),
-
-    resolveLongDownload: choice => {
-      const resolver = get()._longDownloadResolver;
-      set(s => {
-        s.longDownload = null;
-        s._longDownloadResolver = undefined;
-      });
-      resolver?.(choice);
     },
 
     openCreditRanOut: refusal =>
@@ -294,16 +264,6 @@ export async function openDownloadSwitchConfirm(
 
 export function resolveDownloadSwitch(choice: boolean) {
   return useModalStore.getState().resolveDownloadSwitch(choice);
-}
-
-export function openLongDownloadConfirm(
-  details: LongDownloadDetails
-): Promise<boolean> {
-  return useModalStore.getState().openLongDownloadConfirm(details);
-}
-
-export function resolveLongDownload(choice: boolean) {
-  return useModalStore.getState().resolveLongDownload(choice);
 }
 
 export async function openCreditRanOut(

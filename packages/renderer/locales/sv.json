@@ -368,13 +368,6 @@
       "collection": "Det här är en länk till en kanal eller spellista. Klistra in en länk till en enskild video, eller använd Hitta videor.",
       "live": "Det här är en livesändning. Translator kan ladda ner den när sändningen är slut."
     },
-    "longDownload": {
-      "title": "Ladda ner en lång video?",
-      "body": "Videon är lång, så nedladdningen kan ta en stund och kräva mycket diskutrymme. Med lägre nedladdningskvalitet går det snabbare och filen blir mindre.",
-      "duration": "Längd: {{duration}}",
-      "size": "Cirka {{size}}",
-      "confirm": "Ladda ner"
-    },
     "dropWhileDownloading": "En nedladdning pågår. Släpp filen igen när den är klar.",
     "dropWhileBusy": "Translator arbetar med den här videon. Släpp filen igen när den är klar.",
     "dropNotSupported": "Släpp en video, en ljudfil eller en .srt-undertextfil.",

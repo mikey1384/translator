@@ -366,13 +366,6 @@
       "collection": "Ini tautan channel atau playlist. Tempel tautan satu video saja, atau gunakan Cari video.",
       "live": "Ini siaran langsung. Translator bisa mengunduhnya setelah siaran selesai."
     },
-    "longDownload": {
-      "title": "Unduh video panjang?",
-      "body": "Video ini panjang, jadi unduhannya bisa lama dan memakan banyak ruang disk. Kualitas unduhan yang lebih rendah membuatnya lebih cepat dan lebih kecil.",
-      "duration": "Durasi: {{duration}}",
-      "size": "Sekitar {{size}}",
-      "confirm": "Unduh"
-    },
     "dropWhileDownloading": "Unduhan sedang berjalan. Lepaskan file lagi setelah selesai.",
     "dropWhileBusy": "Translator sedang memproses video ini. Lepaskan file lagi setelah selesai.",
     "dropNotSupported": "Lepaskan video, file audio, atau file subtitle .srt.",

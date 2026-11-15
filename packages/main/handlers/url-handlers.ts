@@ -275,7 +275,6 @@ export async function handleProcessUrl(
       {},
       {
         signal: controller.signal,
-        allowLongVideo: options.allowLongVideo === true,
         infoJsonPath,
         referer: selected?.referer,
         userAgent: selected?.userAgent,
@@ -364,20 +363,16 @@ export async function handleProcessUrl(
       });
     }
 
-    // Refused before any media was fetched (channel/playlist, live, or a long
-    // video awaiting confirmation). Not a failure: no error progress event,
-    // the renderer explains or asks from `rejection`.
+    // Refused before any media was fetched (channel/playlist or live). Not a
+    // failure: no error progress event, the renderer explains from
+    // `rejection`.
     if (error instanceof UrlSourceRejectedError) {
       await discardPendingUrlResult(operationId);
       registryFinish(operationId);
       return {
         success: false,
         error: error.message,
-        rejection: {
-          code: error.code,
-          durationSec: error.durationSec,
-          estimatedBytes: error.estimatedBytes,
-        },
+        rejection: { code: error.code },
         operationId,
       };
     }

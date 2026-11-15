@@ -366,13 +366,6 @@
       "collection": "这是频道或播放列表链接。请粘贴单个视频的链接，或使用“找视频”。",
       "live": "这是直播。直播结束后，Translator 才能下载。"
     },
-    "longDownload": {
-      "title": "要下载这个长视频吗？",
-      "body": "这个视频较长，下载可能需要一段时间，并占用较多磁盘空间。选择较低的下载画质会更快，文件也更小。",
-      "duration": "时长：{{duration}}",
-      "size": "约 {{size}}",
-      "confirm": "下载"
-    },
     "dropWhileDownloading": "正在下载中。下载完成后再拖入文件。",
     "dropWhileBusy": "Translator 正在处理这个视频。完成后再拖入文件。",
     "dropNotSupported": "请拖入视频、音频或 .srt 字幕文件。",

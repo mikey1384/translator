@@ -470,8 +470,6 @@ declare module '@shared-types/app' {
     url: string;
     quality?: VideoQuality;
     operationId?: string;
-    /** The user confirmed downloading a video over the long-video limit. */
-    allowLongVideo?: boolean;
     webVideo?: WebVideoSelection;
   }
 
@@ -526,13 +524,11 @@ declare module '@shared-types/app' {
   }
 
   /**
-   * A link refused before any media was fetched: a channel or playlist, a
-   * live broadcast, or a long video that needs the user's confirmation.
+   * A link refused before any media was fetched: a channel or playlist, or a
+   * live broadcast.
    */
   export interface ProcessUrlRejection {
-    code: 'collection_url' | 'live_stream' | 'long_video';
-    durationSec?: number;
-    estimatedBytes?: number;
+    code: 'collection_url' | 'live_stream';
   }
 
   export interface ProcessUrlResult {

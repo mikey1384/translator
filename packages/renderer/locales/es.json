@@ -368,13 +368,6 @@
       "collection": "Es un enlace a un canal o una lista de reproducción. Pega el enlace de un solo video o usa Buscar videos.",
       "live": "Es una transmisión en vivo. Translator podrá descargarla cuando termine."
     },
-    "longDownload": {
-      "title": "¿Descargar un video largo?",
-      "body": "Este video es largo, así que la descarga puede tardar y ocupar mucho espacio en disco. Con una calidad de descarga más baja, será más rápida y ocupará menos.",
-      "duration": "Duración: {{duration}}",
-      "size": "Aprox. {{size}}",
-      "confirm": "Descargar"
-    },
     "dropWhileDownloading": "Hay una descarga en curso. Suelta el archivo de nuevo cuando termine.",
     "dropWhileBusy": "Translator está trabajando en este video. Suelta el archivo de nuevo cuando termine.",
     "dropNotSupported": "Suelta un video, un archivo de audio o un archivo de subtítulos .srt.",

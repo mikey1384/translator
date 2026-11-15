@@ -368,13 +368,6 @@
       "collection": "Das ist ein Kanal- oder Playlist-Link. Füge den Link zu einem einzelnen Video ein oder nutze „Videos finden“.",
       "live": "Das ist ein Livestream. Translator kann ihn herunterladen, sobald die Übertragung vorbei ist."
     },
-    "longDownload": {
-      "title": "Langes Video herunterladen?",
-      "body": "Dieses Video ist lang, deshalb kann der Download eine Weile dauern und viel Speicherplatz belegen. Mit einer niedrigeren Downloadqualität geht es schneller und die Datei wird kleiner.",
-      "duration": "Länge: {{duration}}",
-      "size": "Etwa {{size}}",
-      "confirm": "Herunterladen"
-    },
     "dropWhileDownloading": "Gerade läuft ein Download. Leg die Datei noch mal ab, wenn er fertig ist.",
     "dropWhileBusy": "Translator arbeitet gerade an diesem Video. Leg die Datei noch mal ab, wenn es fertig ist.",
     "dropNotSupported": "Leg ein Video, eine Audiodatei oder eine .srt-Untertiteldatei ab.",

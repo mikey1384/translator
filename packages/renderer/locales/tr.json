@@ -368,13 +368,6 @@
       "collection": "Bu bir kanal veya oynatma listesi bağlantısı. Tek bir videonun bağlantısını yapıştırın ya da Video bul’u kullanın.",
       "live": "Bu bir canlı yayın. Translator yayın bittikten sonra indirebilir."
     },
-    "longDownload": {
-      "title": "Uzun bir video indirilsin mi?",
-      "body": "Bu video uzun; indirme biraz sürebilir ve diskte çok yer kaplayabilir. Daha düşük bir indirme kalitesi, işlemi hızlandırır ve dosyayı küçültür.",
-      "duration": "Süre: {{duration}}",
-      "size": "Yaklaşık {{size}}",
-      "confirm": "İndir"
-    },
     "dropWhileDownloading": "Bir indirme sürüyor. Bittiğinde dosyayı yeniden bırakın.",
     "dropWhileBusy": "Translator bu video üzerinde çalışıyor. İşlem bittiğinde dosyayı yeniden bırakın.",
     "dropNotSupported": "Bir video, ses dosyası veya .srt altyazı dosyası bırakın.",

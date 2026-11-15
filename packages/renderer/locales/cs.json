@@ -368,13 +368,6 @@
       "collection": "Tohle je odkaz na kanál nebo playlist. Vložte odkaz na jedno video, nebo použijte „Najít videa“.",
       "live": "Tohle je živé vysílání. Translator ho může stáhnout, až vysílání skončí."
     },
-    "longDownload": {
-      "title": "Stáhnout dlouhé video?",
-      "body": "Video je dlouhé, takže stahování může chvíli trvat a zabrat hodně místa na disku. S nižší kvalitou stahování to bude rychlejší a soubor menší.",
-      "duration": "Délka: {{duration}}",
-      "size": "Asi {{size}}",
-      "confirm": "Stáhnout"
-    },
     "dropWhileDownloading": "Probíhá stahování. Až skončí, přetáhněte soubor znovu.",
     "dropWhileBusy": "Translator na tomto videu pracuje. Až skončí, přetáhněte soubor znovu.",
     "dropNotSupported": "Přetáhněte sem video, zvukový soubor nebo titulky .srt.",

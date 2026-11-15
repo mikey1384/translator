@@ -368,13 +368,6 @@
       "collection": "Dette er en lenke til en kanal eller spilleliste. Lim inn en lenke til én video, eller bruk Finn videoer.",
       "live": "Dette er en direktesending. Translator kan laste den ned når sendingen er over."
     },
-    "longDownload": {
-      "title": "Laste ned en lang video?",
-      "body": "Videoen er lang, så nedlastingen kan ta en stund og bruke mye diskplass. Med lavere nedlastingskvalitet går det raskere, og filen blir mindre.",
-      "duration": "Lengde: {{duration}}",
-      "size": "Omtrent {{size}}",
-      "confirm": "Last ned"
-    },
     "dropWhileDownloading": "En nedlasting pågår. Slipp filen igjen når den er ferdig.",
     "dropWhileBusy": "Translator jobber med denne videoen. Slipp filen igjen når den er ferdig.",
     "dropNotSupported": "Slipp en video, en lydfil eller en .srt-undertekstfil.",

@@ -1256,8 +1256,6 @@ async function runSuggestedVideoBatchItems(
     urlState.setDownloadQuality(quality);
     const result = await urlState.downloadMedia({
       url: item.url,
-      // The agent asked for this video; no one is there to confirm length.
-      allowLongVideo: true,
       preserveSubtitles: false,
       mountOnComplete: false,
       fromBatch: true,
@@ -3463,8 +3461,6 @@ async function downloadAndMountAgentSource(input: {
     url: input.url,
     preserveSubtitles: true,
     mountOnComplete: false,
-    // The agent asked for this video; no one is there to confirm length.
-    allowLongVideo: true,
     interactive: false,
     webVideoId: input.webVideoId,
   });

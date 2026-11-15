@@ -368,13 +368,6 @@
       "collection": "Tämä on kanavan tai soittolistan linkki. Liitä yksittäisen videon linkki tai käytä Etsi videoita -hakua.",
       "live": "Tämä on suora lähetys. Translator voi ladata sen, kun lähetys on päättynyt."
     },
-    "longDownload": {
-      "title": "Ladataanko pitkä video?",
-      "body": "Video on pitkä, joten lataus voi kestää jonkin aikaa ja viedä paljon levytilaa. Matalampi latauslaatu tekee siitä nopeamman ja pienemmän.",
-      "duration": "Kesto: {{duration}}",
-      "size": "Noin {{size}}",
-      "confirm": "Lataa"
-    },
     "dropWhileDownloading": "Lataus on käynnissä. Pudota tiedosto uudelleen, kun se on valmis.",
     "dropWhileBusy": "Translator työstää tätä videota. Pudota tiedosto uudelleen, kun työ on valmis.",
     "dropNotSupported": "Pudota video, äänitiedosto tai .srt-tekstitystiedosto.",

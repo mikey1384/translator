@@ -159,8 +159,6 @@ export async function processVideoUrl(
   dependencies: ProcessVideoUrlDependencies = {},
   options: {
     signal?: AbortSignal;
-    /** The user confirmed a video over the long-video threshold. */
-    allowLongVideo?: boolean;
     infoJsonPath?: string;
     referer?: string;
     userAgent?: string;
@@ -330,7 +328,6 @@ export async function processVideoUrl(
       signal,
       undefined,
       {
-        allowLongVideo: options.allowLongVideo,
         infoJsonPath: options.infoJsonPath,
         cookieSourceUrl: options.cookieSourceUrl,
       }

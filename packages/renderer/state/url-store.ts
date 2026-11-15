@@ -15,7 +15,6 @@ import { useUIStore } from './ui-store';
 import {
   closeChangeVideo,
   openDownloadSwitchConfirm,
-  openLongDownloadConfirm,
   openUnsavedSrtConfirm,
 } from './modal-store';
 import {
@@ -88,7 +87,6 @@ export type DownloadRequest = {
   replaceCurrent?: boolean;
   webVideo?: WebVideoSelection;
   webVideoId?: string;
-  allowLongVideo?: boolean;
   interactive?: boolean;
 };
 
@@ -167,8 +165,6 @@ type DownloadMediaOptions = {
   mountOnComplete?: boolean;
   preserveSubtitles?: boolean;
   url?: string;
-  /** Skip the long-video confirmation (the user already confirmed). */
-  allowLongVideo?: boolean;
   /**
    * The user asked to replace the open video with this link (Change Video):
    * the finished download opens without asking "Watch now?".
@@ -459,7 +455,6 @@ async function downloadMediaInternal(
       replaceCurrent: options?.replaceCurrent === true,
       webVideoId: options?.webVideoId,
       webVideo,
-      allowLongVideo: options?.allowLongVideo,
       interactive: options?.interactive,
     };
   });
@@ -677,7 +672,6 @@ async function downloadMediaInternal(
       url: requestedUrl,
       quality: downloadQuality,
       operationId: opId,
-      allowLongVideo: options?.allowLongVideo === true,
       webVideo,
     });
 
@@ -692,36 +686,6 @@ async function downloadMediaInternal(
 
     if (res.rejection) {
       const rejection = res.rejection;
-      if (rejection.code === 'long_video') {
-        set((state: UrlState) => {
-          state.needCookies = false;
-          state.download.inProgress = false;
-          state.download.stage = '';
-          state.download.percent = 0;
-        });
-        const confirmed = await openLongDownloadConfirm({
-          durationSec: rejection.durationSec,
-          estimatedBytes: rejection.estimatedBytes,
-        });
-        // A download the user started meanwhile owns the state now.
-        if (get().download.id !== opId) return cancelledResult();
-        if (!confirmed) {
-          set((state: UrlState) => {
-            state.download.stage = 'Cancelled';
-            state.download.percent = 100;
-          });
-          return cancelledResult();
-        }
-        // The continued request owns the selection now, including a possible
-        // sign-in retry. The outer finally must not release its capability.
-        retainDiscovery = true;
-        return await downloadMediaInternal(set, get, {
-          ...options,
-          url: requestedUrl,
-          allowLongVideo: true,
-          webVideo,
-        });
-      }
       const message = sourceRejectionMessage(rejection.code);
       set((state: UrlState) => {
         state.needCookies = false;

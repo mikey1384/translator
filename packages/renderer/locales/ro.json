@@ -370,13 +370,6 @@
       "collection": "Acesta e linkul unui canal sau al unui playlist. Lipește linkul unui singur videoclip sau folosește Caută videoclipuri.",
       "live": "Aceasta e o transmisiune live. Translator o poate descărca după ce se termină."
     },
-    "longDownload": {
-      "title": "Descarci un videoclip lung?",
-      "body": "Videoclipul e lung, așa că descărcarea poate dura și poate ocupa mult spațiu pe disc. Cu o calitate mai mică, descărcarea e mai rapidă și fișierul mai mic.",
-      "duration": "Durată: {{duration}}",
-      "size": "Aproximativ {{size}}",
-      "confirm": "Descarcă"
-    },
     "dropWhileDownloading": "O descărcare este în curs. Trage din nou fișierul după ce se termină.",
     "dropWhileBusy": "Translator lucrează la acest videoclip. Trage din nou fișierul după ce termină.",
     "dropNotSupported": "Trage un videoclip, un fișier audio sau un fișier de subtitrare .srt.",
