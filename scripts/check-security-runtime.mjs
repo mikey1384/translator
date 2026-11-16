@@ -37,16 +37,38 @@ async function verifyBrotli() {
   }));
 }
 
-function check(executable, label) {
-  const result = spawnSync(executable, ['-e', `(${verifyBrotli})().catch(() => process.exit(1))`], {
+// A cold Intel launch under Rosetta took 32 seconds during verification, and
+// on a busy macOS runner it has exceeded 90 seconds (v1.33.1 failed here
+// twice, then passed unchanged). A launch that times out gets one longer
+// retry: by then Rosetta has translated the app, so a real hang still fails.
+const LAUNCH_TIMEOUTS_MS = [90_000, 240_000];
+
+function launch(executable, timeout) {
+  return spawnSync(executable, ['-e', `(${verifyBrotli})().catch(() => process.exit(1))`], {
     env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
     encoding: 'utf8',
-    // A cold Intel launch under Rosetta took 32 seconds during verification.
-    // Keep a bound while allowing first-launch translation and signature checks.
-    timeout: 90_000,
+    timeout,
     maxBuffer: 64 * 1024,
     windowsHide: true,
   });
+}
+
+function check(executable, label) {
+  let result;
+  for (const [attempt, timeout] of LAUNCH_TIMEOUTS_MS.entries()) {
+    const started = Date.now();
+    result = launch(executable, timeout);
+    const seconds = ((Date.now() - started) / 1000).toFixed(1);
+    if (result.error?.code !== 'ETIMEDOUT') {
+      if (attempt > 0 || Number(seconds) > 30) {
+        console.log(`${label}: launch took ${seconds}s (attempt ${attempt + 1})`);
+      }
+      break;
+    }
+    console.warn(
+      `${label}: launch timed out after ${seconds}s (attempt ${attempt + 1} of ${LAUNCH_TIMEOUTS_MS.length})`
+    );
+  }
   assert.equal(result.error, undefined,
     `${label} security check could not run (${result.error?.code || 'launch failure'})`);
   assert.equal(result.status, 0,
