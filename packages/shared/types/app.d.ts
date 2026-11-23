@@ -1057,6 +1057,8 @@ declare module '@shared-types/app' {
     filters?: { name: string; extensions: string[] }[];
     multiple?: boolean;
     sourceLang?: string;
+    /** Job details for the credit record; filled in by the IPC wrapper. */
+    jobContext?: import('../helpers/job-details').JobContext;
   }
 
   export interface GenerateSubtitlesResult {
@@ -1068,6 +1070,8 @@ declare module '@shared-types/app' {
     error?: string;
     success: boolean;
     transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
+    /** Language the transcription engine heard, when it reports one. */
+    detectedLanguage?: string;
   }
 
   // =========================================
@@ -1086,6 +1090,8 @@ declare module '@shared-types/app' {
     qualityTranslation?: boolean; // true = include review, false = skip review
     /** Resume only pending review cues, without translating completed drafts. */
     reviewOnly?: boolean;
+    /** Job details for the credit record; filled in by the IPC wrapper. */
+    jobContext?: import('../helpers/job-details').JobContext;
   }
 
   export interface TranslationReviewOutcome {
@@ -1151,6 +1157,8 @@ declare module '@shared-types/app' {
     start: number;
     end?: number;
     operationId?: string;
+    /** Job details for the credit record; filled in by the IPC wrapper. */
+    jobContext?: import('../helpers/job-details').JobContext;
   }
 
   export interface TranscribeRemainingResult {

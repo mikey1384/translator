@@ -15,6 +15,8 @@ export type GenerateSubtitlesFullResult = {
   speechIntervals: Array<{ start: number; end: number }>;
   // New transcripts are always 'elevenlabs'; 'whisper' marks legacy saves.
   transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
+  /** Language the transcription engine heard, when it reports one. */
+  detectedLanguage?: string;
   tempFileSaved: boolean;
   tempFilePath?: string;
   tempFileError?: string;

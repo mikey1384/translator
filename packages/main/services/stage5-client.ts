@@ -29,6 +29,7 @@ import {
   withStage5AuthRetryOnResponse,
 } from './stage5-auth.js';
 import { RELAY_URL, STAGE5_API_URL } from './endpoints.js';
+import { jobDetailsHeaders } from './job-details.js';
 import { ELEVENLABS_SCRIBE_MODEL_ID } from '../../shared/constants/model-catalog.js';
 import {
   throwIfStage5UpdateRequiredError,
@@ -425,6 +426,7 @@ async function startDurableTranscriptionJob({
       {
         headers: {
           ...authHeaders,
+          ...jobDetailsHeaders(),
           ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
         },
         signal,
@@ -745,6 +747,7 @@ export async function transcribe({
         return await axios.post(`${STAGE5_API_URL}/transcribe`, fd, {
           headers: {
             ...authHeaders,
+            ...jobDetailsHeaders(),
             ...fd.getHeaders(),
             ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
           },
@@ -943,6 +946,7 @@ export async function translate({
       axios.post(`${STAGE5_API_URL}/translate`, payload, {
         headers: {
           ...authHeaders,
+          ...jobDetailsHeaders(),
           ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
         },
         signal,
@@ -1855,6 +1859,7 @@ export async function translateViaDirect({
       axios.post(`${RELAY_URL}/translate-direct`, payload, {
         headers: {
           ...authHeaders,
+          ...jobDetailsHeaders(),
           'Content-Type': 'application/json',
           ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
         },

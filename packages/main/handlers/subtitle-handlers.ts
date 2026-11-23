@@ -70,6 +70,11 @@ import { transcribePass } from '../services/subtitle-processing/pipeline/transcr
 import { generateTranscriptSummary } from '../services/subtitle-processing/summarizer.js';
 import { generateDubbedMedia } from '../services/dubber.js';
 import { describeTaskFailure } from '../utils/task-failure.js';
+import { runWithJobDetails } from '../services/job-details.js';
+import {
+  siteNameFromUrl,
+  type JobContext,
+} from '../../shared/helpers/job-details.js';
 import { synthesizeDub as synthesizeDubAi } from '../services/ai-provider.js';
 import {
   buildVerticalReframeFilter,
@@ -435,14 +440,31 @@ export async function handleGenerateSubtitles(
       });
     }
 
-    const result = await extractSubtitlesFromMedia({
-      preparedAudioPath: previewAudioPath,
-      options: finalOptions,
-      operationId,
-      signal: controller.signal,
-      progressCallback,
-      services: { ffmpeg, fileManager },
-    });
+    const result = await runWithJobDetails(
+      {
+        ...finalOptions.jobContext,
+        sourceLanguage:
+          finalOptions.sourceLang || finalOptions.jobContext?.sourceLanguage,
+        // Transcription asks for "original"; the language the user has
+        // chosen to translate into comes from the job context.
+        targetLanguage:
+          finalOptions.targetLanguage &&
+          finalOptions.targetLanguage !== 'original'
+            ? finalOptions.targetLanguage
+            : finalOptions.jobContext?.targetLanguage,
+        // The whole video, even when only a free preview is transcribed.
+        videoSeconds: sourceDurationSec,
+      },
+      () =>
+        extractSubtitlesFromMedia({
+          preparedAudioPath: previewAudioPath,
+          options: finalOptions,
+          operationId,
+          signal: controller.signal,
+          progressCallback,
+          services: { ffmpeg, fileManager },
+        })
+    );
 
     await cleanupTempFile(tempVideoPath);
 
@@ -458,6 +480,7 @@ export async function handleGenerateSubtitles(
       subtitles: result.subtitles,
       segments: result.segments,
       transcriptionEngine: result.transcriptionEngine ?? null,
+      detectedLanguage: result.detectedLanguage,
       operationId,
     };
     void trackTranscriptionFunnelEvent(
@@ -567,6 +590,7 @@ export async function handleTranslateSubtitles(
     targetLanguage: string;
     qualityTranslation?: boolean;
     reviewOnly?: boolean;
+    jobContext?: JobContext;
   },
   operationId: string
 ): Promise<{
@@ -589,22 +613,31 @@ export async function handleTranslateSubtitles(
     registerAutoCancel(operationId, event.sender, () => controller.abort());
     addSubtitle(operationId, controller);
 
-    const result = await translateSubtitlesFromSrt({
-      inputSegments: options.segments,
-      srtContent: options.subtitles,
-      targetLanguage: options.targetLanguage,
-      operationId,
-      signal: controller.signal,
-      progressCallback: progress => {
-        event.sender.send('generate-subtitles-progress', {
-          ...progress,
-          operationId,
-        });
+    const result = await runWithJobDetails(
+      {
+        ...options.jobContext,
+        sourceLanguage:
+          options.sourceLanguage || options.jobContext?.sourceLanguage,
+        targetLanguage: options.targetLanguage,
       },
-      fileManager,
-      qualityTranslation: options.qualityTranslation,
-      reviewOnly: options.reviewOnly,
-    });
+      () =>
+        translateSubtitlesFromSrt({
+          inputSegments: options.segments,
+          srtContent: options.subtitles,
+          targetLanguage: options.targetLanguage,
+          operationId,
+          signal: controller.signal,
+          progressCallback: progress => {
+            event.sender.send('generate-subtitles-progress', {
+              ...progress,
+              operationId,
+            });
+          },
+          fileManager,
+          qualityTranslation: options.qualityTranslation,
+          reviewOnly: options.reviewOnly,
+        })
+    );
 
     return {
       success: true,
@@ -2156,6 +2189,7 @@ export async function handleTranscribeRemaining(
     sourceUrl?: string | null;
     start: number;
     end?: number;
+    jobContext?: JobContext;
   },
   operationId: string
 ): Promise<{
@@ -2225,36 +2259,46 @@ export async function handleTranscribeRemaining(
       operationId,
     });
 
-    const res = await transcribePass({
-      audioPath: tempAudioPath,
-      sourceMediaPath: videoPath,
-      durableRecoverySeed: buildDurableTranscriptionRecoverySeed({
-        sourceIdentity,
-        start: sliceStart,
-        end: sliceEnd,
-        mode: 'remaining',
-      }),
-      services: { ffmpeg },
-      progressCallback: p => {
-        const mapped = Math.min(95, Math.max(35, p.percent));
-        // Forward partialResult with an absolute time offset so renderer can append tail incrementally
-        event.sender.send('generate-subtitles-progress', {
-          // Terminal failures keep their reason so the renderer can say why.
-          percent: p.error || p.cancelled ? p.percent : mapped,
-          stage: p.stage,
-          error: p.error,
-          cancelled: p.cancelled,
-          current: p.current,
-          total: p.total,
-          partialResult: (p as any).partialResult,
-          operationId,
-          startOffset: sliceStart,
-          tailMode: true,
-        });
+    const tailAudioPath = tempAudioPath;
+    const res = await runWithJobDetails(
+      {
+        ...options.jobContext,
+        sourceSite:
+          options.jobContext?.sourceSite ?? siteNameFromUrl(sourceUrl),
+        videoSeconds: durationFull,
       },
-      operationId,
-      signal: controller.signal,
-    });
+      () =>
+        transcribePass({
+          audioPath: tailAudioPath,
+          sourceMediaPath: videoPath,
+          durableRecoverySeed: buildDurableTranscriptionRecoverySeed({
+            sourceIdentity,
+            start: sliceStart,
+            end: sliceEnd,
+            mode: 'remaining',
+          }),
+          services: { ffmpeg },
+          progressCallback: p => {
+            const mapped = Math.min(95, Math.max(35, p.percent));
+            // Forward partialResult with an absolute time offset so renderer can append tail incrementally
+            event.sender.send('generate-subtitles-progress', {
+              // Terminal failures keep their reason so the renderer can say why.
+              percent: p.error || p.cancelled ? p.percent : mapped,
+              stage: p.stage,
+              error: p.error,
+              cancelled: p.cancelled,
+              current: p.current,
+              total: p.total,
+              partialResult: (p as any).partialResult,
+              operationId,
+              startOffset: sliceStart,
+              tailMode: true,
+            });
+          },
+          operationId,
+          signal: controller.signal,
+        })
+    );
 
     const segsOut = res.segments.map(s => ({
       ...s,

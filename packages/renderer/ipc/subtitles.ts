@@ -14,6 +14,10 @@ import type {
   TranscribeRemainingOptions,
   TranscribeRemainingResult,
 } from '@shared-types/app';
+import {
+  currentJobContext,
+  rememberDetectedLanguage,
+} from '../utils/jobContext';
 
 type PngRenderResult = {
   operationId: string;
@@ -43,10 +47,18 @@ export function sendPngRenderRequest(options: RenderSubtitlesOptions): void {
   window.electron.sendPngRenderRequest(options);
 }
 
-export function generate(
+export async function generate(
   options: GenerateSubtitlesOptions
 ): Promise<GenerateSubtitlesResult> {
-  return window.electron.generateSubtitles(options);
+  const result = await window.electron.generateSubtitles({
+    jobContext: currentJobContext(),
+    ...options,
+  });
+  rememberDetectedLanguage(
+    options.sourceMediaPath || options.videoPath,
+    result?.detectedLanguage
+  );
+  return result;
 }
 
 export function onGenerateProgress(
@@ -85,6 +97,7 @@ export function translateSubtitles(
   // Ensure sourceLanguage is a string for type contract if not provided
   const payload = {
     sourceLanguage: '',
+    jobContext: currentJobContext(),
     ...options,
   } as {
     subtitles: string;
@@ -186,7 +199,10 @@ export function transcribeOneLine(
 export function transcribeRemaining(
   options: TranscribeRemainingOptions
 ): Promise<TranscribeRemainingResult> {
-  return (window.electron as any).transcribeRemaining(options);
+  return (window.electron as any).transcribeRemaining({
+    jobContext: currentJobContext(),
+    ...options,
+  });
 }
 
 export const cancelPngRender = (operationId: string): void => {

@@ -101,7 +101,7 @@ export async function extractSubtitlesFromMedia({
     }
     markStage('prepare_audio');
 
-    const { segments, speechIntervals, transcriptionEngine } =
+    const { segments, speechIntervals, transcriptionEngine, detectedLanguage } =
       await transcribePass({
         audioPath: audioPath,
         sourceMediaPath: options.sourceMediaPath ?? options.videoPath,
@@ -121,7 +121,7 @@ export async function extractSubtitlesFromMedia({
       operationId,
     });
     markStage('finalize');
-    return { ...finalized, transcriptionEngine };
+    return { ...finalized, transcriptionEngine, detectedLanguage };
   } catch (error: any) {
     console.error(`[${operationId}] Error during subtitle generation:`, error);
 

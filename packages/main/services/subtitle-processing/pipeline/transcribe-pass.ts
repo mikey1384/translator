@@ -52,6 +52,7 @@ export async function transcribePass({
   segments: SrtSegment[];
   speechIntervals: Array<{ start: number; end: number }>;
   transcriptionEngine: 'elevenlabs';
+  detectedLanguage?: string;
 }> {
   const tempDir = path.dirname(audioPath);
 
@@ -103,6 +104,7 @@ export async function transcribePass({
       segments: SrtSegment[];
       speechIntervals: Array<{ start: number; end: number }>;
       transcriptionEngine: 'elevenlabs';
+      detectedLanguage?: string;
     }> => {
       const segments = (result?.segments || []) as Array<{
         id: number;
@@ -146,6 +148,10 @@ export async function transcribePass({
         segments: cleaned,
         speechIntervals: [],
         transcriptionEngine: 'elevenlabs',
+        detectedLanguage:
+          typeof result?.language === 'string' && result.language
+            ? result.language
+            : undefined,
       };
     };
 

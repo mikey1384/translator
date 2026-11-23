@@ -37,3 +37,9 @@ export const WIRE_APP_VERSION_HEADER = 'X-Stage5-App-Version';
 // Sent by unpackaged ("dev") and scripted ("test") app launches so their
 // welcome grants can be left out of funnel numbers. Never grants anything.
 export const WIRE_APP_BUILD_HEADER = 'X-Stage5-App-Build';
+
+// --- Job details (Translator 1.34.0+) ---------------------------------------
+// JSON with up to four fields (sourceLanguage, targetLanguage, videoSeconds,
+// sourceSite) sent on credit-based transcription and translation requests
+// and kept with the job's credit record. Never sent for own-key jobs.
+export const WIRE_JOB_DETAILS_HEADER = 'X-Stage5-Job-Details';
