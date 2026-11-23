@@ -129,6 +129,34 @@ const reasonRow = css`
   color: ${colors.textDim};
 `;
 
+// Quieter than a button: the question is optional and must not compete
+// with the workspace's real actions.
+const reasonChip = css`
+  appearance: none;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid ${colors.border};
+  background: transparent;
+  color: ${colors.text};
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.3;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+
+  &:hover {
+    border-color: ${colors.borderStrong};
+    background: ${colors.surface};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${colors.primary};
+    outline-offset: 2px;
+  }
+`;
+
 /** How long the "What held you back?" question waits for a tap. */
 const REASON_ASK_MS = 30_000;
 
@@ -371,14 +399,14 @@ export default function FreePreviewOffer() {
         <div className={reasonRow} role="group">
           <span>{t('freePreview.reasonAsk', 'What held you back?')}</span>
           {reasons.map(reason => (
-            <Button
+            <button
               key={reason.event}
-              variant="secondary"
-              size="sm"
+              type="button"
+              className={reasonChip}
               onClick={() => answer(reason)}
             >
               {reason.label(t)}
-            </Button>
+            </button>
           ))}
         </div>
       </div>
