@@ -59,6 +59,17 @@ declare module '@shared-types/app' {
     | 'download_handoff_clicked'
     | 'download_handoff_dismissed';
 
+  /**
+   * The one-tap answer to "What held you back?" after the free-preview offer
+   * is dismissed. Anonymous daily counts, event names only.
+   */
+  export type FreePreviewDismissReasonEvent =
+    | 'free_preview_dismiss_price'
+    | 'free_preview_dismiss_quality'
+    | 'free_preview_dismiss_enough'
+    | 'free_preview_dismiss_trying'
+    | 'free_preview_dismiss_download_only';
+
   /** Where a transcription/translation run was started from, when tracked. */
   export type ProductStartTrigger = 'download_handoff';
 
@@ -1775,7 +1786,7 @@ declare module '@shared-types/app' {
       }
     ) => Promise<{ success: boolean; error?: string }>;
     trackHandoffEvent: (
-      event: HandoffFunnelEvent
+      event: HandoffFunnelEvent | FreePreviewDismissReasonEvent
     ) => Promise<{ success: boolean; error?: string }>;
     onHeartbeatPing: (callback: () => void) => (() => void) | undefined;
     getAnalyticsPrivacy: () => Promise<AnalyticsPrivacyState>;

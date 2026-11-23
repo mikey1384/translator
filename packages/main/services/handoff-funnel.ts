@@ -6,6 +6,7 @@
  */
 
 import type {
+  FreePreviewDismissReasonEvent,
   HandoffFunnelEvent,
   ProductStartTrigger,
 } from '@shared-types/app';
@@ -25,6 +26,18 @@ export const RENDERER_HANDOFF_FUNNEL_EVENTS = Object.freeze([
 ] as const satisfies readonly HandoffFunnelEvent[]);
 
 /**
+ * The one-tap answer to "What held you back?" after the free-preview offer
+ * is dismissed. The renderer may count these too.
+ */
+export const FREE_PREVIEW_DISMISS_REASON_EVENTS = Object.freeze([
+  'free_preview_dismiss_price',
+  'free_preview_dismiss_quality',
+  'free_preview_dismiss_enough',
+  'free_preview_dismiss_trying',
+  'free_preview_dismiss_download_only',
+] as const satisfies readonly FreePreviewDismissReasonEvent[]);
+
+/**
  * Counted by main when the translation of a run started from the card
  * begins (the step that turns a download into subtitles).
  */
@@ -41,13 +54,20 @@ export const HANDOFF_TRANSLATION_STARTED =
 export const PROVISIONAL_USAGE_EVENTS: ReadonlySet<string> = new Set([
   ...RENDERER_HANDOFF_FUNNEL_EVENTS,
   HANDOFF_TRANSLATION_STARTED,
+  ...FREE_PREVIEW_DISMISS_REASON_EVENTS,
 ]);
 
-const rendererEventSet = new Set<string>(RENDERER_HANDOFF_FUNNEL_EVENTS);
+const rendererEventSet = new Set<string>([
+  ...RENDERER_HANDOFF_FUNNEL_EVENTS,
+  ...FREE_PREVIEW_DISMISS_REASON_EVENTS,
+]);
 
+/** True for a count the renderer may ask main to record. */
 export function isRendererHandoffFunnelEvent(
   event: unknown
-): event is (typeof RENDERER_HANDOFF_FUNNEL_EVENTS)[number] {
+): event is
+  | (typeof RENDERER_HANDOFF_FUNNEL_EVENTS)[number]
+  | (typeof FREE_PREVIEW_DISMISS_REASON_EVENTS)[number] {
   return typeof event === 'string' && rendererEventSet.has(event);
 }
 

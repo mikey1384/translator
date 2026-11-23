@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { describe, it } from 'node:test';
 import {
+  FREE_PREVIEW_DISMISS_REASON_EVENTS,
   HANDOFF_TRANSLATION_STARTED,
   PROVISIONAL_USAGE_EVENTS,
   RENDERER_HANDOFF_FUNNEL_EVENTS,
@@ -33,12 +34,31 @@ describe('handoff counts from the renderer', () => {
     }
   });
 
+  it('allows the five free-preview dismissal reasons, kept apart until the server knows them', () => {
+    assert.deepEqual(
+      [...FREE_PREVIEW_DISMISS_REASON_EVENTS],
+      [
+        'free_preview_dismiss_price',
+        'free_preview_dismiss_quality',
+        'free_preview_dismiss_enough',
+        'free_preview_dismiss_trying',
+        'free_preview_dismiss_download_only',
+      ]
+    );
+    for (const event of FREE_PREVIEW_DISMISS_REASON_EVENTS) {
+      assert.ok(isRendererHandoffFunnelEvent(event), event);
+      assert.ok(!isRendererPurchaseFunnelEvent(event), event);
+      assert.ok(PROVISIONAL_USAGE_EVENTS.has(event), event);
+    }
+  });
+
   it('rejects anything else, including main-only names', () => {
     for (const event of [
       HANDOFF_TRANSLATION_STARTED,
       'transcription_started',
       'app_open',
       'home_translate',
+      'free_preview_dismiss_other',
       '',
       null,
       42,
@@ -101,6 +121,7 @@ describe('anonymous count batches', () => {
       assert.ok(PROVISIONAL_USAGE_EVENTS.has(e), e);
     for (const e of ['app_open', 'app_first_open', 'transcription_started'])
       assert.ok(!PROVISIONAL_USAGE_EVENTS.has(e), e);
-    assert.equal(PROVISIONAL_USAGE_EVENTS.size, 6);
+    // Six handoff names plus the five free-preview dismissal reasons.
+    assert.equal(PROVISIONAL_USAGE_EVENTS.size, 11);
   });
 });

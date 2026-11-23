@@ -15,6 +15,7 @@ import type {
   CreditTransferRedeemResult,
   PurchaseFailureReason,
   PurchaseFunnelEvent,
+  FreePreviewDismissReasonEvent,
   HandoffFunnelEvent,
   PurchasePlacement,
   Stage5VideoSuggestionMode,
@@ -40,7 +41,7 @@ export function trackPurchaseEvent(
 
 /** An anonymous daily count (event name only); main allow-lists it. */
 export function trackHandoffEvent(
-  event: HandoffFunnelEvent
+  event: HandoffFunnelEvent | FreePreviewDismissReasonEvent
 ): Promise<{ success: boolean; error?: string }> {
   return window.electron.trackHandoffEvent(event);
 }

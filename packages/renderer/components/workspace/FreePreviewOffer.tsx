@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   intoLanguageName,
   sentenceLanguageName,
@@ -30,6 +31,7 @@ import { colors, fonts } from '../../styles';
 import { formatUsd } from '../../utils/formatUsd';
 import CheckoutCurrencyNote from '../CheckoutCurrencyNote';
 import { localizeDigits } from '../../utils/formatNumbers';
+import type { FreePreviewDismissReasonEvent } from '@shared-types/app';
 
 const card = css`
   display: flex;
@@ -111,6 +113,61 @@ const dot = css`
   margin-inline-end: 10px;
 `;
 
+const dismissedCol = css`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const reasonRow = css`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px;
+  font-size: 0.85rem;
+  color: ${colors.textDim};
+`;
+
+/** How long the "What held you back?" question waits for a tap. */
+const REASON_ASK_MS = 30_000;
+
+type DismissReason = {
+  event: FreePreviewDismissReasonEvent;
+  label: (t: TFunction) => string;
+};
+
+const REASON_PRICE: DismissReason = {
+  event: 'free_preview_dismiss_price',
+  label: t => t('freePreview.reasonPrice', 'The price'),
+};
+const REASON_TRYING: DismissReason = {
+  event: 'free_preview_dismiss_trying',
+  label: t => t('freePreview.reasonTrying', 'Just trying it out'),
+};
+/** After watching a preview. */
+const REASONS_AFTER_PREVIEW: DismissReason[] = [
+  REASON_PRICE,
+  {
+    event: 'free_preview_dismiss_quality',
+    label: t => t('freePreview.reasonQuality', 'Subtitle quality'),
+  },
+  {
+    event: 'free_preview_dismiss_enough',
+    label: t => t('freePreview.reasonEnough', 'The preview was enough'),
+  },
+  REASON_TRYING,
+];
+/** When nothing was subtitled, so there is no quality to judge. */
+const REASONS_WITHOUT_PREVIEW: DismissReason[] = [
+  REASON_PRICE,
+  {
+    event: 'free_preview_dismiss_download_only',
+    label: t => t('freePreview.reasonDownloadOnly', 'I only wanted the video'),
+  },
+  REASON_TRYING,
+];
+
 function formatClock(seconds: number): string {
   const s = Math.max(0, Math.round(seconds));
   const h = Math.floor(s / 3600);
@@ -167,6 +224,14 @@ export default function FreePreviewOffer() {
   const checkPaymentNow = useCreditStore(s => s.checkPaymentNow);
   const quality = useUIStore(s => s.qualityTranslation);
   const setStatus = useFreePreviewStore(s => s.setStatus);
+  // The preview whose "Not now" was just tapped: one optional question,
+  // gone after a tap, after a while, or with the video.
+  const [askingKey, setAskingKey] = useState<string | null>(null);
+  useEffect(() => {
+    if (!askingKey) return;
+    const timer = setTimeout(() => setAskingKey(null), REASON_ASK_MS);
+    return () => clearTimeout(timer);
+  }, [askingKey]);
 
   const remainingSecs = preview
     ? Math.max(0, preview.durationSecs - preview.coveredSecs)
@@ -238,10 +303,25 @@ export default function FreePreviewOffer() {
     void SystemIPC.trackPurchaseEvent('free_preview_dismissed', {
       placement: 'free-preview-offer',
     }).catch(() => {});
+    // Only a declined purchase has a reason worth asking about.
+    if (!canFinishNow && preview.status !== 'failed') {
+      setAskingKey(preview.key);
+    }
+  };
+  const answer = (reason: DismissReason) => {
+    logButton('free_preview_dismiss_reason', { reason: reason.event });
+    setAskingKey(null);
+    void SystemIPC.trackHandoffEvent(reason.event).catch(() => {});
   };
 
   if (preview.status === 'dismissed') {
-    return (
+    const reasons =
+      askingKey === preview.key
+        ? preview.coveredSecs > 0
+          ? REASONS_AFTER_PREVIEW
+          : REASONS_WITHOUT_PREVIEW
+        : null;
+    const quiet = (
       <div className={quietLine} role="status">
         <span style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
           <span className={dot} aria-hidden="true" />
@@ -282,6 +362,25 @@ export default function FreePreviewOffer() {
                   { language: languageName, languageInto, price }
                 )}
         </Button>
+      </div>
+    );
+    if (!reasons) return quiet;
+    return (
+      <div className={dismissedCol}>
+        {quiet}
+        <div className={reasonRow} role="group">
+          <span>{t('freePreview.reasonAsk', 'What held you back?')}</span>
+          {reasons.map(reason => (
+            <Button
+              key={reason.event}
+              variant="secondary"
+              size="sm"
+              onClick={() => answer(reason)}
+            >
+              {reason.label(t)}
+            </Button>
+          ))}
+        </div>
       </div>
     );
   }
