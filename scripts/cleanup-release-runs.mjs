@@ -9,6 +9,8 @@ const REPO = 'mikey1384/translator';
 const BASE = `repos/${REPO}`;
 const RELEASE_WORKFLOW = '.github/workflows/release-mac.yml';
 const CLEANUP_WORKFLOW = '.github/workflows/cleanup-release-runs.yml';
+// One second apart (see `wait`), so a deleted run gets about ten seconds to disappear.
+const DELETE_CONFIRM_READS = 10;
 
 function runGh(args) {
   try { return execFileSync('gh', args, { encoding: 'utf8', timeout: 60_000,
@@ -93,10 +95,15 @@ export function cleanupReleaseRuns(dependencies = {}) {
       }
       throw error;
     }
-    try { gh(`${BASE}/actions/runs/${run.id}`); }
-    catch (error) {
-      if (error.httpStatus === 404) { deleted.push(String(run.id)); pause(); return; }
-      throw error;
+    // GitHub can keep serving a run for a few seconds after it accepted the
+    // DELETE. Read again (never delete again) before treating it as stuck.
+    for (let read = 0; read < DELETE_CONFIRM_READS; read++) {
+      try { gh(`${BASE}/actions/runs/${run.id}`); }
+      catch (error) {
+        if (error.httpStatus === 404) { deleted.push(String(run.id)); pause(); return; }
+        throw error;
+      }
+      pause();
     }
     throw new Error('Deleted run remains visible; inspect before retrying');
   };

@@ -74,3 +74,27 @@ test('asset identities are version-bound and restricted to the documented tag fo
   assert(requiredMacAssets('v1.2.3-mac').includes('Translator-1.2.3-darwin-arm64.dmg'));
   assert.throws(() => requiredMacAssets('v1.2.3/other'));
 });
+
+test('a deleted run that GitHub still serves for a moment is confirmed by reading again, not by deleting again', () => {
+  const f = fixture();
+  const gh = f.deps.github;
+  let staleReads = 3, waits = 0;
+  f.deps.wait = () => { waits++; };
+  f.deps.github = (endpoint) => {
+    const id = Number(endpoint.match(/\/actions\/runs\/(\d+)$/)?.[1]);
+    // Run 11 was deleted, but the next three reads still return it.
+    if (id === 11 && f.removed.has(11) && staleReads > 0) { staleReads--; return { ...f.success }; }
+    return gh(endpoint);
+  };
+  assert.deepEqual(cleanupReleaseRuns(f.deps).deleted, ['11', '12', '22']);
+  assert.deepEqual(f.events, [11, 12, 22]);
+  assert.equal(staleReads, 0);
+  assert(waits >= 3);
+});
+
+test('a run that never disappears after its delete still stops the cleanup', () => {
+  const f = fixture();
+  f.deps.deleteRun = (id) => { f.events.push(id); };
+  assert.throws(() => cleanupReleaseRuns(f.deps), /Deleted run remains visible/);
+  assert.deepEqual(f.events, [11]);
+});
