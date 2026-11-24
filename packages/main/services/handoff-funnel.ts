@@ -38,6 +38,13 @@ export const FREE_PREVIEW_DISMISS_REASON_EVENTS = Object.freeze([
 ] as const satisfies readonly FreePreviewDismissReasonEvent[]);
 
 /**
+ * Counted by main when it refuses to open a checkout because the server
+ * created it for a different number of packs than the offer showed. It
+ * should stay at zero; anything else means the app and the API disagree.
+ */
+export const CHECKOUT_PACK_COUNT_MISMATCH = 'checkout_pack_count_mismatch';
+
+/**
  * Counted by main when the translation of a run started from the card
  * begins (the step that turns a download into subtitles).
  */
@@ -55,6 +62,7 @@ export const PROVISIONAL_USAGE_EVENTS: ReadonlySet<string> = new Set([
   ...RENDERER_HANDOFF_FUNNEL_EVENTS,
   HANDOFF_TRANSLATION_STARTED,
   ...FREE_PREVIEW_DISMISS_REASON_EVENTS,
+  CHECKOUT_PACK_COUNT_MISMATCH,
 ]);
 
 const rendererEventSet = new Set<string>([

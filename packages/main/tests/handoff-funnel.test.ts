@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { describe, it } from 'node:test';
 import {
+  CHECKOUT_PACK_COUNT_MISMATCH,
   FREE_PREVIEW_DISMISS_REASON_EVENTS,
   HANDOFF_TRANSLATION_STARTED,
   PROVISIONAL_USAGE_EVENTS,
@@ -121,7 +122,10 @@ describe('anonymous count batches', () => {
       assert.ok(PROVISIONAL_USAGE_EVENTS.has(e), e);
     for (const e of ['app_open', 'app_first_open', 'transcription_started'])
       assert.ok(!PROVISIONAL_USAGE_EVENTS.has(e), e);
-    // Six handoff names plus the five free-preview dismissal reasons.
-    assert.equal(PROVISIONAL_USAGE_EVENTS.size, 11);
+    // Six handoff names, the five free-preview dismissal reasons and the
+    // checkout pack-count mismatch.
+    assert.equal(PROVISIONAL_USAGE_EVENTS.size, 12);
+    assert.ok(PROVISIONAL_USAGE_EVENTS.has(CHECKOUT_PACK_COUNT_MISMATCH));
+    assert.ok(!isRendererHandoffFunnelEvent(CHECKOUT_PACK_COUNT_MISMATCH));
   });
 });

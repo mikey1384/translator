@@ -34,6 +34,8 @@ import {
   packQuantity,
 } from '../../shared/constants/index.js';
 import { getMainWindow, broadcastToApp } from '../utils/window.js';
+import { countAnonymousUsage } from '../services/anonymous-usage-counts.js';
+import { CHECKOUT_PACK_COUNT_MISMATCH } from '../services/handoff-funnel.js';
 import { getUiLanguage } from '../utils/ui-language.js';
 import { createSafeStore, getPersistentDeviceId } from '../store/safe-store.js';
 import {
@@ -1182,6 +1184,7 @@ export async function handleCreateCheckoutSession(
     // shown. A server that does not know about multiples would charge for
     // one, so never open a page whose amount differs from the offer.
     if (quantity > 1 && response.data?.quantity !== quantity) {
+      countAnonymousUsage(CHECKOUT_PACK_COUNT_MISMATCH);
       throw new Error(
         `Checkout was created for ${String(response.data?.quantity ?? 1)} pack(s), not the ${quantity} requested.`
       );
