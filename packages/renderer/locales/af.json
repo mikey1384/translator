@@ -1516,7 +1516,7 @@
     "finishShort": "Vertaal die res",
     "finishShortPrice": "Vertaal die res vir {{price}}",
     "checkoutTitle": "Voltooi die betaling in jou blaaier",
-    "checkoutBody": "Ons het ’n veilige Stripe-betaalblad vir die {{price}}-pakket oopgemaak. Sodra jy betaal het, gaan Translator voort waar dit opgehou het. Jy hoef niks hier te klik nie.",
+    "checkoutBody": "Ons het ’n veilige Stripe-betaalblad van {{price}} oopgemaak. Sodra jy betaal het, gaan Translator voort waar dit opgehou het. Jy hoef niks hier te klik nie.",
     "checkoutBack": "Terug",
     "resumingTitle": "Besig om die res te vertaal",
     "resumingBody": "Gaan voort by {{time}} en vertaal die res na {{language}}…",

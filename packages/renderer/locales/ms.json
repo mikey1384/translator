@@ -1493,7 +1493,7 @@
     "finishShort": "Terjemah hingga selesai",
     "finishShortPrice": "Teruskan dengan {{price}}",
     "checkoutTitle": "Selesaikan pembayaran dalam pelayar",
-    "checkoutBody": "Halaman pembayaran Stripe yang selamat untuk pek {{price}} telah dibuka. Sebaik sahaja selesai, Translator terus menyambung dari tempat ia berhenti. Tak perlu klik apa-apa di sini.",
+    "checkoutBody": "Halaman pembayaran Stripe yang selamat berjumlah {{price}} telah dibuka. Sebaik sahaja selesai, Translator terus menyambung dari tempat ia berhenti. Tak perlu klik apa-apa di sini.",
     "checkoutBack": "Kembali",
     "resumingTitle": "Menterjemah bakinya",
     "resumingBody": "Menyambung dari {{time}} dan menterjemah bakinya ke {{language}}…",

@@ -1516,7 +1516,7 @@
     "finishShort": "Översätt resten",
     "finishShortPrice": "Översätt resten för {{price}}",
     "checkoutTitle": "Slutför betalningen i webbläsaren",
-    "checkoutBody": "Vi har öppnat en säker Stripe-betalning för paketet på {{price}}. När du har betalat fortsätter Translator där den slutade. Du behöver inte klicka på något här.",
+    "checkoutBody": "Vi har öppnat en säker Stripe-betalning på {{price}}. När du har betalat fortsätter Translator där den slutade. Du behöver inte klicka på något här.",
     "checkoutBack": "Tillbaka",
     "resumingTitle": "Översätter resten",
     "resumingBody": "Fortsätter från {{time}} och översätter resten till {{language}}…",

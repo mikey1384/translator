@@ -1516,7 +1516,7 @@
     "finishShort": "Tafsiri hadi mwisho",
     "finishShortPrice": "Tafsiri hadi mwisho kwa {{price}}",
     "checkoutTitle": "Kamilisha malipo kwenye kivinjari chako",
-    "checkoutBody": "Tumefungua ukurasa salama wa malipo wa Stripe kwa kifurushi cha {{price}}. Ukimaliza kulipa, Translator itaendelea pale ilipoishia. Huhitaji kubofya chochote hapa.",
+    "checkoutBody": "Tumefungua ukurasa salama wa malipo wa Stripe wa {{price}}. Ukimaliza kulipa, Translator itaendelea pale ilipoishia. Huhitaji kubofya chochote hapa.",
     "checkoutBack": "Rudi",
     "resumingTitle": "Inatafsiri hadi mwisho",
     "resumingBody": "Inaendelea kutoka {{time}} na kutafsiri sehemu iliyobaki kwa {{language}}…",

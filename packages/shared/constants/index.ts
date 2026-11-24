@@ -332,6 +332,24 @@ export const CREDIT_PACKS = {
   },
 } as const;
 
+// The free-preview offer sells the $1 pack in multiples (2, 3 or 4 in one
+// payment), so a video that needs a little more than one pack does not jump
+// to the $5 pack. Five would cost as much as the $5 pack, which holds more.
+// Must match stage5-api src/types/packs.ts.
+export const MULTI_PACK_ID = 'MICRO' as const;
+export const MAX_PACK_QUANTITY = 4;
+
+/** A whole number from 1 to MAX_PACK_QUANTITY of the $1 pack; otherwise 1. */
+export function packQuantity(packId: string, raw: unknown): number {
+  return packId === MULTI_PACK_ID &&
+    typeof raw === 'number' &&
+    Number.isInteger(raw) &&
+    raw >= 1 &&
+    raw <= MAX_PACK_QUANTITY
+    ? raw
+    : 1;
+}
+
 // Re-export from runtime-config for backward compatibility
 export {
   BASELINE_HEIGHT,

@@ -1516,7 +1516,7 @@
     "finishShort": "Oversett resten",
     "finishShortPrice": "Oversett resten for {{price}}",
     "checkoutTitle": "Fullfør betalingen i nettleseren",
-    "checkoutBody": "Vi har åpnet en sikker Stripe-betaling for pakken til {{price}}. Så snart du er ferdig, fortsetter Translator der den slapp. Du trenger ikke å trykke på noe her.",
+    "checkoutBody": "Vi har åpnet en sikker Stripe-betaling på {{price}}. Så snart du er ferdig, fortsetter Translator der den slapp. Du trenger ikke å trykke på noe her.",
     "checkoutBack": "Tilbake",
     "resumingTitle": "Oversetter resten",
     "resumingBody": "Fortsetter fra {{time}} og oversetter resten til {{language}}…",

@@ -1516,7 +1516,7 @@
     "finishShort": "Bis zum Ende übersetzen",
     "finishShortPrice": "Für {{price}} zu Ende übersetzen",
     "checkoutTitle": "Schließe die Zahlung im Browser ab",
-    "checkoutBody": "Wir haben eine sichere Stripe-Bezahlseite für das Paket zu {{price}} geöffnet. Sobald du bezahlt hast, macht Translator genau da weiter, wo es aufgehört hat. Hier musst du nichts tun.",
+    "checkoutBody": "Wir haben eine sichere Stripe-Bezahlseite über {{price}} geöffnet. Sobald du bezahlt hast, macht Translator genau da weiter, wo es aufgehört hat. Hier musst du nichts tun.",
     "checkoutBack": "Zurück",
     "resumingTitle": "Wird zu Ende übersetzt",
     "resumingBody": "Weiter ab {{time}} – der Rest wird auf {{language}} übersetzt…",

@@ -1534,7 +1534,7 @@
     "finishShort": "Tradu restul",
     "finishShortPrice": "Tradu restul cu {{price}}",
     "checkoutTitle": "Finalizează plata în browser",
-    "checkoutBody": "Am deschis plata securizată Stripe pentru pachetul de {{price}}. Când termini, Translator continuă exact de unde a rămas. Aici nu trebuie să apeși nimic.",
+    "checkoutBody": "Am deschis plata securizată Stripe de {{price}}. Când termini, Translator continuă exact de unde a rămas. Aici nu trebuie să apeși nimic.",
     "checkoutBack": "Înapoi",
     "resumingTitle": "Se traduce restul",
     "resumingBody": "Continuăm de la {{time}} și traducem restul în {{language}}…",

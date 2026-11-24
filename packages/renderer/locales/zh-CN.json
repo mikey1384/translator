@@ -1493,7 +1493,7 @@
     "finishShort": "翻译完整视频",
     "finishShortPrice": "{{price}} 翻译完整视频",
     "checkoutTitle": "请在浏览器中完成付款",
-    "checkoutBody": "已为你打开 {{price}} 时长包的 Stripe 安全付款页面。付款完成后，Translator 会自动从中断处接着翻译，这里不用做任何操作。",
+    "checkoutBody": "已为你打开 {{price}} 的 Stripe 安全付款页面。付款完成后，Translator 会自动从中断处接着翻译，这里不用做任何操作。",
     "checkoutBack": "返回",
     "resumingTitle": "正在翻译剩余部分",
     "resumingBody": "从 {{time}} 接着翻译，把剩余部分译成{{language}}…",

@@ -122,6 +122,95 @@ test('the offer names the smallest pack that finishes the video', () => {
   assert.equal(huge.coversAll, false);
 });
 
+test('a video a little longer than one $1 pack costs $2, $3 or $4, not $5', async () => {
+  const { MAX_PACK_QUANTITY, packQuantity } =
+    await import('../../shared/constants');
+  const buy = (minutes: number, credits = 0) => {
+    const { pack, quantity, price, coversAll } = packToFinish({
+      remainingSecs: minutes * 60,
+      credits,
+      qualityEnabled: false,
+    });
+    return { id: pack.id, quantity, price, coversAll };
+  };
+  assert.deepEqual(buy(20), {
+    id: 'MICRO',
+    quantity: 1,
+    price: 1,
+    coversAll: true,
+  });
+  assert.deepEqual(buy(40), {
+    id: 'MICRO',
+    quantity: 2,
+    price: 2,
+    coversAll: true,
+  });
+  assert.deepEqual(buy(70), {
+    id: 'MICRO',
+    quantity: 3,
+    price: 3,
+    coversAll: true,
+  });
+  assert.deepEqual(buy(100), {
+    id: 'MICRO',
+    quantity: 4,
+    price: 4,
+    coversAll: true,
+  });
+  // Five $1 packs would cost as much as the $5 pack, which holds far more.
+  assert.deepEqual(buy(130), {
+    id: 'STARTER',
+    quantity: 1,
+    price: 5,
+    coversAll: true,
+  });
+  // Minutes already on the balance count first.
+  assert.equal(buy(40, 10_000).quantity, 1);
+
+  // What is bought always covers what is needed and lets the video resume,
+  // at every length, with or without leftover minutes and quality review.
+  for (const qualityEnabled of [false, true]) {
+    for (const credits of [0, 700, 6_300, 20_000]) {
+      for (let minutes = 1; minutes <= 300; minutes += 1) {
+        const seconds = minutes * 60;
+        const label = `${minutes} min, ${credits} credits, quality ${qualityEnabled}`;
+        const { pack, quantity, price, coversAll } = packToFinish({
+          remainingSecs: seconds,
+          credits,
+          qualityEnabled,
+        });
+        assert.ok(coversAll, label);
+        const after = credits + pack.credits * quantity;
+        assert.ok(after >= creditsToFinish(seconds, qualityEnabled), label);
+        assert.ok(after >= creditsToStart(seconds, qualityEnabled), label);
+        assert.equal(price, pack.price * quantity, label);
+        assert.ok(quantity >= 1 && quantity <= MAX_PACK_QUANTITY, label);
+        assert.ok(quantity === 1 || pack.id === 'MICRO', label);
+        assert.equal(packQuantity(pack.id, quantity), quantity, label);
+        // Never more $1 packs than needed.
+        if (pack.id === 'MICRO' && quantity > 1) {
+          assert.ok(
+            credits + pack.credits * (quantity - 1) <
+              creditsToFinish(seconds, qualityEnabled),
+            label
+          );
+        }
+      }
+    }
+  }
+});
+
+test('pack quantity is 1 to 4 of the $1 pack, otherwise one', async () => {
+  const { packQuantity } = await import('../../shared/constants');
+  assert.equal(packQuantity('MICRO', 3), 3);
+  assert.equal(packQuantity('MICRO', 5), 1);
+  assert.equal(packQuantity('MICRO', 0), 1);
+  assert.equal(packQuantity('MICRO', 2.5), 1);
+  assert.equal(packQuantity('MICRO', '3'), 1);
+  assert.equal(packQuantity('MICRO', undefined), 1);
+  assert.equal(packQuantity('STARTER', 2), 1);
+});
+
 test('video cost reads covered, preview-then-pack, or pack', async () => {
   const { describeVideoCost } = await import('./freePreview');
   assert.deepEqual(

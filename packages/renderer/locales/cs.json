@@ -1543,7 +1543,7 @@
     "finishShort": "Přeložit do konce",
     "finishShortPrice": "Do konce za {{price}}",
     "checkoutTitle": "Dokončete platbu v prohlížeči",
-    "checkoutBody": "Otevřeli jsme zabezpečenou platbu Stripe za balíček {{price}}. Jakmile ji dokončíte, Translator naváže přesně tam, kde skončil. Tady nemusíte nic dělat.",
+    "checkoutBody": "Otevřeli jsme zabezpečenou platbu Stripe ve výši {{price}}. Jakmile ji dokončíte, Translator naváže přesně tam, kde skončil. Tady nemusíte nic dělat.",
     "checkoutBack": "Zpět",
     "resumingTitle": "Překládáme do konce",
     "resumingBody": "Pokračujeme od {{time}} a zbytek překládáme do {{languageInto}}…",

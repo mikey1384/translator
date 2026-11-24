@@ -1516,7 +1516,7 @@
     "finishShort": "Isalin hanggang dulo",
     "finishShortPrice": "Ituloy sa {{price}}",
     "checkoutTitle": "Tapusin ang bayad sa browser mo",
-    "checkoutBody": "Binuksan namin ang secure na Stripe checkout para sa {{price}} na pack. Pagkabayad mo, itutuloy agad ng Translator kung saan ito huminto. Wala ka nang kailangang i-click dito.",
+    "checkoutBody": "Binuksan namin ang secure na Stripe checkout para sa {{price}}. Pagkabayad mo, itutuloy agad ng Translator kung saan ito huminto. Wala ka nang kailangang i-click dito.",
     "checkoutBack": "Bumalik",
     "resumingTitle": "Isinasalin ang natitira",
     "resumingBody": "Itinutuloy mula {{time}} — ginagawang {{language}} ang natitira…",

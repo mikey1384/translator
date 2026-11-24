@@ -1527,7 +1527,7 @@
     "finishShort": "Traduzir o resto",
     "finishShortPrice": "Traduzir o resto por {{price}}",
     "checkoutTitle": "Conclua o pagamento no navegador",
-    "checkoutBody": "Abrimos o pagamento seguro da Stripe para o pacote de {{price}}. Assim que você terminar, o Translator continua de onde parou. Não precisa clicar em nada aqui.",
+    "checkoutBody": "Abrimos o pagamento seguro da Stripe de {{price}}. Assim que você terminar, o Translator continua de onde parou. Não precisa clicar em nada aqui.",
     "checkoutBack": "Voltar",
     "resumingTitle": "Traduzindo o resto",
     "resumingBody": "Continuando a partir de {{time}} e traduzindo o resto para {{language}}…",

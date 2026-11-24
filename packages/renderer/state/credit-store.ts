@@ -8,7 +8,7 @@ import {
   lateCheckoutCreditsAdded,
   type LateCheckoutWatch,
 } from '../utils/lateCheckoutWatch';
-import { CREDIT_PACKS } from '../../shared/constants';
+import { CREDIT_PACKS, packQuantity } from '../../shared/constants';
 import type {
   CheckoutTransitionInfo,
   CreditHistorySummary,
@@ -541,7 +541,11 @@ export const useCreditStore = create<CreditState>((set, get) => {
   const unsubConfirmed = SystemIPC.onCheckoutConfirmed(info => {
     const packId = packIdFrom(info) ?? get().checkoutPackId;
     clearCheckoutPending();
-    showCheckoutSuccess(packId ? CREDIT_PACKS[packId].credits : null);
+    showCheckoutSuccess(
+      packId
+        ? CREDIT_PACKS[packId].credits * packQuantity(packId, info?.quantity)
+        : null
+    );
   });
 
   const unsubUnresolved = SystemIPC.onCheckoutUnresolved(info => {

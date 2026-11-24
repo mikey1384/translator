@@ -1525,7 +1525,7 @@
     "finishShort": "תרגום עד הסוף",
     "finishShortPrice": "תרגום עד הסוף ב-{{price}}",
     "checkoutTitle": "השלימו את התשלום בדפדפן",
-    "checkoutBody": "פתחנו דף תשלום מאובטח של Stripe לחבילה של {{price}}. ברגע שהתשלום יושלם, Translator ימשיך בדיוק מאיפה שעצר. אין צורך ללחוץ כאן על כלום.",
+    "checkoutBody": "פתחנו דף תשלום מאובטח של Stripe על סך {{price}}. ברגע שהתשלום יושלם, Translator ימשיך בדיוק מאיפה שעצר. אין צורך ללחוץ כאן על כלום.",
     "checkoutBack": "חזרה",
     "resumingTitle": "מתרגמים עד הסוף",
     "resumingBody": "ממשיכים מ-{{time}} ומתרגמים את השאר ל{{language}}…",

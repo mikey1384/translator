@@ -1544,7 +1544,7 @@
     "finishShort": "Przetłumacz do końca",
     "finishShortPrice": "Do końca za {{price}}",
     "checkoutTitle": "Dokończ płatność w przeglądarce",
-    "checkoutBody": "Otworzyliśmy bezpieczną płatność Stripe — pakiet za {{price}}. Gdy tylko ją zakończysz, Translator wróci dokładnie tam, gdzie przerwał. Nie musisz tu nic klikać.",
+    "checkoutBody": "Otworzyliśmy bezpieczną płatność Stripe na kwotę {{price}}. Gdy tylko ją zakończysz, Translator wróci dokładnie tam, gdzie przerwał. Nie musisz tu nic klikać.",
     "checkoutBack": "Wróć",
     "resumingTitle": "Tłumaczymy do końca",
     "resumingBody": "Wznawiamy od {{time}} i tłumaczymy resztę na {{language}}…",

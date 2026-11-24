@@ -1516,7 +1516,7 @@
     "finishShort": "Helemaal vertalen",
     "finishShortPrice": "Helemaal vertalen voor {{price}}",
     "checkoutTitle": "Rond de betaling af in je browser",
-    "checkoutBody": "We hebben een beveiligde Stripe-betaalpagina geopend voor het pakket van {{price}}. Zodra je hebt betaald, gaat Translator verder waar het was gebleven. Je hoeft hier niets te doen.",
+    "checkoutBody": "We hebben een beveiligde Stripe-betaalpagina geopend voor {{price}}. Zodra je hebt betaald, gaat Translator verder waar het was gebleven. Je hoeft hier niets te doen.",
     "checkoutBack": "Terug",
     "resumingTitle": "De rest wordt vertaald",
     "resumingBody": "Verder vanaf {{time}}: de rest wordt naar het {{language}} vertaald…",

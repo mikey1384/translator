@@ -63,11 +63,14 @@ export default function BuyCreditsButton({
 /** Starts Stripe checkout for a pack, with the purchase funnel events. */
 export function useCreditCheckout({
   packId,
+  quantity = 1,
   placement,
   onCheckoutCreated,
   trackShown = true,
 }: {
   packId: BuyCreditsButtonProps['packId'];
+  /** Packs in this one payment; more than one only for the $1 pack. */
+  quantity?: number;
   placement?: CheckoutPlacement;
   onCheckoutCreated?: () => void;
   // Off when a surface with several packs records one "shown" itself.
@@ -111,7 +114,8 @@ export function useCreditCheckout({
       useCreditStore.getState().noteCheckoutPack(packId);
       const checkoutSessionId = await SystemIPC.createCheckoutSession(
         packId,
-        placement
+        placement,
+        quantity
       );
       if (checkoutSessionId === CHECKOUT_ALREADY_PENDING) {
         // This pack's checkout is already open (main reopens its Stripe

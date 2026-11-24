@@ -2,6 +2,8 @@ import { transcriptStopsEarlyAt } from './transcriptCoverage';
 import {
   CREDIT_PACKS,
   CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
+  MAX_PACK_QUANTITY,
+  MULTI_PACK_ID,
 } from '../../shared/constants';
 import { estimateTranslationCreditsPerHour } from './creditEstimates';
 
@@ -99,9 +101,20 @@ export function planFreePreview({
   return { kind: 'preview', previewSecs };
 }
 
+/** What the offer sells: `quantity` of `pack` in one payment, for `price`. */
+export interface FinishPurchase {
+  pack: Pack;
+  /** More than one only for the $1 pack. */
+  quantity: number;
+  /** Total in US dollars: pack price × quantity. */
+  price: number;
+  coversAll: boolean;
+}
+
 /**
- * The smallest pack that, with what is left, finishes the remaining seconds.
- * Falls back to the largest pack for very long videos.
+ * The cheapest purchase that, with what is left, finishes the remaining
+ * seconds: one to four $1 packs, then the larger packs. Falls back to the
+ * largest pack for very long videos.
  */
 export function packToFinish({
   remainingSecs,
@@ -111,19 +124,26 @@ export function packToFinish({
   remainingSecs: number;
   credits: number;
   qualityEnabled: boolean;
-}): { pack: Pack; coversAll: boolean } {
+}): FinishPurchase {
   const needed = creditsToFinish(remainingSecs, qualityEnabled);
   const have = Math.max(0, Math.floor(credits));
-  const packs: Pack[] = [
-    CREDIT_PACKS.MICRO,
-    CREDIT_PACKS.STARTER,
-    CREDIT_PACKS.STANDARD,
-    CREDIT_PACKS.PRO,
+  const multi = CREDIT_PACKS[MULTI_PACK_ID];
+  const options: Array<{ pack: Pack; quantity: number }> = [
+    ...Array.from({ length: MAX_PACK_QUANTITY }, (_, index) => ({
+      pack: multi,
+      quantity: index + 1,
+    })),
+    { pack: CREDIT_PACKS.STARTER, quantity: 1 },
+    { pack: CREDIT_PACKS.STANDARD, quantity: 1 },
+    { pack: CREDIT_PACKS.PRO, quantity: 1 },
   ];
-  for (const pack of packs) {
-    if (have + pack.credits >= needed) return { pack, coversAll: true };
+  for (const { pack, quantity } of options) {
+    if (have + pack.credits * quantity >= needed) {
+      return { pack, quantity, price: pack.price * quantity, coversAll: true };
+    }
   }
-  return { pack: CREDIT_PACKS.PRO, coversAll: false };
+  const largest = CREDIT_PACKS.PRO;
+  return { pack: largest, quantity: 1, price: largest.price, coversAll: false };
 }
 
 /** "4" or "28": whole minutes for copy, never zero for a non-empty span. */
@@ -183,7 +203,7 @@ export function describeVideoCost({
     0,
     credits - (covered > 0 ? creditsToFinish(covered, qualityEnabled) : 0)
   );
-  const { pack } = packToFinish({
+  const { price } = packToFinish({
     remainingSecs: durationSecs - covered,
     credits: leftover,
     qualityEnabled,
@@ -192,9 +212,9 @@ export function describeVideoCost({
     ? {
         kind: 'preview',
         previewMinutes: Math.max(1, Math.floor(covered / 60)),
-        wholeVideoPrice: pack.price,
+        wholeVideoPrice: price,
       }
-    : { kind: 'offer', wholeVideoPrice: pack.price };
+    : { kind: 'offer', wholeVideoPrice: price };
 }
 
 /**

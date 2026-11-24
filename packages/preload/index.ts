@@ -570,8 +570,10 @@ const electronAPI = {
 
   createCheckoutSession: (
     packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO',
-    placement?: string
-  ) => ipcRenderer.invoke('create-checkout-session', packId, placement),
+    placement?: string,
+    quantity?: number
+  ) =>
+    ipcRenderer.invoke('create-checkout-session', packId, placement, quantity),
   abandonCheckoutSession: (): Promise<void> =>
     ipcRenderer.invoke('abandon-checkout-session'),
   createByoUnlockSession: (): Promise<void> =>
@@ -731,8 +733,13 @@ const electronAPI = {
     return () => ipcRenderer.removeListener('checkout-pending', handler);
   },
 
-  onCheckoutConfirmed: (callback: (info?: { packId?: string }) => void) => {
-    const handler = (_e: unknown, info?: { packId?: string }) => callback(info);
+  onCheckoutConfirmed: (
+    callback: (info?: { packId?: string; quantity?: number }) => void
+  ) => {
+    const handler = (
+      _e: unknown,
+      info?: { packId?: string; quantity?: number }
+    ) => callback(info);
     ipcRenderer.on('checkout-confirmed', handler);
     return () => ipcRenderer.removeListener('checkout-confirmed', handler);
   },

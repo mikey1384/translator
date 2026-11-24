@@ -13,6 +13,8 @@ export type PendingCheckoutRecord = {
   mode: PendingCheckoutMode;
   sessionId: string;
   packId?: string;
+  /** Packs the session charges for; absent means one. */
+  quantity?: number;
   url?: string;
   // When the app created the session (ms since epoch).
   createdAt: number;

@@ -1493,7 +1493,7 @@
     "finishShort": "翻完整部影片",
     "finishShortPrice": "{{price}} 翻完整部",
     "checkoutTitle": "請在瀏覽器中完成付款",
-    "checkoutBody": "已為你開啟 {{price}} 方案的 Stripe 安全付款頁面。付款完成後，Translator 會自動從中斷的地方接著翻，這裡不用再按任何東西。",
+    "checkoutBody": "已為你開啟 {{price}} 的 Stripe 安全付款頁面。付款完成後，Translator 會自動從中斷的地方接著翻，這裡不用再按任何東西。",
     "checkoutBack": "返回",
     "resumingTitle": "正在翻完剩下的部分",
     "resumingBody": "從 {{time}} 接著翻，把剩下的部分翻成{{language}}…",

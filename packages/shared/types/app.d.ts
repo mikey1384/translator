@@ -1425,7 +1425,11 @@ declare module '@shared-types/app' {
   export type StoredApiKeySummary = { present: boolean; last4: string | null };
 
   /** Which pack a credit checkout broadcast is about, when main knows it. */
-  export type CheckoutTransitionInfo = { packId?: string };
+  export type CheckoutTransitionInfo = {
+    packId?: string;
+    /** Packs bought in the one payment; absent means one. */
+    quantity?: number;
+  };
 
   export type CreditHistorySummary = {
     everHadCredits: boolean;
@@ -1773,7 +1777,9 @@ declare module '@shared-types/app' {
 
     createCheckoutSession: (
       packId: CreditPackId,
-      placement?: PurchasePlacement
+      placement?: PurchasePlacement,
+      /** Packs in this one payment; more than one only for the $1 pack. */
+      quantity?: number
     ) => Promise<string | null>;
     createByoUnlockSession: () => Promise<void>;
     abandonCheckoutSession: () => Promise<void>;

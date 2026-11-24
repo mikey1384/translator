@@ -1515,7 +1515,7 @@
     "finishShort": "Finish the video",
     "finishShortPrice": "Finish for {{price}}",
     "checkoutTitle": "Finish paying in your browser",
-    "checkoutBody": "We opened a secure Stripe checkout for the {{price}} pack. Translator picks up right where it left off as soon as it’s done. No need to click anything here.",
+    "checkoutBody": "We opened a secure Stripe checkout for {{price}}. Translator picks up right where it left off as soon as it’s done. No need to click anything here.",
     "checkoutBack": "Back",
     "resumingTitle": "Finishing the video",
     "resumingBody": "Resuming at {{time}} and translating the rest into {{language}}…",

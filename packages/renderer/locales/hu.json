@@ -1504,7 +1504,7 @@
     "finishShort": "Fordítás a végéig",
     "finishShortPrice": "A végéig: {{price}}",
     "checkoutTitle": "Fejezd be a fizetést a böngészőben",
-    "checkoutBody": "Megnyitottuk a Stripe biztonságos fizetési oldalát ({{price}} csomag). Amint végeztél, a Translator ott folytatja, ahol abbahagyta. Itt semmire nem kell kattintanod.",
+    "checkoutBody": "Megnyitottuk a Stripe biztonságos fizetési oldalát ({{price}}). Amint végeztél, a Translator ott folytatja, ahol abbahagyta. Itt semmire nem kell kattintanod.",
     "checkoutBack": "Vissza",
     "resumingTitle": "Fordítjuk a végéig",
     "resumingBody": "Folytatjuk innen: {{time}} – a többit is {{language}} nyelvre fordítjuk…",

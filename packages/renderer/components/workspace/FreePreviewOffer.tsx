@@ -266,7 +266,12 @@ export default function FreePreviewOffer() {
     : 0;
   const balance =
     typeof credits === 'number' ? freePreviewPlanningCredits(credits) : 0;
-  const { pack, coversAll } = packToFinish({
+  const {
+    pack,
+    quantity,
+    price: priceUsd,
+    coversAll,
+  } = packToFinish({
     remainingSecs,
     credits: balance,
     qualityEnabled: Boolean(quality),
@@ -276,6 +281,7 @@ export default function FreePreviewOffer() {
 
   const { loading, start } = useCreditCheckout({
     packId: pack.id,
+    quantity,
     placement: 'free-preview-offer',
     onCheckoutCreated: () => {
       if (preview) setStatus(preview.key, 'checkout');
@@ -306,7 +312,7 @@ export default function FreePreviewOffer() {
   if (!preview) return null;
 
   const { covered, total, remaining } = previewMinuteSplit(preview);
-  const price = formatUsd(pack.price, locale);
+  const price = formatUsd(priceUsd, locale);
   const languageName = sentenceLanguageName(
     t(`languages.${preview.language}`, { defaultValue: preview.language }),
     locale
@@ -444,7 +450,7 @@ export default function FreePreviewOffer() {
               <p className={body}>
                 {t(
                   'freePreview.checkoutBody',
-                  'We opened a secure Stripe checkout for the {{price}} pack. Translator picks up right where it left off as soon as it’s done. No need to click anything here.',
+                  'We opened a secure Stripe checkout for {{price}}. Translator picks up right where it left off as soon as it’s done. No need to click anything here.',
                   { price }
                 )}
               </p>

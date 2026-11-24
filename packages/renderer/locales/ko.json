@@ -1493,7 +1493,7 @@
     "finishShort": "끝까지 번역하기",
     "finishShortPrice": "{{price}}에 끝까지 번역하기",
     "checkoutTitle": "브라우저에서 결제를 마쳐 주세요",
-    "checkoutBody": "{{price}} 팩을 결제할 수 있게 Stripe 보안 결제 페이지를 열었어요. 결제가 끝나면 Translator가 멈춘 곳부터 바로 이어서 해요. 여기서는 따로 누를 게 없어요.",
+    "checkoutBody": "{{price}} 결제를 위한 Stripe 보안 결제 페이지를 열었어요. 결제가 끝나면 Translator가 멈춘 곳부터 바로 이어서 해요. 여기서는 따로 누를 게 없어요.",
     "checkoutBack": "돌아가기",
     "resumingTitle": "끝까지 번역하는 중",
     "resumingBody": "{{time}}부터 이어서 나머지도 {{language}}로 바꾸는 중…",

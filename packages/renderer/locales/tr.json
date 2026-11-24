@@ -1516,7 +1516,7 @@
     "finishShort": "Sonuna kadar çevir",
     "finishShortPrice": "{{price}} ile sonuna kadar çevir",
     "checkoutTitle": "Ödemeyi tarayıcınızda tamamlayın",
-    "checkoutBody": "{{price}} paketi için güvenli bir Stripe ödeme sayfası açtık. Ödeme biter bitmez Translator kaldığı yerden devam eder. Burada bir şeye tıklamanıza gerek yok.",
+    "checkoutBody": "{{price}} tutarında güvenli bir Stripe ödeme sayfası açtık. Ödeme biter bitmez Translator kaldığı yerden devam eder. Burada bir şeye tıklamanıza gerek yok.",
     "checkoutBack": "Geri",
     "resumingTitle": "Sonuna kadar çevriliyor",
     "resumingBody": "{{time}} noktasından devam ediliyor; kalanı da {{language}} diline çevriliyor…",

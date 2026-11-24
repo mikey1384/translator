@@ -31,6 +31,7 @@ import {
   CREDITS_PER_AUDIO_HOUR,
   API_TIMEOUTS,
   CHECKOUT_ALREADY_PENDING,
+  packQuantity,
 } from '../../shared/constants/index.js';
 import { getMainWindow, broadcastToApp } from '../utils/window.js';
 import { getUiLanguage } from '../utils/ui-language.js';
@@ -222,6 +223,8 @@ const activeCheckoutSessions: Partial<Record<CheckoutMode, string>> = {};
 type ActiveCreditCheckout = {
   sessionId: string;
   packId: CreditPackId;
+  /** Packs this session charges for (more than one only for the $1 pack). */
+  quantity: number;
   placement?: PurchasePlacement;
   url: string;
 };
@@ -230,12 +233,15 @@ let activeCreditCheckout: ActiveCreditCheckout | null = null;
 /** Payload for checkout-pending / checkout-unresolved broadcasts. */
 function checkoutTransitionPayload(
   mode: CheckoutMode
-): { packId: CreditPackId } | undefined {
+): { packId: CreditPackId; quantity: number } | undefined {
   if (mode !== 'credits' || !activeCreditCheckout) return undefined;
   if (activeCreditCheckout.sessionId !== getActiveCheckoutSessionId(mode)) {
     return undefined;
   }
-  return { packId: activeCreditCheckout.packId };
+  return {
+    packId: activeCreditCheckout.packId,
+    quantity: activeCreditCheckout.quantity,
+  };
 }
 
 /** Funnel details (pack and placement) for the active credit checkout. */
@@ -310,7 +316,8 @@ const checkoutCreationInFlight: Partial<Record<CheckoutMode, boolean>> = {};
  */
 function tryBeginCheckoutCreation(
   mode: CheckoutMode,
-  requestedPackId?: CreditPackId
+  requestedPackId?: CreditPackId,
+  requestedQuantity = 1
 ): boolean {
   if (checkoutCreationInFlight[mode]) {
     reassertCheckoutTransition(mode);
@@ -325,10 +332,13 @@ function tryBeginCheckoutCreation(
         : null;
     // The user picked a different pack while one was waiting: they changed
     // their mind, so the new pack replaces the old session.
+    // A different number of the same pack is a different purchase too: the
+    // open Stripe page charges another amount than the one just shown.
     const choseAnotherPack =
       requestedPackId != null &&
       activePackId != null &&
-      requestedPackId !== activePackId;
+      (requestedPackId !== activePackId ||
+        requestedQuantity !== (activeCreditCheckout?.quantity ?? 1));
     const replace =
       checkoutUiTransitions[mode] === 'unresolved' || choseAnotherPack;
     if (!replace && activePackId != null && activeCreditCheckout) {
@@ -534,13 +544,20 @@ function emitCheckoutConfirmed(
   }
 
   const funnelDetails = activeCreditCheckoutFunnelDetails(sessionId);
+  const confirmedQuantity =
+    activeCreditCheckout &&
+    (!sessionId || activeCreditCheckout.sessionId === sessionId)
+      ? activeCreditCheckout.quantity
+      : 1;
   clearActiveCheckoutSession('credits', sessionId);
   markCheckoutTransition('credits', null);
   void targetWindow; // checkout events go to every tab
 
   broadcastToApp(
     'checkout-confirmed',
-    funnelDetails.packId ? { packId: funnelDetails.packId } : undefined
+    funnelDetails.packId
+      ? { packId: funnelDetails.packId, quantity: confirmedQuantity }
+      : undefined
   );
 
   // Track successful checkout completion
@@ -1097,8 +1114,11 @@ export function handleAbandonCheckoutSession(): void {
 export async function handleCreateCheckoutSession(
   _evt: Electron.IpcMainInvokeEvent,
   packId: CreditPackId,
-  placementInput?: unknown
+  placementInput?: unknown,
+  quantityInput?: unknown
 ): Promise<string | null> {
+  // The free-preview offer may buy two to four $1 packs in one payment.
+  const quantity = packQuantity(packId, quantityInput);
   // Where the purchase started, stored with the session server-side so a
   // fulfilled payment can be traced back to the feature that asked for it.
   const placement = isPurchasePlacement(placementInput)
@@ -1106,7 +1126,7 @@ export async function handleCreateCheckoutSession(
     : undefined;
   // One checkout at a time: reserved synchronously so two tabs clicking Buy
   // during the create POST can't both open Stripe sessions.
-  if (!tryBeginCheckoutCreation('credits', packId)) {
+  if (!tryBeginCheckoutCreation('credits', packId, quantity)) {
     return CHECKOUT_ALREADY_PENDING;
   }
 
@@ -1118,7 +1138,7 @@ export async function handleCreateCheckoutSession(
         : undefined;
     const expectedCredits =
       typeof baselineCredits === 'number'
-        ? baselineCredits + PACK_CREDITS[packId]
+        ? baselineCredits + PACK_CREDITS[packId] * quantity
         : undefined;
     if (typeof baselineCredits !== 'number') {
       log.info(
@@ -1140,6 +1160,7 @@ export async function handleCreateCheckoutSession(
         apiUrl,
         {
           packId,
+          ...(quantity > 1 ? { quantity } : {}),
           deviceId: getDeviceId(),
           locale: getCheckoutLocaleHint(),
           country: getCheckoutCountryHint() ?? undefined,
@@ -1157,6 +1178,15 @@ export async function handleCreateCheckoutSession(
       status: response.status,
     });
 
+    // The server must have made the session for the number of packs just
+    // shown. A server that does not know about multiples would charge for
+    // one, so never open a page whose amount differs from the offer.
+    if (quantity > 1 && response.data?.quantity !== quantity) {
+      throw new Error(
+        `Checkout was created for ${String(response.data?.quantity ?? 1)} pack(s), not the ${quantity} requested.`
+      );
+    }
+
     // Expecting backend to respond with { url: 'https://checkout.stripe.com/…' }
     if (response.data?.url) {
       const checkoutSessionId =
@@ -1173,6 +1203,7 @@ export async function handleCreateCheckoutSession(
         ? {
             sessionId: checkoutSessionId,
             packId,
+            quantity,
             placement,
             url: response.data.url,
           }
@@ -1182,6 +1213,7 @@ export async function handleCreateCheckoutSession(
           mode: 'credits',
           sessionId: checkoutSessionId,
           packId,
+          ...(quantity > 1 ? { quantity } : {}),
           url: response.data.url,
           createdAt: Date.now(),
         });
@@ -2858,6 +2890,7 @@ export function resumePendingCheckouts(
       activeCreditCheckout = {
         sessionId: record.sessionId,
         packId,
+        quantity: packQuantity(packId, record.quantity),
         url: record.url,
       };
     }

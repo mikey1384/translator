@@ -240,9 +240,10 @@ export function getVideoMetadata(
 
 export function createCheckoutSession(
   packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO',
-  placement?: PurchasePlacement
+  placement?: PurchasePlacement,
+  quantity?: number
 ): Promise<string | null> {
-  return window.electron.createCheckoutSession(packId, placement);
+  return window.electron.createCheckoutSession(packId, placement, quantity);
 }
 
 /** Stop waiting on the open checkout so another pack can be chosen. */

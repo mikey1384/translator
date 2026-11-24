@@ -1564,7 +1564,7 @@
     "finishShort": "إكمال الترجمة",
     "finishShortPrice": "إكمال الترجمة مقابل {{price}}",
     "checkoutTitle": "أكمل الدفع في المتصفح",
-    "checkoutBody": "فتحنا لك صفحة دفع آمنة من Stripe لباقة {{price}}. بعد إتمام الدفع، يتابع Translator من حيث توقف مباشرةً. لا حاجة إلى النقر على أي شيء هنا.",
+    "checkoutBody": "فتحنا لك صفحة دفع آمنة من Stripe بمبلغ {{price}}. بعد إتمام الدفع، يتابع Translator من حيث توقف مباشرةً. لا حاجة إلى النقر على أي شيء هنا.",
     "checkoutBack": "رجوع",
     "resumingTitle": "جارٍ إكمال الترجمة",
     "resumingBody": "نتابع من {{time}} ونترجم البقية إلى {{language}}…",

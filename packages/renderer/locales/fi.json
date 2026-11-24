@@ -1516,7 +1516,7 @@
     "finishShort": "Käännä loppuun",
     "finishShortPrice": "Käännä loppuun – {{price}}",
     "checkoutTitle": "Viimeistele maksu selaimessa",
-    "checkoutBody": "Avasimme selaimeen turvallisen Stripe-maksun paketille ({{price}}). Kun maksu on valmis, Translator jatkaa siitä, mihin jäi. Täällä ei tarvitse painaa mitään.",
+    "checkoutBody": "Avasimme selaimeen turvallisen Stripe-maksun ({{price}}). Kun maksu on valmis, Translator jatkaa siitä, mihin jäi. Täällä ei tarvitse painaa mitään.",
     "checkoutBack": "Takaisin",
     "resumingTitle": "Käännetään loppuun",
     "resumingBody": "Jatketaan kohdasta {{time}} ja käännetään loppu {{languageInto}}…",

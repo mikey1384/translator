@@ -1493,7 +1493,7 @@
     "finishShort": "最後まで翻訳",
     "finishShortPrice": "{{price}}で最後まで翻訳",
     "checkoutTitle": "ブラウザでお支払いを完了してください",
-    "checkoutBody": "{{price}}パックの安全なStripe決済ページを開きました。お支払いが済むと、Translatorが止まったところから自動で続けます。ここでの操作は不要です。",
+    "checkoutBody": "{{price}}の安全なStripe決済ページを開きました。お支払いが済むと、Translatorが止まったところから自動で続けます。ここでの操作は不要です。",
     "checkoutBack": "戻る",
     "resumingTitle": "最後まで翻訳しています",
     "resumingBody": "{{time}}から続きを{{language}}に翻訳しています…",

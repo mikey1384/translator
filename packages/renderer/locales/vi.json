@@ -1493,7 +1493,7 @@
     "finishShort": "Dịch hết video",
     "finishShortPrice": "Dịch hết với {{price}}",
     "checkoutTitle": "Hoàn tất thanh toán trên trình duyệt",
-    "checkoutBody": "Đã mở trang thanh toán Stripe an toàn cho gói {{price}}. Thanh toán xong, Translator sẽ tự dịch tiếp từ chỗ đang dừng. Bạn không cần bấm gì ở đây.",
+    "checkoutBody": "Đã mở trang thanh toán Stripe an toàn cho khoản {{price}}. Thanh toán xong, Translator sẽ tự dịch tiếp từ chỗ đang dừng. Bạn không cần bấm gì ở đây.",
     "checkoutBack": "Quay lại",
     "resumingTitle": "Đang dịch nốt video",
     "resumingBody": "Đang dịch tiếp từ {{time}}, chuyển phần còn lại sang {{language}}…",
