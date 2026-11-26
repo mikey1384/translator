@@ -32,7 +32,7 @@
   <img src="https://img.shields.io/badge/TypeScript-source-3178c6?logo=typescript&logoColor=white" alt="TypeScript source">
 </p>
 
-![Translator with multiple video workspaces open in tabs](https://translator.tools/screenshots/watch-translated-subtitles-editorial-2026-08.webp)
+![Translator demo: watch videos from almost any site with translated subtitles in 39 languages](docs/media/translator-demo.gif)
 
 ## Quick install
 
