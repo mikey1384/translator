@@ -43,3 +43,41 @@ test('API key review model config falls back to the available provider family', 
     'gpt-5.5'
   );
 });
+
+test('API key review model config supports Gemini 4 Neon and Gemini 4 Carbon tiers', () => {
+  assert.equal(
+    resolveByoTranslationReviewModelConfig({
+      prefersClaude: false,
+      preferredProvider: 'gemini',
+      canUseAnthropicByo: true,
+      canUseOpenAiByo: true,
+      canUseGeminiByo: true,
+      geminiReviewModel: 'gemini-4-neon',
+    }).model,
+    'gemini-4-neon'
+  );
+
+  assert.equal(
+    resolveByoTranslationReviewModelConfig({
+      prefersClaude: false,
+      preferredProvider: 'gemini',
+      canUseAnthropicByo: true,
+      canUseOpenAiByo: true,
+      canUseGeminiByo: true,
+      geminiReviewModel: 'gemini-4-carbon',
+    }).model,
+    'gemini-4-carbon'
+  );
+
+  // Gemini-only user falls back to Gemini even when legacy prefersClaude=true
+  assert.equal(
+    resolveByoTranslationReviewModelConfig({
+      prefersClaude: true,
+      canUseAnthropicByo: false,
+      canUseOpenAiByo: false,
+      canUseGeminiByo: true,
+      geminiReviewModel: 'gemini-4-neon',
+    }).model,
+    'gemini-4-neon'
+  );
+});

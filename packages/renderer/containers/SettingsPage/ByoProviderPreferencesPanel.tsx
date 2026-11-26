@@ -1,7 +1,13 @@
 import { css, cx } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import { useCallback, useMemo, type ReactNode } from 'react';
-import type { VideoSuggestionModelPreference } from '@shared-types/app';
+import type {
+  ByoGeminiDraftModel,
+  ByoGeminiReviewModel,
+  ByoGeminiSummaryModel,
+  ByoTextProviderPreference,
+  VideoSuggestionModelPreference,
+} from '@shared-types/app';
 import {
   AI_MODEL_DISPLAY_NAMES,
   AI_MODELS,
@@ -14,6 +20,7 @@ import { useUIStore } from '../../state/ui-store';
 import {
   hasAnthropicByoConfigured,
   hasElevenLabsByoConfigured,
+  hasGeminiByoConfigured,
   hasOpenAiByoConfigured,
   resolveDubbingProvider,
   resolveEffectiveTranslationReviewModel,
@@ -239,9 +246,11 @@ export default function ByoProviderPreferencesPanel() {
 
   const keyPresent = useAiStore(state => state.keyPresent);
   const anthropicKeyPresent = useAiStore(state => state.anthropicKeyPresent);
+  const geminiKeyPresent = useAiStore(state => state.geminiKeyPresent);
   const elevenLabsKeyPresent = useAiStore(state => state.elevenLabsKeyPresent);
   const byoUnlocked = useAiStore(state => state.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(state => state.byoAnthropicUnlocked);
+  const byoGeminiUnlocked = useAiStore(state => state.byoGeminiUnlocked);
   const byoElevenLabsUnlocked = useAiStore(
     state => state.byoElevenLabsUnlocked
   );
@@ -251,6 +260,7 @@ export default function ByoProviderPreferencesPanel() {
   const useApiKeysMode = useAiStore(state => state.useApiKeysMode);
   const useByo = useAiStore(state => state.useByo);
   const useByoAnthropic = useAiStore(state => state.useByoAnthropic);
+  const useByoGemini = useAiStore(state => state.useByoGemini);
   const useByoElevenLabs = useAiStore(state => state.useByoElevenLabs);
 
   const preferredTranscriptionProvider = useAiStore(
@@ -262,16 +272,39 @@ export default function ByoProviderPreferencesPanel() {
   const preferClaudeTranslation = useAiStore(
     state => state.preferClaudeTranslation
   );
-  const setPreferClaudeTranslation = useAiStore(
-    state => state.setPreferClaudeTranslation
-  );
   const preferClaudeReview = useAiStore(state => state.preferClaudeReview);
-  const setPreferClaudeReview = useAiStore(
-    state => state.setPreferClaudeReview
-  );
   const preferClaudeSummary = useAiStore(state => state.preferClaudeSummary);
-  const setPreferClaudeSummary = useAiStore(
-    state => state.setPreferClaudeSummary
+  const preferredTranslationProvider = useAiStore(
+    state => state.preferredTranslationProvider
+  );
+  const setPreferredTranslationProvider = useAiStore(
+    state => state.setPreferredTranslationProvider
+  );
+  const preferredReviewProvider = useAiStore(
+    state => state.preferredReviewProvider
+  );
+  const setPreferredReviewProvider = useAiStore(
+    state => state.setPreferredReviewProvider
+  );
+  const preferredSummaryProvider = useAiStore(
+    state => state.preferredSummaryProvider
+  );
+  const setPreferredSummaryProvider = useAiStore(
+    state => state.setPreferredSummaryProvider
+  );
+  const byoGeminiDraftModel = useAiStore(state => state.byoGeminiDraftModel);
+  const setByoGeminiDraftModel = useAiStore(
+    state => state.setByoGeminiDraftModel
+  );
+  const byoGeminiReviewModel = useAiStore(state => state.byoGeminiReviewModel);
+  const setByoGeminiReviewModel = useAiStore(
+    state => state.setByoGeminiReviewModel
+  );
+  const byoGeminiSummaryModel = useAiStore(
+    state => state.byoGeminiSummaryModel
+  );
+  const setByoGeminiSummaryModel = useAiStore(
+    state => state.setByoGeminiSummaryModel
   );
   const qualityTranslation = useUIStore(state => state.qualityTranslation);
   const setQualityTranslation = useUIStore(
@@ -296,17 +329,26 @@ export default function ByoProviderPreferencesPanel() {
       useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
+      byoGeminiUnlocked,
       byoElevenLabsUnlocked,
       stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
+      useByoGemini,
       useByoElevenLabs,
       keyPresent,
       anthropicKeyPresent,
+      geminiKeyPresent,
       elevenLabsKeyPresent,
       preferClaudeTranslation,
       preferClaudeReview,
       preferClaudeSummary,
+      preferredTranslationProvider,
+      preferredReviewProvider,
+      preferredSummaryProvider,
+      byoGeminiDraftModel,
+      byoGeminiReviewModel,
+      byoGeminiSummaryModel,
       preferredTranscriptionProvider,
       preferredDubbingProvider,
       stage5DubbingTtsProvider,
@@ -315,17 +357,26 @@ export default function ByoProviderPreferencesPanel() {
       useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
+      byoGeminiUnlocked,
       byoElevenLabsUnlocked,
       stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
+      useByoGemini,
       useByoElevenLabs,
       keyPresent,
       anthropicKeyPresent,
+      geminiKeyPresent,
       elevenLabsKeyPresent,
       preferClaudeTranslation,
       preferClaudeReview,
       preferClaudeSummary,
+      preferredTranslationProvider,
+      preferredReviewProvider,
+      preferredSummaryProvider,
+      byoGeminiDraftModel,
+      byoGeminiReviewModel,
+      byoGeminiSummaryModel,
       preferredTranscriptionProvider,
       preferredDubbingProvider,
       stage5DubbingTtsProvider,
@@ -334,26 +385,37 @@ export default function ByoProviderPreferencesPanel() {
 
   const hasOpenAiConfigured = hasOpenAiByoConfigured(runtimeState);
   const hasAnthropicConfigured = hasAnthropicByoConfigured(runtimeState);
+  const hasGeminiConfigured = hasGeminiByoConfigured(runtimeState);
   const hasElevenLabsConfigured = hasElevenLabsByoConfigured(runtimeState);
 
   const showStackPanel =
-    hasOpenAiConfigured || hasAnthropicConfigured || hasElevenLabsConfigured;
+    hasOpenAiConfigured ||
+    hasAnthropicConfigured ||
+    hasGeminiConfigured ||
+    hasElevenLabsConfigured;
   // Transcription is ElevenLabs Scribe only; show the row whenever any audio
   // or translation BYO key is configured so OpenAI-only users learn
   // transcription needs ElevenLabs.
-  const showTranscriptionRow = hasOpenAiConfigured || hasElevenLabsConfigured;
-  const showTranslationRows = hasOpenAiConfigured || hasAnthropicConfigured;
+  const showTranscriptionRow =
+    hasOpenAiConfigured || hasGeminiConfigured || hasElevenLabsConfigured;
+  const showTranslationRows =
+    hasOpenAiConfigured || hasAnthropicConfigured || hasGeminiConfigured;
   // Dubbing is ElevenLabs-only; show the row whenever any audio BYO key is
   // configured so OpenAI-only users learn dubbing needs ElevenLabs.
-  const showDubbingRow = hasOpenAiConfigured || hasElevenLabsConfigured;
-  const showVideoSuggestionRow = hasOpenAiConfigured || hasAnthropicConfigured;
-  const hasTranslationChoice = hasOpenAiConfigured && hasAnthropicConfigured;
+  const showDubbingRow =
+    hasOpenAiConfigured || hasGeminiConfigured || hasElevenLabsConfigured;
+  const showVideoSuggestionRow = showTranslationRows;
+  const hasTranslationChoice =
+    (hasOpenAiConfigured && hasAnthropicConfigured) || hasGeminiConfigured;
   const hasReviewChoice = showTranslationRows;
   const hasSummaryChoice = showTranslationRows;
   const canUseOpenAiVideoSuggestionModel = hasOpenAiConfigured;
   const canUseAnthropicVideoSuggestionModel = hasAnthropicConfigured;
+  const canUseGeminiVideoSuggestionModel = hasGeminiConfigured;
   const hasVideoSuggestionChoice =
-    canUseOpenAiVideoSuggestionModel || canUseAnthropicVideoSuggestionModel;
+    canUseOpenAiVideoSuggestionModel ||
+    canUseAnthropicVideoSuggestionModel ||
+    canUseGeminiVideoSuggestionModel;
   const hasProviderChoice =
     hasTranslationChoice ||
     hasReviewChoice ||
@@ -366,8 +428,13 @@ export default function ByoProviderPreferencesPanel() {
     resolveTranslationDraftProvider(runtimeState);
   const translationReviewModel =
     resolveEffectiveTranslationReviewModel(runtimeState);
-  const effectiveReviewProvider =
-    translationReviewModel === AI_MODELS.CLAUDE_OPUS ? 'anthropic' : 'openai';
+  const effectiveReviewProvider: ByoTextProviderPreference =
+    translationReviewModel === AI_MODELS.CLAUDE_OPUS
+      ? 'anthropic'
+      : translationReviewModel === AI_MODELS.GEMINI_NEON ||
+          translationReviewModel === AI_MODELS.GEMINI_CARBON
+        ? 'gemini'
+        : 'openai';
   const dubbingProvider = resolveDubbingProvider(runtimeState);
   const resolvedVideoSuggestionModel = useMemo(
     () =>
@@ -384,10 +451,14 @@ export default function ByoProviderPreferencesPanel() {
             : null,
           canUseAnthropicVideoSuggestionModel ? AI_MODELS.CLAUDE_SONNET : null,
           canUseAnthropicVideoSuggestionModel ? AI_MODELS.CLAUDE_OPUS : null,
+          canUseGeminiVideoSuggestionModel ? AI_MODELS.GEMINI_HYDROGEN : null,
+          canUseGeminiVideoSuggestionModel ? AI_MODELS.GEMINI_NEON : null,
+          canUseGeminiVideoSuggestionModel ? AI_MODELS.GEMINI_CARBON : null,
         ],
       }),
     [
       canUseAnthropicVideoSuggestionModel,
+      canUseGeminiVideoSuggestionModel,
       canUseOpenAiVideoSuggestionModel,
       byoVideoSuggestionModel,
       translationDraftModel,
@@ -407,6 +478,12 @@ export default function ByoProviderPreferencesPanel() {
     selectedVideoSuggestionModel === AI_MODELS.CLAUDE_SONNET;
   const videoSuggestionUsesOpus =
     selectedVideoSuggestionModel === AI_MODELS.CLAUDE_OPUS;
+  const videoSuggestionUsesGeminiHydrogen =
+    selectedVideoSuggestionModel === AI_MODELS.GEMINI_HYDROGEN;
+  const videoSuggestionUsesGeminiNeon =
+    selectedVideoSuggestionModel === AI_MODELS.GEMINI_NEON;
+  const videoSuggestionUsesGeminiCarbon =
+    selectedVideoSuggestionModel === AI_MODELS.GEMINI_CARBON;
   const showVideoSuggestionRuntimeHint =
     useApiKeysMode &&
     selectedVideoSuggestionModel !== resolvedVideoSuggestionModel;
@@ -519,36 +596,86 @@ export default function ByoProviderPreferencesPanel() {
         ),
         onSelect: () => handleVideoSuggestionModelChange(AI_MODELS.CLAUDE_OPUS),
       },
+      {
+        value: AI_MODELS.GEMINI_HYDROGEN,
+        label: t(
+          BYO_PROVIDERS.videoSuggestion.geminiHydrogen.labelKey,
+          BYO_PROVIDERS.videoSuggestion.geminiHydrogen.fallback
+        ),
+        price: BYO_PROVIDERS.videoSuggestion.geminiHydrogen.price,
+        selected: videoSuggestionUsesGeminiHydrogen,
+        disabled: !canUseGeminiVideoSuggestionModel,
+        disabledReason: t(
+          'settings.byoPreferences.videoSuggestionModelRequiresGemini',
+          'Needs the API-key unlock and your Google Gemini key.'
+        ),
+        onSelect: () =>
+          handleVideoSuggestionModelChange(AI_MODELS.GEMINI_HYDROGEN),
+      },
+      {
+        value: AI_MODELS.GEMINI_NEON,
+        label: t(
+          BYO_PROVIDERS.videoSuggestion.geminiNeon.labelKey,
+          BYO_PROVIDERS.videoSuggestion.geminiNeon.fallback
+        ),
+        price: BYO_PROVIDERS.videoSuggestion.geminiNeon.price,
+        selected: videoSuggestionUsesGeminiNeon,
+        disabled: !canUseGeminiVideoSuggestionModel,
+        disabledReason: t(
+          'settings.byoPreferences.videoSuggestionModelRequiresGemini',
+          'Needs the API-key unlock and your Google Gemini key.'
+        ),
+        onSelect: () => handleVideoSuggestionModelChange(AI_MODELS.GEMINI_NEON),
+      },
+      {
+        value: AI_MODELS.GEMINI_CARBON,
+        label: t(
+          BYO_PROVIDERS.videoSuggestion.geminiCarbon.labelKey,
+          BYO_PROVIDERS.videoSuggestion.geminiCarbon.fallback
+        ),
+        price: BYO_PROVIDERS.videoSuggestion.geminiCarbon.price,
+        selected: videoSuggestionUsesGeminiCarbon,
+        disabled: !canUseGeminiVideoSuggestionModel,
+        disabledReason: t(
+          'settings.byoPreferences.videoSuggestionModelRequiresGemini',
+          'Needs the API-key unlock and your Google Gemini key.'
+        ),
+        onSelect: () =>
+          handleVideoSuggestionModelChange(AI_MODELS.GEMINI_CARBON),
+      },
     ];
 
     return options;
   }, [
     canUseAnthropicVideoSuggestionModel,
+    canUseGeminiVideoSuggestionModel,
     canUseOpenAiVideoSuggestionModel,
     handleVideoSuggestionModelChange,
     t,
     videoSuggestionUsesDirectGpt,
     videoSuggestionUsesDirectGpt54,
+    videoSuggestionUsesGeminiCarbon,
+    videoSuggestionUsesGeminiHydrogen,
+    videoSuggestionUsesGeminiNeon,
     videoSuggestionUsesOpus,
     videoSuggestionUsesSonnet,
   ]);
 
-  const handleTranslationProviderChange = async (value: boolean) => {
-    const result = await setPreferClaudeTranslation(value);
+  const handleTranslationDraftSelect = async (
+    provider: ByoTextProviderPreference,
+    geminiModel?: ByoGeminiDraftModel
+  ) => {
+    if (provider === 'gemini' && geminiModel) {
+      await setByoGeminiDraftModel(geminiModel);
+    }
+    const result = await setPreferredTranslationProvider(provider);
     if (!result.success) {
       console.error('Failed to update translation provider:', result.error);
     }
   };
 
-  const handleReviewProviderChange = async (value: boolean) => {
-    const result = await setPreferClaudeReview(value);
-    if (!result.success) {
-      console.error('Failed to update review provider:', result.error);
-    }
-  };
-
   const handleReviewModeChange = async (
-    value: 'off' | 'openai' | 'anthropic'
+    value: 'off' | 'openai' | 'anthropic' | 'gemini-neon' | 'gemini-carbon'
   ) => {
     if (value === 'off') {
       setQualityTranslation(false);
@@ -556,22 +683,31 @@ export default function ByoProviderPreferencesPanel() {
     }
 
     setQualityTranslation(true);
-    await handleReviewProviderChange(value === 'anthropic');
-  };
-
-  const handleSummaryProviderChange = async (value: boolean) => {
-    const result = await setPreferClaudeSummary(value);
-    if (!result.success) {
-      console.error('Failed to update summary provider:', result.error);
+    if (value === 'gemini-neon' || value === 'gemini-carbon') {
+      const model: ByoGeminiReviewModel =
+        value === 'gemini-carbon'
+          ? AI_MODELS.GEMINI_CARBON
+          : AI_MODELS.GEMINI_NEON;
+      await setByoGeminiReviewModel(model);
+      await setPreferredReviewProvider('gemini');
+      return;
     }
+    await setPreferredReviewProvider(value);
   };
 
   const handleSummaryModeChange = async (
-    provider: 'openai' | 'anthropic',
-    effort: 'standard' | 'high'
+    provider: ByoTextProviderPreference,
+    effort: 'standard' | 'high',
+    geminiModel?: ByoGeminiSummaryModel
   ) => {
     setSummaryEffortLevel(effort);
-    await handleSummaryProviderChange(provider === 'anthropic');
+    if (provider === 'gemini' && geminiModel) {
+      await setByoGeminiSummaryModel(geminiModel);
+    }
+    const result = await setPreferredSummaryProvider(provider);
+    if (!result.success) {
+      console.error('Failed to update summary provider:', result.error);
+    }
   };
 
   if (!showStackPanel) return null;
@@ -641,8 +777,13 @@ export default function ByoProviderPreferencesPanel() {
                 BYO_PROVIDERS.translationDraft.openai.fallback
               ),
               price: BYO_PROVIDERS.translationDraft.openai.price,
-              selected: !preferClaudeTranslation,
-              onSelect: () => handleTranslationProviderChange(false),
+              selected: preferredTranslationProvider === 'openai',
+              disabled: !hasOpenAiConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.videoSuggestionModelRequiresOpenAi',
+                'Needs the API-key unlock, your OpenAI key, and the OpenAI switch turned on.'
+              ),
+              onSelect: () => void handleTranslationDraftSelect('openai'),
             },
             {
               value: 'anthropic',
@@ -651,13 +792,87 @@ export default function ByoProviderPreferencesPanel() {
                 BYO_PROVIDERS.translationDraft.anthropic.fallback
               ),
               price: BYO_PROVIDERS.translationDraft.anthropic.price,
-              selected: preferClaudeTranslation,
-              onSelect: () => handleTranslationProviderChange(true),
+              selected: preferredTranslationProvider === 'anthropic',
+              disabled: !hasAnthropicConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.videoSuggestionModelRequiresAnthropic',
+                'Needs the API-key unlock, your Anthropic key, and the Anthropic switch turned on.'
+              ),
+              onSelect: () => void handleTranslationDraftSelect('anthropic'),
+            },
+            {
+              value: AI_MODELS.GEMINI_FLASH_LITE,
+              label: t(
+                BYO_PROVIDERS.translationDraft.geminiFlashLite.labelKey,
+                BYO_PROVIDERS.translationDraft.geminiFlashLite.fallback
+              ),
+              price: BYO_PROVIDERS.translationDraft.geminiFlashLite.price,
+              selected:
+                preferredTranslationProvider === 'gemini' &&
+                byoGeminiDraftModel === AI_MODELS.GEMINI_FLASH_LITE,
+              disabled: !hasGeminiConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.videoSuggestionModelRequiresGemini',
+                'Needs the API-key unlock and your Google Gemini key.'
+              ),
+              onSelect: () =>
+                void handleTranslationDraftSelect(
+                  'gemini',
+                  AI_MODELS.GEMINI_FLASH_LITE
+                ),
+            },
+            {
+              value: AI_MODELS.GEMINI_HYDROGEN,
+              label: t(
+                BYO_PROVIDERS.translationDraft.geminiHydrogen.labelKey,
+                BYO_PROVIDERS.translationDraft.geminiHydrogen.fallback
+              ),
+              price: BYO_PROVIDERS.translationDraft.geminiHydrogen.price,
+              selected:
+                preferredTranslationProvider === 'gemini' &&
+                byoGeminiDraftModel === AI_MODELS.GEMINI_HYDROGEN,
+              disabled: !hasGeminiConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.videoSuggestionModelRequiresGemini',
+                'Needs the API-key unlock and your Google Gemini key.'
+              ),
+              onSelect: () =>
+                void handleTranslationDraftSelect(
+                  'gemini',
+                  AI_MODELS.GEMINI_HYDROGEN
+                ),
+            },
+            {
+              value: AI_MODELS.GEMINI_NEON,
+              label: t(
+                BYO_PROVIDERS.translationDraft.geminiNeon.labelKey,
+                BYO_PROVIDERS.translationDraft.geminiNeon.fallback
+              ),
+              price: BYO_PROVIDERS.translationDraft.geminiNeon.price,
+              selected:
+                preferredTranslationProvider === 'gemini' &&
+                byoGeminiDraftModel === AI_MODELS.GEMINI_NEON,
+              disabled: !hasGeminiConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.videoSuggestionModelRequiresGemini',
+                'Needs the API-key unlock and your Google Gemini key.'
+              ),
+              onSelect: () =>
+                void handleTranslationDraftSelect(
+                  'gemini',
+                  AI_MODELS.GEMINI_NEON
+                ),
             },
           ]}
           infoProvider={getProviderInfo(t, translationDraftProvider, {
             openai: BYO_PROVIDERS.translationDraft.openai,
             anthropic: BYO_PROVIDERS.translationDraft.anthropic,
+            gemini:
+              byoGeminiDraftModel === AI_MODELS.GEMINI_FLASH_LITE
+                ? BYO_PROVIDERS.translationDraft.geminiFlashLite
+                : byoGeminiDraftModel === AI_MODELS.GEMINI_NEON
+                  ? BYO_PROVIDERS.translationDraft.geminiNeon
+                  : BYO_PROVIDERS.translationDraft.geminiHydrogen,
           })}
         />
       )}
@@ -700,6 +915,42 @@ export default function ByoProviderPreferencesPanel() {
               ),
               onSelect: () => void handleReviewModeChange('anthropic'),
             },
+            {
+              value: 'gemini-neon',
+              label: t(
+                BYO_PROVIDERS.review.geminiNeon.labelKey,
+                BYO_PROVIDERS.review.geminiNeon.fallback
+              ),
+              price: BYO_PROVIDERS.review.geminiNeon.price,
+              selected:
+                qualityTranslation &&
+                effectiveReviewProvider === 'gemini' &&
+                byoGeminiReviewModel === AI_MODELS.GEMINI_NEON,
+              disabled: !hasGeminiConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.videoSuggestionModelRequiresGemini',
+                'Needs the API-key unlock and your Google Gemini key.'
+              ),
+              onSelect: () => void handleReviewModeChange('gemini-neon'),
+            },
+            {
+              value: 'gemini-carbon',
+              label: t(
+                BYO_PROVIDERS.review.geminiCarbon.labelKey,
+                BYO_PROVIDERS.review.geminiCarbon.fallback
+              ),
+              price: BYO_PROVIDERS.review.geminiCarbon.price,
+              selected:
+                qualityTranslation &&
+                effectiveReviewProvider === 'gemini' &&
+                byoGeminiReviewModel === AI_MODELS.GEMINI_CARBON,
+              disabled: !hasGeminiConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.videoSuggestionModelRequiresGemini',
+                'Needs the API-key unlock and your Google Gemini key.'
+              ),
+              onSelect: () => void handleReviewModeChange('gemini-carbon'),
+            },
           ]}
         />
       )}
@@ -717,7 +968,9 @@ export default function ByoProviderPreferencesPanel() {
                 BYO_PROVIDERS.summary.standard.openai.fallback
               ),
               price: BYO_PROVIDERS.summary.standard.openai.price,
-              selected: summaryEffortLevel !== 'high' && !preferClaudeSummary,
+              selected:
+                summaryEffortLevel !== 'high' &&
+                preferredSummaryProvider === 'openai',
               disabled: !hasOpenAiConfigured,
               disabledReason: t(
                 'settings.byoPreferences.summaryRequiresOpenAi',
@@ -733,7 +986,9 @@ export default function ByoProviderPreferencesPanel() {
                 BYO_PROVIDERS.summary.standard.anthropic.fallback
               ),
               price: BYO_PROVIDERS.summary.standard.anthropic.price,
-              selected: summaryEffortLevel !== 'high' && preferClaudeSummary,
+              selected:
+                summaryEffortLevel !== 'high' &&
+                preferredSummaryProvider === 'anthropic',
               disabled: !hasAnthropicConfigured,
               disabledReason: t(
                 'settings.byoPreferences.summaryRequiresAnthropic',
@@ -743,13 +998,37 @@ export default function ByoProviderPreferencesPanel() {
                 void handleSummaryModeChange('anthropic', 'standard'),
             },
             {
+              value: 'gemini-standard',
+              label: t(
+                BYO_PROVIDERS.summary.standard.geminiHydrogen.labelKey,
+                BYO_PROVIDERS.summary.standard.geminiHydrogen.fallback
+              ),
+              price: BYO_PROVIDERS.summary.standard.geminiHydrogen.price,
+              selected:
+                summaryEffortLevel !== 'high' &&
+                preferredSummaryProvider === 'gemini',
+              disabled: !hasGeminiConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.summaryRequiresGemini',
+                'Needs the API-key unlock and your Google Gemini key.'
+              ),
+              onSelect: () =>
+                void handleSummaryModeChange(
+                  'gemini',
+                  'standard',
+                  AI_MODELS.GEMINI_HYDROGEN
+                ),
+            },
+            {
               value: 'openai-high',
               label: t(
                 BYO_PROVIDERS.summary.high.openai.labelKey,
                 BYO_PROVIDERS.summary.high.openai.fallback
               ),
               price: BYO_PROVIDERS.summary.high.openai.price,
-              selected: summaryEffortLevel === 'high' && !preferClaudeSummary,
+              selected:
+                summaryEffortLevel === 'high' &&
+                preferredSummaryProvider === 'openai',
               disabled: !hasOpenAiConfigured,
               disabledReason: t(
                 'settings.byoPreferences.summaryRequiresOpenAi',
@@ -764,13 +1043,61 @@ export default function ByoProviderPreferencesPanel() {
                 BYO_PROVIDERS.summary.high.anthropic.fallback
               ),
               price: BYO_PROVIDERS.summary.high.anthropic.price,
-              selected: summaryEffortLevel === 'high' && preferClaudeSummary,
+              selected:
+                summaryEffortLevel === 'high' &&
+                preferredSummaryProvider === 'anthropic',
               disabled: !hasAnthropicConfigured,
               disabledReason: t(
                 'settings.byoPreferences.summaryRequiresAnthropic',
                 'Needs the API-key unlock and your Anthropic key.'
               ),
               onSelect: () => void handleSummaryModeChange('anthropic', 'high'),
+            },
+            {
+              value: 'gemini-neon-high',
+              label: t(
+                BYO_PROVIDERS.summary.high.geminiNeon.labelKey,
+                BYO_PROVIDERS.summary.high.geminiNeon.fallback
+              ),
+              price: BYO_PROVIDERS.summary.high.geminiNeon.price,
+              selected:
+                summaryEffortLevel === 'high' &&
+                preferredSummaryProvider === 'gemini' &&
+                byoGeminiSummaryModel !== AI_MODELS.GEMINI_CARBON,
+              disabled: !hasGeminiConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.summaryRequiresGemini',
+                'Needs the API-key unlock and your Google Gemini key.'
+              ),
+              onSelect: () =>
+                void handleSummaryModeChange(
+                  'gemini',
+                  'high',
+                  AI_MODELS.GEMINI_NEON
+                ),
+            },
+            {
+              value: 'gemini-carbon-high',
+              label: t(
+                BYO_PROVIDERS.summary.high.geminiCarbon.labelKey,
+                BYO_PROVIDERS.summary.high.geminiCarbon.fallback
+              ),
+              price: BYO_PROVIDERS.summary.high.geminiCarbon.price,
+              selected:
+                summaryEffortLevel === 'high' &&
+                preferredSummaryProvider === 'gemini' &&
+                byoGeminiSummaryModel === AI_MODELS.GEMINI_CARBON,
+              disabled: !hasGeminiConfigured,
+              disabledReason: t(
+                'settings.byoPreferences.summaryRequiresGemini',
+                'Needs the API-key unlock and your Google Gemini key.'
+              ),
+              onSelect: () =>
+                void handleSummaryModeChange(
+                  'gemini',
+                  'high',
+                  AI_MODELS.GEMINI_CARBON
+                ),
             },
           ]}
         />
@@ -818,7 +1145,7 @@ export default function ByoProviderPreferencesPanel() {
           infoProvider={{
             label: t(
               'settings.byoPreferences.videoSuggestionModelUnavailable',
-              'No video recommendation model is available with your own keys. Turn on your OpenAI or Anthropic key to use this.'
+              'No video recommendation model is available with your own keys. Turn on your OpenAI, Anthropic, or Google Gemini key to use this.'
             ),
             price: '',
           }}

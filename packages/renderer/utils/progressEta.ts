@@ -1,7 +1,7 @@
 import { formatDurationMinutes, formatDurationSeconds } from './formatUnits';
 
 type EtaOperationType = 'transcription' | 'translation' | 'dubbing';
-type ProviderHint = 'stage5' | 'openai' | 'anthropic' | 'elevenlabs';
+type ProviderHint = 'stage5' | 'openai' | 'anthropic' | 'gemini' | 'elevenlabs';
 
 export interface OperationEtaInput {
   operationType: EtaOperationType;
@@ -60,6 +60,9 @@ export function normalizeModelFamily(model?: string): string | undefined {
   if (normalized.includes('claude') && normalized.includes('haiku')) {
     return 'claude-haiku';
   }
+  if (normalized.includes('gemini')) {
+    return 'gemini';
+  }
   if (normalized.includes('gpt-5.1')) return 'gpt-5.1';
   if (normalized.includes('gpt')) return 'gpt';
   if (normalized.includes('scribe')) return 'scribe';
@@ -74,6 +77,7 @@ function detectProviderFromModel(model?: string): ProviderHint | undefined {
   const family = normalizeModelFamily(model);
   if (!family) return undefined;
   if (family.startsWith('claude')) return 'anthropic';
+  if (family === 'gemini') return 'gemini';
   if (
     family === 'gpt' ||
     family === 'gpt-5.1' ||

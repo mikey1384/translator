@@ -34,6 +34,14 @@ const ANTHROPIC_SUMMARY_STANDARD_USD = estimateSummaryUsdPerHour(
 );
 const ANTHROPIC_SUMMARY_HIGH_USD =
   estimateSummaryUsdPerHour(AI_MODELS.CLAUDE_OPUS) * SUMMARY_QUALITY_MULTIPLIER;
+const GEMINI_SUMMARY_STANDARD_USD = estimateSummaryUsdPerHour(
+  AI_MODELS.GEMINI_HYDROGEN
+);
+const GEMINI_SUMMARY_NEON_USD =
+  estimateSummaryUsdPerHour(AI_MODELS.GEMINI_NEON) * SUMMARY_QUALITY_MULTIPLIER;
+const GEMINI_SUMMARY_CARBON_USD =
+  estimateSummaryUsdPerHour(AI_MODELS.GEMINI_CARBON) *
+  SUMMARY_QUALITY_MULTIPLIER;
 
 export const BYO_PROVIDERS = {
   // Transcription is ElevenLabs Scribe only (OpenAI whisper-1 retires
@@ -62,6 +70,30 @@ export const BYO_PROVIDERS = {
         '/hr'
       ),
     },
+    geminiFlashLite: {
+      labelKey: 'settings.byoPreferences.geminiFlashLite',
+      fallback: 'Gemini 3.5 Flash-Lite',
+      price: formatUsdEstimate(
+        estimateTranslationUsdPerHour(AI_MODELS.GEMINI_FLASH_LITE),
+        '/hr'
+      ),
+    },
+    geminiHydrogen: {
+      labelKey: 'settings.byoPreferences.geminiHydrogen',
+      fallback: 'Gemini 4 Hydrogen',
+      price: formatUsdEstimate(
+        estimateTranslationUsdPerHour(AI_MODELS.GEMINI_HYDROGEN),
+        '/hr'
+      ),
+    },
+    geminiNeon: {
+      labelKey: 'settings.byoPreferences.geminiNeon',
+      fallback: 'Gemini 4 Neon',
+      price: formatUsdEstimate(
+        estimateTranslationUsdPerHour(AI_MODELS.GEMINI_NEON),
+        '/hr'
+      ),
+    },
   },
   review: {
     openai: {
@@ -80,6 +112,22 @@ export const BYO_PROVIDERS = {
         '/hr'
       ),
     },
+    geminiNeon: {
+      labelKey: 'settings.byoPreferences.geminiNeon',
+      fallback: 'Gemini 4 Neon',
+      price: formatUsdEstimate(
+        estimateTranslationUsdPerHour(AI_MODELS.GEMINI_NEON),
+        '/hr'
+      ),
+    },
+    geminiCarbon: {
+      labelKey: 'settings.byoPreferences.geminiCarbon',
+      fallback: 'Gemini 4 Carbon',
+      price: formatUsdEstimate(
+        estimateTranslationUsdPerHour(AI_MODELS.GEMINI_CARBON),
+        '/hr'
+      ),
+    },
   },
   summary: {
     standard: {
@@ -93,6 +141,11 @@ export const BYO_PROVIDERS = {
         fallback: 'Claude Sonnet 5.5',
         price: formatUsdEstimate(ANTHROPIC_SUMMARY_STANDARD_USD, '/hr'),
       },
+      geminiHydrogen: {
+        labelKey: 'settings.byoPreferences.geminiHydrogen',
+        fallback: 'Gemini 4 Hydrogen',
+        price: formatUsdEstimate(GEMINI_SUMMARY_STANDARD_USD, '/hr'),
+      },
     },
     high: {
       openai: {
@@ -104,6 +157,16 @@ export const BYO_PROVIDERS = {
         labelKey: 'settings.byoPreferences.claudeOpus',
         fallback: 'Claude Opus 5.5',
         price: formatUsdEstimate(ANTHROPIC_SUMMARY_HIGH_USD, '/hr'),
+      },
+      geminiNeon: {
+        labelKey: 'settings.byoPreferences.geminiNeon',
+        fallback: 'Gemini 4 Neon',
+        price: formatUsdEstimate(GEMINI_SUMMARY_NEON_USD, '/hr'),
+      },
+      geminiCarbon: {
+        labelKey: 'settings.byoPreferences.geminiCarbon',
+        fallback: 'Gemini 4 Carbon',
+        price: formatUsdEstimate(GEMINI_SUMMARY_CARBON_USD, '/hr'),
       },
     },
   },
@@ -145,6 +208,30 @@ export const BYO_PROVIDERS = {
       fallback: 'Claude Opus 5.5',
       price: formatUsdEstimate(
         estimateVideoSuggestionUsdPerSearch(AI_MODELS.CLAUDE_OPUS),
+        '/search'
+      ),
+    },
+    geminiHydrogen: {
+      labelKey: 'settings.byoPreferences.geminiHydrogen',
+      fallback: 'Gemini 4 Hydrogen',
+      price: formatUsdEstimate(
+        estimateVideoSuggestionUsdPerSearch(AI_MODELS.GEMINI_HYDROGEN),
+        '/search'
+      ),
+    },
+    geminiNeon: {
+      labelKey: 'settings.byoPreferences.geminiNeon',
+      fallback: 'Gemini 4 Neon',
+      price: formatUsdEstimate(
+        estimateVideoSuggestionUsdPerSearch(AI_MODELS.GEMINI_NEON),
+        '/search'
+      ),
+    },
+    geminiCarbon: {
+      labelKey: 'settings.byoPreferences.geminiCarbon',
+      fallback: 'Gemini 4 Carbon',
+      price: formatUsdEstimate(
+        estimateVideoSuggestionUsdPerSearch(AI_MODELS.GEMINI_CARBON),
         '/search'
       ),
     },

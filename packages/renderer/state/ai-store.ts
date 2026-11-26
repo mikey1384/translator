@@ -1,10 +1,15 @@
 import { create } from 'zustand';
 import * as SystemIPC from '@ipc/system';
 import type {
+  ByoGeminiDraftModel,
+  ByoGeminiReviewModel,
+  ByoGeminiSummaryModel,
+  ByoTextProviderPreference,
   ByoVideoSuggestionModel,
   Stage5VideoSuggestionMode,
   VideoSuggestionModelPreference,
 } from '@shared-types/app';
+import { AI_MODELS } from '../../shared/constants';
 import {
   normalizeByoVideoSuggestionModel,
   normalizeStage5VideoSuggestionMode,
@@ -79,6 +84,7 @@ interface AiStoreState {
   encryptionAvailable: boolean; // Whether OS-level encryption is available for API keys
   byoUnlocked: boolean;
   byoAnthropicUnlocked: boolean;
+  byoGeminiUnlocked: boolean;
   byoElevenLabsUnlocked: boolean;
   stage5AnthropicReviewAvailable: boolean;
   entitlementsHydrated: boolean;
@@ -98,6 +104,13 @@ interface AiStoreState {
   preferClaudeReview: boolean;
   // Claude summary preference (use Claude on BYO summary paths instead of GPT)
   preferClaudeSummary: boolean;
+  // 3-provider BYO text preferences & Gemini tiers
+  preferredTranslationProvider: ByoTextProviderPreference;
+  preferredReviewProvider: ByoTextProviderPreference;
+  preferredSummaryProvider: ByoTextProviderPreference;
+  byoGeminiDraftModel: ByoGeminiDraftModel;
+  byoGeminiReviewModel: ByoGeminiReviewModel;
+  byoGeminiSummaryModel: ByoGeminiSummaryModel;
   // Active preference currently used by runtime (derived from mode + split settings).
   videoSuggestionModelPreference: VideoSuggestionModelPreference;
   // Stage5 credits preference (standard/high).
@@ -130,6 +143,14 @@ interface AiStoreState {
   savingAnthropicKey: boolean;
   validatingAnthropicKey: boolean;
   useByoAnthropic: boolean;
+  // Gemini key state
+  geminiKeyValue: string;
+  geminiKeyPresent: boolean;
+  geminiKeyLast4: string | null;
+  geminiKeyLoading: boolean;
+  savingGeminiKey: boolean;
+  validatingGeminiKey: boolean;
+  useByoGemini: boolean;
   // ElevenLabs key state
   elevenLabsKeyValue: string;
   elevenLabsKeyPresent: boolean;
@@ -165,6 +186,25 @@ interface AiStoreState {
   syncClaudeSummaryPreference: () => Promise<void>;
   setPreferClaudeSummary: (
     value: boolean
+  ) => Promise<{ success: boolean; error?: string }>;
+  // 3-provider BYO text preference & Gemini tier actions
+  setPreferredTranslationProvider: (
+    value: ByoTextProviderPreference
+  ) => Promise<{ success: boolean; error?: string }>;
+  setPreferredReviewProvider: (
+    value: ByoTextProviderPreference
+  ) => Promise<{ success: boolean; error?: string }>;
+  setPreferredSummaryProvider: (
+    value: ByoTextProviderPreference
+  ) => Promise<{ success: boolean; error?: string }>;
+  setByoGeminiDraftModel: (
+    value: ByoGeminiDraftModel
+  ) => Promise<{ success: boolean; error?: string }>;
+  setByoGeminiReviewModel: (
+    value: ByoGeminiReviewModel
+  ) => Promise<{ success: boolean; error?: string }>;
+  setByoGeminiSummaryModel: (
+    value: ByoGeminiSummaryModel
   ) => Promise<{ success: boolean; error?: string }>;
   // Video suggestion model preference actions
   syncStage5VideoSuggestionMode: () => Promise<void>;
@@ -211,6 +251,16 @@ interface AiStoreState {
   validateAnthropicKey: () => Promise<{ ok: boolean; error?: string }>;
   syncByoAnthropicToggle: () => Promise<void>;
   setUseByoAnthropic: (
+    value: boolean
+  ) => Promise<{ success: boolean; error?: string }>;
+  // Gemini actions
+  setGeminiKeyValue: (value: string) => void;
+  loadGeminiKey: () => Promise<void>;
+  saveGeminiKey: () => Promise<{ success: boolean; error?: string }>;
+  clearGeminiKey: () => Promise<{ success: boolean; error?: string }>;
+  validateGeminiKey: () => Promise<{ ok: boolean; error?: string }>;
+  syncByoGeminiToggle: () => Promise<void>;
+  setUseByoGemini: (
     value: boolean
   ) => Promise<{ success: boolean; error?: string }>;
   // ElevenLabs actions
@@ -282,12 +332,17 @@ async function coerceStage5ProviderPreferencesForApiKeyMode(
   }
 }
 
-type HiddenByoProvider = 'openai' | 'anthropic' | 'elevenlabs';
+type HiddenByoProvider = 'openai' | 'anthropic' | 'gemini' | 'elevenlabs';
 
 async function enableConfiguredByoToggles(
   get: () => AiStoreState,
   set: (partial: Partial<AiStoreState>) => void,
-  providers: HiddenByoProvider[] = ['openai', 'anthropic', 'elevenlabs']
+  providers: HiddenByoProvider[] = [
+    'openai',
+    'anthropic',
+    'gemini',
+    'elevenlabs',
+  ]
 ): Promise<void> {
   const state = get();
   const enabledProviders = new Set(providers);
@@ -324,6 +379,23 @@ async function enableConfiguredByoToggles(
       }
     } catch (err) {
       console.error('[AiStore] Failed to auto-enable Anthropic BYO:', err);
+    }
+  }
+
+  if (
+    enabledProviders.has('gemini') &&
+    state.byoGeminiUnlocked &&
+    state.geminiKeyPresent &&
+    !state.useByoGemini
+  ) {
+    try {
+      const result = await SystemIPC.setByoGeminiEnabled(true);
+      if (result.success) {
+        set({ useByoGemini: true });
+        changed = true;
+      }
+    } catch (err) {
+      console.error('[AiStore] Failed to auto-enable Gemini BYO:', err);
     }
   }
 
@@ -464,6 +536,7 @@ function ensureSubscriptions(
       set({
         byoUnlocked: hasByoOpenAi,
         byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
+        byoGeminiUnlocked: Boolean(snapshot?.byoGemini ?? hasByoOpenAi),
         byoElevenLabsUnlocked: Boolean(snapshot?.byoElevenLabs),
         stage5AnthropicReviewAvailable: Boolean(
           snapshot?.stage5AnthropicReviewAvailable
@@ -516,6 +589,7 @@ function ensureSubscriptions(
         unlockError: undefined,
         byoUnlocked: Boolean(snapshot?.byoOpenAi),
         byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
+        byoGeminiUnlocked: Boolean(snapshot?.byoGemini ?? snapshot?.byoOpenAi),
         byoElevenLabsUnlocked: Boolean(snapshot?.byoElevenLabs),
         stage5AnthropicReviewAvailable: Boolean(
           snapshot?.stage5AnthropicReviewAvailable
@@ -620,6 +694,39 @@ function ensureSubscriptions(
   );
 
   unsubscribers.push(
+    SystemIPC.onGeminiApiKeyChanged(async ({ hasKey }) => {
+      if (!hasKey) {
+        set({
+          geminiKeyPresent: false,
+          geminiKeyValue: '',
+          useByoGemini: false,
+        });
+        try {
+          await SystemIPC.setByoGeminiEnabled(false);
+        } catch (err) {
+          console.error(
+            '[AiStore] Failed to sync BYO Gemini toggle after key removal:',
+            err
+          );
+        }
+        await checkAndDisableApiKeyModeIfNeeded(get, set);
+        return;
+      }
+      try {
+        const key = await SystemIPC.getGeminiApiKey();
+        set({
+          geminiKeyPresent: key.present,
+          geminiKeyLast4: key.last4,
+          geminiKeyValue: '',
+        });
+        await enableConfiguredByoToggles(get, set, ['gemini']);
+      } catch {
+        set({ geminiKeyPresent: true });
+      }
+    })
+  );
+
+  unsubscribers.push(
     SystemIPC.onElevenLabsApiKeyChanged(async ({ hasKey }) => {
       if (!hasKey) {
         set({
@@ -684,6 +791,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     encryptionAvailable: true, // Assume true until checked
     byoUnlocked: false,
     byoAnthropicUnlocked: false,
+    byoGeminiUnlocked: false,
     byoElevenLabsUnlocked: false,
     stage5AnthropicReviewAvailable: false,
     entitlementsHydrated: false,
@@ -702,6 +810,12 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     preferClaudeReview: false,
     // Claude summary preference (defaults to true - prefer Claude on BYO summary paths)
     preferClaudeSummary: true,
+    preferredTranslationProvider: 'openai',
+    preferredReviewProvider: 'openai',
+    preferredSummaryProvider: 'anthropic',
+    byoGeminiDraftModel: AI_MODELS.GEMINI_HYDROGEN,
+    byoGeminiReviewModel: AI_MODELS.GEMINI_NEON,
+    byoGeminiSummaryModel: AI_MODELS.GEMINI_NEON,
     // Video suggestion model settings (split by mode).
     // Default to the GPT-5.5 review tier for the agent's reasoning; users can
     // drop to 'standard' (GPT-5.1) as a cost downgrade.
@@ -729,6 +843,14 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     savingAnthropicKey: false,
     validatingAnthropicKey: false,
     useByoAnthropic: false,
+    // Gemini state
+    geminiKeyValue: '',
+    geminiKeyPresent: false,
+    geminiKeyLast4: null,
+    geminiKeyLoading: false,
+    savingGeminiKey: false,
+    validatingGeminiKey: false,
+    useByoGemini: false,
     // ElevenLabs state
     elevenLabsKeyValue: '',
     elevenLabsKeyPresent: false,
@@ -745,6 +867,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         entitlementsLoading: true,
         keyLoading: true,
         anthropicKeyLoading: true,
+        geminiKeyLoading: true,
         elevenLabsKeyLoading: true,
       });
       try {
@@ -782,12 +905,16 @@ export const useAiStore = create<AiStoreState>((set, get) => {
             anthropicKeyValue: '',
             anthropicKeyPresent: settings.anthropicKeyPresent,
             anthropicKeyLoading: false,
+            geminiKeyValue: '',
+            geminiKeyPresent: Boolean(settings.geminiKeyPresent),
+            geminiKeyLoading: false,
             elevenLabsKeyValue: '',
             elevenLabsKeyPresent: settings.elevenLabsKeyPresent,
             elevenLabsKeyLoading: false,
             // Individual toggles
             useByo: settings.useByoOpenAi,
             useByoAnthropic: settings.useByoAnthropic,
+            useByoGemini: Boolean(settings.useByoGemini),
             useByoElevenLabs: settings.useByoElevenLabs,
             // API key mode
             useApiKeysMode: settings.useApiKeysMode,
@@ -795,6 +922,21 @@ export const useAiStore = create<AiStoreState>((set, get) => {
             preferClaudeTranslation: settings.preferClaudeTranslation,
             preferClaudeReview: settings.preferClaudeReview,
             preferClaudeSummary: settings.preferClaudeSummary,
+            preferredTranslationProvider:
+              settings.preferredTranslationProvider ??
+              (settings.preferClaudeTranslation ? 'anthropic' : 'openai'),
+            preferredReviewProvider:
+              settings.preferredReviewProvider ??
+              (settings.preferClaudeReview ? 'anthropic' : 'openai'),
+            preferredSummaryProvider:
+              settings.preferredSummaryProvider ??
+              (settings.preferClaudeSummary ? 'anthropic' : 'openai'),
+            byoGeminiDraftModel:
+              settings.byoGeminiDraftModel ?? AI_MODELS.GEMINI_HYDROGEN,
+            byoGeminiReviewModel:
+              settings.byoGeminiReviewModel ?? AI_MODELS.GEMINI_NEON,
+            byoGeminiSummaryModel:
+              settings.byoGeminiSummaryModel ?? AI_MODELS.GEMINI_NEON,
             stage5VideoSuggestionMode,
             byoVideoSuggestionModel,
             videoSuggestionModelPreference,
@@ -818,12 +960,15 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               useApiKeysMode: currentState.useApiKeysMode,
               byoUnlocked: currentState.byoUnlocked,
               byoAnthropicUnlocked: currentState.byoAnthropicUnlocked,
+              byoGeminiUnlocked: currentState.byoGeminiUnlocked,
               byoElevenLabsUnlocked: currentState.byoElevenLabsUnlocked,
               useByo: currentState.useByo,
               useByoAnthropic: currentState.useByoAnthropic,
+              useByoGemini: currentState.useByoGemini,
               useByoElevenLabs: currentState.useByoElevenLabs,
               keyPresent: currentState.keyPresent,
               anthropicKeyPresent: currentState.anthropicKeyPresent,
+              geminiKeyPresent: currentState.geminiKeyPresent,
               elevenLabsKeyPresent: currentState.elevenLabsKeyPresent,
             });
             if (!hasValidCombo) {
@@ -854,6 +999,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           set({
             keyLoading: false,
             anthropicKeyLoading: false,
+            geminiKeyLoading: false,
             elevenLabsKeyLoading: false,
           });
           console.error(
@@ -875,6 +1021,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         set({
           byoUnlocked: hasByoOpenAi,
           byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
+          byoGeminiUnlocked: Boolean(snapshot?.byoGemini ?? hasByoOpenAi),
           byoElevenLabsUnlocked: Boolean(snapshot?.byoElevenLabs),
           stage5AnthropicReviewAvailable: Boolean(
             snapshot?.stage5AnthropicReviewAvailable
@@ -910,6 +1057,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         set({
           byoUnlocked: hasByoOpenAi,
           byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
+          byoGeminiUnlocked: Boolean(snapshot?.byoGemini ?? hasByoOpenAi),
           byoElevenLabsUnlocked: Boolean(snapshot?.byoElevenLabs),
           stage5AnthropicReviewAvailable: Boolean(
             snapshot?.stage5AnthropicReviewAvailable
@@ -1209,6 +1357,107 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       }
     },
 
+    // Gemini actions
+    setGeminiKeyValue: (value: string) => {
+      set({ geminiKeyValue: value });
+    },
+
+    loadGeminiKey: async () => {
+      try {
+        set({ geminiKeyLoading: true });
+        const key = await SystemIPC.getGeminiApiKey();
+        set({
+          geminiKeyValue: '',
+          geminiKeyPresent: key.present,
+          geminiKeyLast4: key.last4,
+          geminiKeyLoading: false,
+        });
+      } catch {
+        set({ geminiKeyLoading: false, geminiKeyPresent: false });
+      }
+    },
+
+    saveGeminiKey: async () => {
+      const value = get().geminiKeyValue;
+      try {
+        set({ savingGeminiKey: true });
+        const result = await SystemIPC.setGeminiApiKey(value);
+        if (result.success) {
+          set({
+            geminiKeyPresent: Boolean(value.trim()),
+            geminiKeyLast4: lastFour(value),
+            geminiKeyValue: '',
+          });
+          await enableConfiguredByoToggles(get, set, ['gemini']);
+        }
+        return result;
+      } finally {
+        set({ savingGeminiKey: false });
+      }
+    },
+
+    clearGeminiKey: async () => {
+      try {
+        set({ savingGeminiKey: true });
+        const result = await SystemIPC.clearGeminiApiKey();
+        if (result.success) {
+          set({ geminiKeyValue: '', geminiKeyPresent: false });
+          try {
+            await SystemIPC.setByoGeminiEnabled(false);
+            set({ useByoGemini: false });
+          } catch (err) {
+            console.error(
+              '[AiStore] Failed to disable BYO Gemini toggle after key clear:',
+              err
+            );
+          }
+          await checkAndDisableApiKeyModeIfNeeded(get, set);
+        }
+        return result;
+      } finally {
+        set({ savingGeminiKey: false });
+      }
+    },
+
+    validateGeminiKey: async () => {
+      const value = get().geminiKeyValue.trim();
+      try {
+        set({ validatingGeminiKey: true });
+        const result = await SystemIPC.validateGeminiApiKey(value || undefined);
+        return result;
+      } finally {
+        set({ validatingGeminiKey: false });
+      }
+    },
+
+    syncByoGeminiToggle: async () => {
+      try {
+        const enabled = await SystemIPC.getByoGeminiEnabled();
+        set({ useByoGemini: Boolean(enabled) });
+      } catch (err) {
+        console.error('[AiStore] Failed to sync BYO Gemini toggle:', err);
+      }
+    },
+
+    setUseByoGemini: async (value: boolean) => {
+      try {
+        const result = await SystemIPC.setByoGeminiEnabled(value);
+        if (result.success) {
+          set({ useByoGemini: Boolean(value) });
+          if (!value) {
+            await checkAndDisableApiKeyModeIfNeeded(get, set);
+          }
+        }
+        return result;
+      } catch (err: any) {
+        console.error('[AiStore] Failed to update BYO Gemini toggle:', err);
+        return {
+          success: false,
+          error: err?.message || 'Failed to save toggle',
+        };
+      }
+    },
+
     // ElevenLabs actions
     setElevenLabsKeyValue: (value: string) => {
       set({ elevenLabsKeyValue: value });
@@ -1381,6 +1630,14 @@ export const useAiStore = create<AiStoreState>((set, get) => {
                 );
               }
             }
+            if (state.geminiKeyPresent && state.byoGeminiUnlocked) {
+              try {
+                await SystemIPC.setByoGeminiEnabled(true);
+                set({ useByoGemini: true });
+              } catch (err) {
+                console.error('[AiStore] Failed to auto-enable Gemini:', err);
+              }
+            }
             if (state.elevenLabsKeyPresent && state.byoElevenLabsUnlocked) {
               try {
                 await SystemIPC.setByoElevenLabsEnabled(true);
@@ -1419,7 +1676,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       try {
         const result = await SystemIPC.setPreferClaudeTranslation(value);
         if (result.success) {
-          set({ preferClaudeTranslation: Boolean(value) });
+          set({
+            preferClaudeTranslation: Boolean(value),
+            preferredTranslationProvider: value ? 'anthropic' : 'openai',
+          });
         }
         return result;
       } catch (err: any) {
@@ -1448,7 +1708,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       try {
         const result = await SystemIPC.setPreferClaudeReview(value);
         if (result.success) {
-          set({ preferClaudeReview: Boolean(value) });
+          set({
+            preferClaudeReview: Boolean(value),
+            preferredReviewProvider: value ? 'anthropic' : 'openai',
+          });
         }
         return result;
       } catch (err: any) {
@@ -1480,7 +1743,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       try {
         const result = await SystemIPC.setPreferClaudeSummary(value);
         if (result.success) {
-          set({ preferClaudeSummary: Boolean(value) });
+          set({
+            preferClaudeSummary: Boolean(value),
+            preferredSummaryProvider: value ? 'anthropic' : 'openai',
+          });
         }
         return result;
       } catch (err: any) {
@@ -1491,6 +1757,113 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         return {
           success: false,
           error: err?.message || 'Failed to save preference',
+        };
+      }
+    },
+
+    setPreferredTranslationProvider: async (
+      value: ByoTextProviderPreference
+    ) => {
+      try {
+        const result = await SystemIPC.setPreferredTranslationProvider(value);
+        if (result.success) {
+          set({
+            preferredTranslationProvider: value,
+            ...(value === 'anthropic' || value === 'openai'
+              ? { preferClaudeTranslation: value === 'anthropic' }
+              : {}),
+          });
+        }
+        return result;
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err?.message || 'Failed to save preference',
+        };
+      }
+    },
+
+    setPreferredReviewProvider: async (value: ByoTextProviderPreference) => {
+      try {
+        const result = await SystemIPC.setPreferredReviewProvider(value);
+        if (result.success) {
+          set({
+            preferredReviewProvider: value,
+            ...(value === 'anthropic' || value === 'openai'
+              ? { preferClaudeReview: value === 'anthropic' }
+              : {}),
+          });
+        }
+        return result;
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err?.message || 'Failed to save preference',
+        };
+      }
+    },
+
+    setPreferredSummaryProvider: async (value: ByoTextProviderPreference) => {
+      try {
+        const result = await SystemIPC.setPreferredSummaryProvider(value);
+        if (result.success) {
+          set({
+            preferredSummaryProvider: value,
+            ...(value === 'anthropic' || value === 'openai'
+              ? { preferClaudeSummary: value === 'anthropic' }
+              : {}),
+          });
+        }
+        return result;
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err?.message || 'Failed to save preference',
+        };
+      }
+    },
+
+    setByoGeminiDraftModel: async (value: ByoGeminiDraftModel) => {
+      try {
+        const result = await SystemIPC.setByoGeminiDraftModel(value);
+        if (result.success) {
+          set({ byoGeminiDraftModel: value });
+        }
+        return result;
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err?.message || 'Failed to save model',
+        };
+      }
+    },
+
+    setByoGeminiReviewModel: async (value: ByoGeminiReviewModel) => {
+      try {
+        const result = await SystemIPC.setByoGeminiReviewModel(value);
+        if (result.success) {
+          set({ byoGeminiReviewModel: value });
+        }
+        return result;
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err?.message || 'Failed to save model',
+        };
+      }
+    },
+
+    setByoGeminiSummaryModel: async (value: ByoGeminiSummaryModel) => {
+      try {
+        const result = await SystemIPC.setByoGeminiSummaryModel(value);
+        if (result.success) {
+          set({ byoGeminiSummaryModel: value });
+        }
+        return result;
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err?.message || 'Failed to save model',
         };
       }
     },

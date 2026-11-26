@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "کلید API شما در ElevenLabs نامعتبر یا منقضی شده است. لطفاً کلید خود را در تنظیمات بررسی کنید.",
       "elevenlabsRateLimit": "به محدودیت نرخ ElevenLabs رسیدید. لطفاً کمی صبر کنید و دوباره تلاش کنید.",
       "elevenlabsInsufficientQuota": "حساب ElevenLabs شما اعتبار کافی ندارد. لطفاً در elevenlabs.io اعتبار اضافه کنید.",
-      "genericApiError": "درخواست API ناموفق بود. لطفاً کلید API و وضعیت حساب خود را بررسی کنید."
+      "genericApiError": "درخواست API ناموفق بود. لطفاً کلید API و وضعیت حساب خود را بررسی کنید.",
+      "geminiKeyInvalid": "کلید API شما در Google Gemini نامعتبر یا منقضی شده است. لطفاً کلید خود را در تنظیمات بررسی کنید.",
+      "geminiRateLimit": "به محدودیت نرخ Google Gemini رسیدید. لطفاً کمی صبر کنید و دوباره تلاش کنید.",
+      "geminiInsufficientQuota": "سهمیه Google Gemini API شما تمام شده است. لطفاً صورت‌حساب را در aistudio.google.com بررسی کنید."
     },
     "transcription": {
       "providerUnavailable": "رونویسی (ElevenLabs Scribe) موقتاً در دسترس نیست یا پس از چند تلاش امکان اتصال به آن وجود نداشت. لطفاً چند دقیقه دیگر دوباره امتحان کنید.",
@@ -718,7 +721,13 @@
       "dubbingRequiresElevenLabs": "دوبله فقط از ElevenLabs استفاده می‌کند. برای دوبله با کلیدهای خودتان، یک کلید API از ElevenLabs اضافه کنید. بدون آن، دوبله از دقیقه‌های Stage5 شما استفاده می‌کند که تا وقتی کلیدهای خودتان روشن است مصرف نمی‌شوند.",
       "runtimeFallback": "جایگزین زمان اجرا در حالت کلید API",
       "videoSuggestionLegacyFollowDraft": "تنظیم قبلی شما حفظ شد: تا وقتی اینجا مدلی انتخاب نکنید، از مدل ترجمهٔ پیش‌نویس شما پیروی می‌کند.",
-      "videoSuggestionLegacyFollowReview": "تنظیم قبلی شما حفظ شد: تا وقتی اینجا مدلی انتخاب نکنید، از مدل ترجمهٔ بازبینی شما پیروی می‌کند."
+      "videoSuggestionLegacyFollowReview": "تنظیم قبلی شما حفظ شد: تا وقتی اینجا مدلی انتخاب نکنید، از مدل ترجمهٔ بازبینی شما پیروی می‌کند.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "به باز بودن قفل کلیدهای API و کلید Google Gemini شما نیاز است.",
+      "summaryRequiresGemini": "به باز بودن قفل کلیدهای API و کلید Google Gemini شما نیاز است."
     },
     "apiKeyGuide": {
       "title": "چگونه کلیدهای API بگیریم",
@@ -727,13 +736,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "کلیدهای API",
         "createNewSecretKey": "ایجاد کلید مخفی جدید",
         "createKey": "ایجاد کلید",
-        "profileApiKey": "پروفایل + کلید API"
+        "profileApiKey": "پروفایل + کلید API",
+        "createApiKey": "ایجاد کلید API"
       },
       "openai": {
         "step1": "بروید به",
@@ -760,6 +771,13 @@
         "step4": "یک روش پرداخت در تنظیمات اشتراک اضافه کنید (برای استفاده از API فراتر از سطح رایگان الزامی است)",
         "step5": "کلید API خود را کپی کنید و در Stage5 بچسبانید",
         "audioDescription": "همهٔ رونویسی‌ها (Scribe) و دوبله‌ها با ElevenLabs انجام می‌شود. بدون کلید ElevenLabs خودتان، هر دو از دقیقه‌های Stage5 شما استفاده می‌کنند که تا وقتی کلیدهای خودتان روشن است مصرف نمی‌شوند."
+      },
+      "gemini": {
+        "step1": "بروید به",
+        "step2": "با حساب Google خود وارد شوید",
+        "step3": "کلیک کنید",
+        "step4": "در صورت نیاز به سقف بالاتر، صورت‌حساب را در Google Cloud / AI Studio فعال کنید",
+        "step5": "کلید را کپی کنید (با AIza شروع می‌شود) و در Stage5 جای‌گذاری کنید"
       }
     },
     "apiKey": {
@@ -790,11 +808,11 @@
       "signOut": "خروج از حساب"
     },
     "agentControl": {
-      "description": "به Claude Code، Claude Desktop، Codex یا هر عامل MCP دیگری اجازه دهید Translator را روی این رایانه کنترل کند. با فعال‌سازی، عامل‌ها می‌توانند ویدیو دانلود کنند، کتابخانه شما را مدیریت کنند، زیرنویس‌ها را ویرایش و ترجمه کنند و فایل‌ها را به پوشه‌های مجاز صادر کنند.",
+      "description": "به Claude Code، Claude Desktop، Codex، Gemini CLI، Antigravity یا هر عامل MCP دیگری اجازه دهید Translator را روی این رایانه کنترل کند. با فعال‌سازی، عامل‌ها می‌توانند ویدیو دانلود کنند، کتابخانه شما را مدیریت کنند، زیرنویس‌ها را ویرایش و ترجمه کنند و فایل‌ها را به پوشه‌های مجاز صادر کنند.",
       "enableLabel": "اجازه کنترل این برنامه به عامل‌ها",
       "enableAria": "فعال‌کردن کنترل عامل‌ها",
       "connection": {
-        "title": "اتصال Claude Code، Claude Desktop یا Codex",
+        "title": "اتصال Claude Code، Claude Desktop، Codex، Gemini CLI یا Antigravity",
         "instructions": "روی یک دکمه کلیک کنید تا سرور MCP با نام “translator” ثبت شود. برای عامل‌های دیگر، یک سرور MCP از نوع STDIO با نام “translator” و این مسیر راه‌انداز اضافه کنید، سپس عامل را دوباره راه‌اندازی کنید تا ابزارهای جدید نمایش داده شوند.",
         "copyPath": "کپی مسیر",
         "copied": "کپی شد",
@@ -814,7 +832,9 @@
         "failedCli": "{{app}} خودکار وصل نشد. این را در ترمینال اجرا کنید:",
         "failedGeneric": "{{app}} وصل نشد. دوباره امتحان کنید.",
         "appNotFound": "برنامهٔ {{app}} روی این رایانه نصب نیست. نصبش کنید، یک بار بازش کنید و دوباره وصل شوید.",
-        "download": "دانلود {{app}}"
+        "download": "دانلود {{app}}",
+        "connectGeminiCli": "اتصال Gemini CLI",
+        "connectAntigravity": "اتصال Antigravity"
       },
       "status": {
         "enabled": "فعال",
@@ -846,7 +866,7 @@
         "addDirectory": "پوشه افزوده نشد.",
         "removeDirectory": "پوشه حذف نشد."
       },
-      "pitch": "با اشتراک Claude یا Codex که از قبل دارید، رایگان ترجمه کنید.",
+      "pitch": "با اشتراک Claude، Codex یا Gemini که از قبل دارید، رایگان ترجمه کنید.",
       "freeTitle": "ترجمهٔ رایگان با هوش مصنوعی خودتان"
     },
     "creditTransfer": {
@@ -934,7 +954,8 @@
       "contact": "تماس با پشتیبانی",
       "retry": "تلاش دوباره",
       "supportSubject": "نمی‌توانم در Translator دقیقه بخرم"
-    }
+    },
+    "usingGemini": "در حال استفاده از Gemini"
   },
   "branding": {
     "translator": "translator",

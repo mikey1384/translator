@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Din ElevenLabs API-nyckel är ogiltig eller har gått ut. Kontrollera din nyckel i Inställningar.",
       "elevenlabsRateLimit": "ElevenLabs-hastighetsgräns nådd. Vänta en stund och försök igen.",
       "elevenlabsInsufficientQuota": "Ditt ElevenLabs-konto har otillräckliga krediter. Lägg till krediter på elevenlabs.io.",
-      "genericApiError": "API-begäran misslyckades. Kontrollera din API-nyckel och kontostatus."
+      "genericApiError": "API-begäran misslyckades. Kontrollera din API-nyckel och kontostatus.",
+      "geminiKeyInvalid": "Din Google Gemini API-nyckel är ogiltig eller har gått ut. Kontrollera din nyckel i Inställningar.",
+      "geminiRateLimit": "Google Gemini-hastighetsgräns nådd. Vänta en stund och försök igen.",
+      "geminiInsufficientQuota": "Din Google Gemini API-kvot är slut. Kontrollera faktureringen på aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Transkribering (ElevenLabs Scribe) är tillfälligt otillgänglig eller kunde inte nås efter flera försök. Försök igen om några minuter.",
@@ -723,7 +726,13 @@
       "dubbingRequiresElevenLabs": "Dubbning använder endast ElevenLabs. Lägg till en ElevenLabs API-nyckel för att dubba med dina egna nycklar. Utan en sådan drar dubbningen av dina Stage5-minuter, som inte används medan dina egna nycklar är på.",
       "runtimeFallback": "Reservalternativ under körning i API-nyckelläge",
       "videoSuggestionLegacyFollowDraft": "Din tidigare inställning behålls: den följer din modell för utkastöversättning tills du väljer en modell här.",
-      "videoSuggestionLegacyFollowReview": "Din tidigare inställning behålls: den följer din modell för granskningsöversättning tills du väljer en modell här."
+      "videoSuggestionLegacyFollowReview": "Din tidigare inställning behålls: den följer din modell för granskningsöversättning tills du väljer en modell här.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Kräver API-nyckelupplåsningen och din Google Gemini-nyckel.",
+      "summaryRequiresGemini": "Kräver API-nyckelupplåsningen och din Google Gemini-nyckel."
     },
     "apiKeyGuide": {
       "title": "Hur man får API-nycklar",
@@ -732,13 +741,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API-nycklar",
         "createNewSecretKey": "Skapa ny hemlig nyckel",
         "createKey": "Skapa nyckel",
-        "profileApiKey": "Profil + API-nyckel"
+        "profileApiKey": "Profil + API-nyckel",
+        "createApiKey": "Skapa API-nyckel"
       },
       "openai": {
         "step1": "Gå till",
@@ -765,6 +776,13 @@
         "step4": "Lägg till en betalningsmetod i prenumerationsinställningarna (krävs för API-användning utöver gratisnivån)",
         "step5": "Kopiera din API-nyckel och klistra in den i Stage5",
         "audioDescription": "ElevenLabs står för all transkribering (Scribe) och dubbning. Utan din egen ElevenLabs-nyckel drar båda av dina Stage5-minuter, som inte används medan dina egna nycklar är på."
+      },
+      "gemini": {
+        "step1": "Gå till",
+        "step2": "Logga in med ditt Google-konto",
+        "step3": "Klicka på",
+        "step4": "Aktivera fakturering i Google Cloud / AI Studio om du behöver högre gränser",
+        "step5": "Kopiera nyckeln (börjar med AIza) och klistra in den i Stage5"
       }
     },
     "apiKey": {
@@ -795,11 +813,11 @@
       "signOut": "Logga ut"
     },
     "agentControl": {
-      "description": "Låt Claude Code, Claude Desktop, Codex eller en annan MCP-agent styra Translator på den här datorn. När detta är aktiverat kan agenter hämta videor, hantera ditt bibliotek, redigera och översätta undertexter och exportera filer till tillåtna mappar.",
+      "description": "Låt Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity eller en annan MCP-agent styra Translator på den här datorn. När detta är aktiverat kan agenter hämta videor, hantera ditt bibliotek, redigera och översätta undertexter och exportera filer till tillåtna mappar.",
       "enableLabel": "Tillåt agentstyrning av den här appen",
       "enableAria": "Aktivera agentstyrning",
       "connection": {
-        "title": "Anslut Claude Code, Claude Desktop eller Codex",
+        "title": "Anslut Claude Code, Claude Desktop, Codex, Gemini CLI eller Antigravity",
         "instructions": "Klicka på en knapp för att registrera MCP-servern ”translator”. För andra agenter lägger du till en STDIO-MCP-server med namnet ”translator” med den här startsökvägen och startar sedan om agenten så att de nya verktygen visas.",
         "copyPath": "Kopiera sökväg",
         "copied": "Kopierad",
@@ -819,7 +837,9 @@
         "failedCli": "Det gick inte att ansluta {{app}} automatiskt. Kör det här i en terminal:",
         "failedGeneric": "Det gick inte att ansluta {{app}}. Försök igen.",
         "appNotFound": "{{app}} är inte installerat på den här datorn. Installera det, öppna det en gång och anslut sedan igen.",
-        "download": "Ladda ner {{app}}"
+        "download": "Ladda ner {{app}}",
+        "connectGeminiCli": "Anslut Gemini CLI",
+        "connectAntigravity": "Anslut Antigravity"
       },
       "status": {
         "enabled": "Aktiverad",
@@ -852,7 +872,7 @@
         "addDirectory": "Det gick inte att lägga till mappen.",
         "removeDirectory": "Det gick inte att ta bort mappen."
       },
-      "pitch": "Översätt gratis med den Claude- eller Codex-prenumeration du redan har.",
+      "pitch": "Översätt gratis med den Claude-, Codex- eller Gemini-prenumeration du redan har.",
       "freeTitle": "Översätt gratis med din egen AI"
     },
     "creditTransfer": {
@@ -942,7 +962,8 @@
       "contact": "Kontakta supporten",
       "retry": "Försök igen",
       "supportSubject": "Jag kan inte köpa minuter i Translator"
-    }
+    },
+    "usingGemini": "Använder Gemini"
   },
   "branding": {
     "translator": "translator",

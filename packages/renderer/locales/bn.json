@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "আপনার ElevenLabs API কী অবৈধ বা মেয়াদ শেষ। অনুগ্রহ করে সেটিংসে আপনার কী পরীক্ষা করুন।",
       "elevenlabsRateLimit": "ElevenLabs রেট সীমায় পৌঁছেছে। অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করে আবার চেষ্টা করুন।",
       "elevenlabsInsufficientQuota": "আপনার ElevenLabs অ্যাকাউন্টে পর্যাপ্ত ক্রেডিট নেই। অনুগ্রহ করে elevenlabs.io তে ক্রেডিট যোগ করুন।",
-      "genericApiError": "API অনুরোধ ব্যর্থ হয়েছে। অনুগ্রহ করে আপনার API কী এবং অ্যাকাউন্ট স্ট্যাটাস পরীক্ষা করুন।"
+      "genericApiError": "API অনুরোধ ব্যর্থ হয়েছে। অনুগ্রহ করে আপনার API কী এবং অ্যাকাউন্ট স্ট্যাটাস পরীক্ষা করুন।",
+      "geminiKeyInvalid": "আপনার Google Gemini API কী অবৈধ বা মেয়াদ শেষ। অনুগ্রহ করে সেটিংসে আপনার কী পরীক্ষা করুন।",
+      "geminiRateLimit": "Google Gemini রেট সীমায় পৌঁছেছে। অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করে আবার চেষ্টা করুন।",
+      "geminiInsufficientQuota": "আপনার Google Gemini API কোটা শেষ হয়ে গেছে। অনুগ্রহ করে aistudio.google.com এ বিলিং পরীক্ষা করুন।"
     },
     "transcription": {
       "providerUnavailable": "ট্রান্সক্রিপশন (ElevenLabs Scribe) সাময়িকভাবে অনুপলব্ধ অথবা কয়েকবার চেষ্টার পরেও সংযোগ করা যায়নি। অনুগ্রহ করে কয়েক মিনিট পরে আবার চেষ্টা করুন।",
@@ -718,7 +721,13 @@
       "dubbingRequiresElevenLabs": "ডাবিং শুধু ElevenLabs দিয়ে হয়। নিজের কী দিয়ে ডাব করতে একটি ElevenLabs API কী যোগ করুন। কী না থাকলে ডাবিংয়ে আপনার Stage5 মিনিট লাগে, যা নিজের কী চালু থাকলে ব্যবহার হয় না।",
       "runtimeFallback": "API কী মোডে রানটাইম ফলব্যাক",
       "videoSuggestionLegacyFollowDraft": "আপনার আগের সেটিং রাখা হয়েছে: এখানে কোনো মডেল বেছে না নেওয়া পর্যন্ত এটি আপনার খসড়া অনুবাদ মডেল অনুসরণ করবে।",
-      "videoSuggestionLegacyFollowReview": "আপনার আগের সেটিং রাখা হয়েছে: এখানে কোনো মডেল বেছে না নেওয়া পর্যন্ত এটি আপনার পর্যালোচনা অনুবাদ মডেল অনুসরণ করবে।"
+      "videoSuggestionLegacyFollowReview": "আপনার আগের সেটিং রাখা হয়েছে: এখানে কোনো মডেল বেছে না নেওয়া পর্যন্ত এটি আপনার পর্যালোচনা অনুবাদ মডেল অনুসরণ করবে।",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "এর জন্য API কী আনলক আর আপনার Google Gemini কী দরকার।",
+      "summaryRequiresGemini": "এর জন্য API কী আনলক আর আপনার Google Gemini কী দরকার।"
     },
     "apiKeyGuide": {
       "title": "API কী কীভাবে পাবেন",
@@ -727,13 +736,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API কী",
         "createNewSecretKey": "নতুন সিক্রেট কী তৈরি করুন",
         "createKey": "কী তৈরি করুন",
-        "profileApiKey": "প্রোফাইল + API কী"
+        "profileApiKey": "প্রোফাইল + API কী",
+        "createApiKey": "API কী তৈরি করুন"
       },
       "openai": {
         "step1": "যান",
@@ -760,6 +771,13 @@
         "step4": "সাবস্ক্রিপশন সেটিংসে একটি পেমেন্ট মেথড যোগ করুন (ফ্রি টিয়ারের বাইরে API ব্যবহারের জন্য প্রয়োজন)",
         "step5": "আপনার API কী কপি করে Stage5 এ পেস্ট করুন",
         "audioDescription": "সব ট্রান্সক্রিপশন (Scribe) আর ডাবিং ElevenLabs দিয়ে চলে। নিজের ElevenLabs কী না থাকলে দুটোতেই আপনার Stage5 মিনিট লাগে, যা নিজের কী চালু থাকলে ব্যবহার হয় না।"
+      },
+      "gemini": {
+        "step1": "যান",
+        "step2": "আপনার Google অ্যাকাউন্ট দিয়ে সাইন ইন করুন",
+        "step3": "ক্লিক করুন",
+        "step4": "বেশি সীমার প্রয়োজন হলে Google Cloud / AI Studio-তে বিলিং চালু করুন",
+        "step5": "কী কপি করুন (AIza দিয়ে শুরু) এবং Stage5-এ পেস্ট করুন"
       }
     },
     "apiKey": {
@@ -790,11 +808,11 @@
       "signOut": "সাইন আউট"
     },
     "agentControl": {
-      "description": "Claude Code, Claude Desktop, Codex বা অন্য কোনো MCP এজেন্টকে এই কম্পিউটারে Translator নিয়ন্ত্রণের অনুমতি দিন। এটি চালু থাকলে এজেন্ট ভিডিও ডাউনলোড করতে, আপনার লাইব্রেরি পরিচালনা করতে, সাবটাইটেল সম্পাদনা ও অনুবাদ করতে এবং অনুমোদিত ফোল্ডারে ফাইল এক্সপোর্ট করতে পারবে।",
+      "description": "Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity বা অন্য কোনো MCP এজেন্টকে এই কম্পিউটারে Translator নিয়ন্ত্রণের অনুমতি দিন। এটি চালু থাকলে এজেন্ট ভিডিও ডাউনলোড করতে, আপনার লাইব্রেরি পরিচালনা করতে, সাবটাইটেল সম্পাদনা ও অনুবাদ করতে এবং অনুমোদিত ফোল্ডারে ফাইল এক্সপোর্ট করতে পারবে।",
       "enableLabel": "এজেন্টকে এই অ্যাপ নিয়ন্ত্রণের অনুমতি দিন",
       "enableAria": "এজেন্ট নিয়ন্ত্রণ চালু করুন",
       "connection": {
-        "title": "Claude Code, Claude Desktop বা Codex সংযুক্ত করুন",
+        "title": "Claude Code, Claude Desktop, Codex, Gemini CLI বা Antigravity সংযুক্ত করুন",
         "instructions": "“translator” MCP সার্ভার নিবন্ধন করতে একটি বোতামে ক্লিক করুন। অন্য এজেন্টের জন্য, এই লঞ্চার পাথ দিয়ে “translator” নামে একটি STDIO MCP সার্ভার যোগ করুন, তারপর নতুন টুলগুলো দেখাতে এজেন্টটি পুনরায় চালু করুন।",
         "copyPath": "পাথ কপি করুন",
         "copied": "কপি হয়েছে",
@@ -814,7 +832,9 @@
         "failedCli": "{{app}} নিজে থেকে কানেক্ট করা যায়নি। টার্মিনালে এটি চালান:",
         "failedGeneric": "{{app}} কানেক্ট করা যায়নি। আবার চেষ্টা করুন।",
         "appNotFound": "এই কম্পিউটারে {{app}} ইনস্টল করা নেই। ইনস্টল করে একবার খুলুন, তারপর আবার কানেক্ট করুন।",
-        "download": "{{app}} ডাউনলোড করুন"
+        "download": "{{app}} ডাউনলোড করুন",
+        "connectGeminiCli": "Gemini CLI সংযুক্ত করুন",
+        "connectAntigravity": "Antigravity সংযুক্ত করুন"
       },
       "status": {
         "enabled": "চালু",
@@ -846,7 +866,7 @@
         "addDirectory": "ফোল্ডার যোগ করা যায়নি।",
         "removeDirectory": "ফোল্ডার সরানো যায়নি।"
       },
-      "pitch": "আপনার আগে থেকেই থাকা Claude বা Codex সাবস্ক্রিপশন দিয়ে ফ্রিতে অনুবাদ করুন।",
+      "pitch": "আপনার আগে থেকেই থাকা Claude, Codex বা Gemini সাবস্ক্রিপশন দিয়ে ফ্রিতে অনুবাদ করুন।",
       "freeTitle": "নিজের AI দিয়ে ফ্রিতে অনুবাদ"
     },
     "creditTransfer": {
@@ -934,7 +954,8 @@
       "contact": "সাপোর্টে যোগাযোগ করুন",
       "retry": "আবার চেষ্টা করুন",
       "supportSubject": "Translator-এ মিনিট কিনতে পারছি না"
-    }
+    },
+    "usingGemini": "Gemini ব্যবহার হচ্ছে"
   },
   "branding": {
     "translator": "translator",

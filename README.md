@@ -17,7 +17,7 @@
 <p align="center">
   <a href="https://translator.tools/#all-downloads"><strong>Download for Mac &amp; Windows</strong></a>
   ·
-  <a href="https://translator.tools/agents">Claude &amp; Codex MCP</a>
+  <a href="https://translator.tools/agents">Claude, Codex &amp; Gemini MCP</a>
   ·
   <a href="https://translator.tools/pricing">Pricing</a>
   ·
@@ -62,26 +62,29 @@ Each video runs in its own **tab** in the background, so long jobs keep running 
 
 - **Always free:** installing, downloading videos, editing subtitles, burning subtitles into video, and exporting SRT/MP4.
 - **Free AI to try:** every install gets welcome credits on first launch plus monthly free AI minutes — enough to try on your own video before paying anything.
-- **Translate with your own Claude or Codex for free:** connect your existing Claude or Codex subscription over local MCP to translate existing captions at **$0 Stage5 credit cost** (see below).
-- **Pay-as-you-go or BYO keys:** for longer videos, buy credits from **$1** (no subscription), or use your own OpenAI, Anthropic, or ElevenLabs API keys.
+- **Translate with your own Claude, Codex, or Gemini for free:** connect your existing Claude, Codex, Gemini CLI, or Antigravity subscription over local MCP to translate existing captions at **$0 Stage5 credit cost** (see below).
+- **Pay-as-you-go or BYO keys:** for longer videos, buy credits from **$1** (no subscription), or use your own OpenAI, Anthropic, Google Gemini, or ElevenLabs API keys.
 
-## Use with Claude Code, Codex, or Claude Desktop (MCP)
+## Use with Claude Code, Codex, Gemini CLI, Antigravity, or Claude Desktop (MCP)
 
 Translator ships a local MCP server inside the packaged app so your existing coding agent can download videos, pull existing captions, translate them using your own subscription, mount them in the player, and export SRT or rendered video.
 
-1. Open Translator → **Settings → Agent Control** → turn on **Allow agent control of this app** and choose allowed output directories.
+1. Open Translator → **Settings → Agent Control** → turn on **Allow agent control of this app** and choose allowed output directories (or click a one-click Connect button).
 2. Register the bundled launcher once:
 
 ```bash
 # Claude Code (macOS)
-claude mcp add translator -- /Applications/Translator.app/Contents/Resources/translator-mcp
+claude mcp add --scope user translator -- /Applications/Translator.app/Contents/Resources/translator-mcp
 
 # Codex (macOS)
 codex mcp add translator -- /Applications/Translator.app/Contents/Resources/translator-mcp
+
+# Gemini CLI (macOS)
+gemini mcp add -s user translator /Applications/Translator.app/Contents/Resources/translator-mcp
 ```
 
 <details>
-<summary>Windows path and Claude Desktop JSON config</summary>
+<summary>Windows path, Antigravity, and Claude Desktop JSON config</summary>
 
 **Windows launcher:**
 
@@ -89,7 +92,7 @@ codex mcp add translator -- /Applications/Translator.app/Contents/Resources/tran
 C:\Program Files\Translator\resources\translator-mcp.cmd
 ```
 
-**Claude Desktop (`claude_desktop_config.json`):**
+**Antigravity (`~/.gemini/config/mcp_config.json`) / Claude Desktop (`claude_desktop_config.json`):**
 
 ```json
 {

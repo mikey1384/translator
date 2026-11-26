@@ -274,12 +274,20 @@ export default function AgentControlSection() {
     commandCopied: boolean;
   } | null>(null);
 
-  const appNameFor = (client: AgentMcpClientId) =>
-    client === 'claude-code'
-      ? 'Claude Code'
-      : client === 'codex'
-        ? 'Codex'
-        : 'Claude Desktop';
+  const appNameFor = (client: AgentMcpClientId) => {
+    switch (client) {
+      case 'claude-code':
+        return 'Claude Code';
+      case 'codex':
+        return 'Codex';
+      case 'gemini-cli':
+        return 'Gemini CLI';
+      case 'antigravity':
+        return 'Antigravity';
+      case 'claude-desktop':
+        return 'Claude Desktop';
+    }
+  };
 
   const copyText = async (text: string): Promise<boolean> => {
     try {
@@ -658,13 +666,13 @@ export default function AgentControlSection() {
         <p className={pitchStyles}>
           {t(
             'settings.agentControl.pitch',
-            'Translate for free with the Claude or Codex subscription you already have.'
+            'Translate for free with the Claude, Codex, or Gemini subscription you already have.'
           )}
         </p>
         <p style={{ margin: 0 }}>
           {t(
             'settings.agentControl.description',
-            'Let Claude Code, Claude Desktop, Codex, or another MCP agent control Translator on this computer. When enabled, agents can download videos, manage your library, edit and translate subtitles, and export files to allowed directories.'
+            'Let Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity, or another MCP agent control Translator on this computer. When enabled, agents can download videos, manage your library, edit and translate subtitles, and export files to allowed directories.'
           )}
         </p>
       </div>
@@ -674,7 +682,7 @@ export default function AgentControlSection() {
           <strong>
             {t(
               'settings.agentControl.connection.title',
-              'Connect Claude Code, Claude Desktop, or Codex'
+              'Connect Claude, Codex, or Gemini'
             )}
           </strong>
           <p style={{ margin: '6px 0 0', color: colors.gray }}>
@@ -684,38 +692,54 @@ export default function AgentControlSection() {
             )}
           </p>
           <div className={connectRowStyles}>
-            {(['claude-code', 'codex', 'claude-desktop'] as const).map(
-              client => (
-                <button
-                  key={client}
-                  type="button"
-                  className={addButtonStyles}
-                  style={{ marginTop: 0 }}
-                  disabled={connecting !== null}
-                  onClick={() => void handleConnect(client)}
-                >
-                  {connecting === client
+            {(
+              [
+                'claude-code',
+                'codex',
+                'gemini-cli',
+                'antigravity',
+                'claude-desktop',
+              ] as const
+            ).map(client => (
+              <button
+                key={client}
+                type="button"
+                className={addButtonStyles}
+                style={{ marginTop: 0 }}
+                disabled={connecting !== null}
+                onClick={() => void handleConnect(client)}
+              >
+                {connecting === client
+                  ? t(
+                      'settings.agentControl.connection.connecting',
+                      'Connecting…'
+                    )
+                  : client === 'claude-code'
                     ? t(
-                        'settings.agentControl.connection.connecting',
-                        'Connecting…'
+                        'settings.agentControl.connection.connectClaudeCode',
+                        'Connect Claude Code'
                       )
-                    : client === 'claude-code'
+                    : client === 'codex'
                       ? t(
-                          'settings.agentControl.connection.connectClaudeCode',
-                          'Connect Claude Code'
+                          'settings.agentControl.connection.connectCodex',
+                          'Connect Codex'
                         )
-                      : client === 'codex'
+                      : client === 'gemini-cli'
                         ? t(
-                            'settings.agentControl.connection.connectCodex',
-                            'Connect Codex'
+                            'settings.agentControl.connection.connectGeminiCli',
+                            'Connect Gemini CLI'
                           )
-                        : t(
-                            'settings.agentControl.connection.connectClaudeDesktop',
-                            'Connect Claude Desktop'
-                          )}
-                </button>
-              )
-            )}
+                        : client === 'antigravity'
+                          ? t(
+                              'settings.agentControl.connection.connectAntigravity',
+                              'Connect Antigravity'
+                            )
+                          : t(
+                              'settings.agentControl.connection.connectClaudeDesktop',
+                              'Connect Claude Desktop'
+                            )}
+              </button>
+            ))}
           </div>
           {renderConnectOutcome()}
           {launcherPath ? (

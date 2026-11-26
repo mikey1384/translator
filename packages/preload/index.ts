@@ -9,6 +9,10 @@ import { createHash } from 'crypto';
 import {
   AnalyticsPrivacyState,
   AllByoSettings,
+  ByoGeminiDraftModel,
+  ByoGeminiReviewModel,
+  ByoGeminiSummaryModel,
+  ByoTextProviderPreference,
   ExposedRenderResult,
   RenderSubtitlesOptions,
   ByoVideoSuggestionModel,
@@ -639,6 +643,26 @@ const electronAPI = {
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-byo-anthropic-enabled', enabled),
 
+  // Gemini API key functions
+  getGeminiApiKey: (): Promise<{ present: boolean; last4: string | null }> =>
+    ipcRenderer.invoke('get-gemini-api-key'),
+  setGeminiApiKey: (
+    apiKey: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-gemini-api-key', apiKey),
+  clearGeminiApiKey: (): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('clear-gemini-api-key'),
+  validateGeminiApiKey: (
+    apiKey?: string
+  ): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('validate-gemini-api-key', apiKey),
+  getByoGeminiEnabled: (): Promise<boolean> =>
+    ipcRenderer.invoke('get-byo-gemini-enabled'),
+  setByoGeminiEnabled: (
+    enabled: boolean
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-byo-gemini-enabled', enabled),
+
   isAdminMode: (): Promise<boolean> => ipcRenderer.invoke('is-admin-mode'),
   getSystemInfo: (): Promise<{
     platform: string;
@@ -836,6 +860,11 @@ const electronAPI = {
     return () =>
       ipcRenderer.removeListener('anthropic-api-key-changed', handler);
   },
+  onGeminiApiKeyChanged: (callback: (payload: { hasKey: boolean }) => void) => {
+    const handler = (_: any, payload: any) => callback(payload);
+    ipcRenderer.on('gemini-api-key-changed', handler);
+    return () => ipcRenderer.removeListener('gemini-api-key-changed', handler);
+  },
 
   // ElevenLabs API key functions
   getElevenLabsApiKey: (): Promise<{
@@ -890,6 +919,43 @@ const electronAPI = {
     prefer: boolean
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-prefer-claude-summary', prefer),
+  // 3-provider BYO text preferences & Gemini tiers
+  getPreferredTranslationProvider: (): Promise<ByoTextProviderPreference> =>
+    ipcRenderer.invoke('get-preferred-translation-provider'),
+  setPreferredTranslationProvider: (
+    provider: ByoTextProviderPreference
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-preferred-translation-provider', provider),
+  getPreferredReviewProvider: (): Promise<ByoTextProviderPreference> =>
+    ipcRenderer.invoke('get-preferred-review-provider'),
+  setPreferredReviewProvider: (
+    provider: ByoTextProviderPreference
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-preferred-review-provider', provider),
+  getPreferredSummaryProvider: (): Promise<ByoTextProviderPreference> =>
+    ipcRenderer.invoke('get-preferred-summary-provider'),
+  setPreferredSummaryProvider: (
+    provider: ByoTextProviderPreference
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-preferred-summary-provider', provider),
+  getByoGeminiDraftModel: (): Promise<ByoGeminiDraftModel> =>
+    ipcRenderer.invoke('get-byo-gemini-draft-model'),
+  setByoGeminiDraftModel: (
+    model: ByoGeminiDraftModel
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-byo-gemini-draft-model', model),
+  getByoGeminiReviewModel: (): Promise<ByoGeminiReviewModel> =>
+    ipcRenderer.invoke('get-byo-gemini-review-model'),
+  setByoGeminiReviewModel: (
+    model: ByoGeminiReviewModel
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-byo-gemini-review-model', model),
+  getByoGeminiSummaryModel: (): Promise<ByoGeminiSummaryModel> =>
+    ipcRenderer.invoke('get-byo-gemini-summary-model'),
+  setByoGeminiSummaryModel: (
+    model: ByoGeminiSummaryModel
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-byo-gemini-summary-model', model),
   getStage5VideoSuggestionMode: (): Promise<Stage5VideoSuggestionMode> =>
     ipcRenderer.invoke('get-stage5-video-suggestion-mode'),
   setStage5VideoSuggestionMode: (
@@ -1070,11 +1136,32 @@ const electronAPI = {
     restartRequired: true;
   }> => ipcRenderer.invoke('get-agent-socket-status'),
   connectAgentMcpClient: (
-    client: 'claude-code' | 'codex' | 'claude-desktop'
+    client:
+      | 'claude-code'
+      | 'codex'
+      | 'gemini-cli'
+      | 'antigravity'
+      | 'claude-desktop'
   ): Promise<{
-    status: 'connected' | 'already-connected' | 'cli-not-found' | 'failed';
-    client: 'claude-code' | 'codex' | 'claude-desktop';
+    status:
+      | 'connected'
+      | 'already-connected'
+      | 'app-not-found'
+      | 'cli-not-found'
+      | 'failed';
+    client:
+      | 'claude-code'
+      | 'codex'
+      | 'gemini-cli'
+      | 'antigravity'
+      | 'claude-desktop';
     command?: string;
+    downloadUrl?: string;
+    reason?:
+      | 'cli_failed'
+      | 'config_invalid'
+      | 'write_failed'
+      | 'launcher_missing';
     message?: string;
     configPath?: string;
     backupPath?: string;

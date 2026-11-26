@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "మీ ElevenLabs API కీ చెల్లదు లేదా గడువు ముగిసింది. దయచేసి సెట్టింగ్‌లలో మీ కీని తనిఖీ చేయండి.",
       "elevenlabsRateLimit": "ElevenLabs రేట్ లిమిట్ చేరుకుంది. దయచేసి కొద్దిసేపు వేచి ఉండి మళ్ళీ ప్రయత్నించండి.",
       "elevenlabsInsufficientQuota": "మీ ElevenLabs ఖాతాలో తగినంత క్రెడిట్‌లు లేవు. దయచేసి elevenlabs.io లో క్రెడిట్‌లు జోడించండి.",
-      "genericApiError": "API అభ్యర్థన విఫలమైంది. దయచేసి మీ API కీ మరియు ఖాతా స్థితిని తనిఖీ చేయండి."
+      "genericApiError": "API అభ్యర్థన విఫలమైంది. దయచేసి మీ API కీ మరియు ఖాతా స్థితిని తనిఖీ చేయండి.",
+      "geminiKeyInvalid": "మీ Google Gemini API కీ చెల్లదు లేదా గడువు ముగిసింది. దయచేసి సెట్టింగ్‌లలో మీ కీని తనిఖీ చేయండి.",
+      "geminiRateLimit": "Google Gemini రేట్ లిమిట్ చేరుకుంది. దయచేసి కొద్దిసేపు వేచి ఉండి మళ్ళీ ప్రయత్నించండి.",
+      "geminiInsufficientQuota": "మీ Google Gemini API కోటా అయిపోయింది. దయచేసి aistudio.google.com లో బిల్లింగ్ తనిఖీ చేయండి."
     },
     "transcription": {
       "providerUnavailable": "ట్రాన్స్‌క్రిప్షన్ (ElevenLabs Scribe) తాత్కాలికంగా అందుబాటులో లేదు లేదా అనేక ప్రయత్నాల తర్వాత కూడా చేరుకోలేకపోయింది. దయచేసి కొన్ని నిమిషాల్లో మళ్లీ ప్రయత్నించండి.",
@@ -723,7 +726,13 @@
       "dubbingRequiresElevenLabs": "డబ్బింగ్ ElevenLabsతో మాత్రమే జరుగుతుంది. మీ సొంత కీలతో డబ్ చేయాలంటే ElevenLabs API కీ జోడించండి. అది లేకపోతే డబ్బింగ్‌కు మీ Stage5 నిమిషాలు వాడతాం; సొంత కీలు ఆన్‌లో ఉన్నప్పుడు అవి ఖర్చు కావు.",
       "runtimeFallback": "API కీ మోడ్‌లో రన్‌టైమ్ ఫాల్‌బ్యాక్",
       "videoSuggestionLegacyFollowDraft": "మీ పాత సెట్టింగ్ అలాగే ఉంది: మీరు ఇక్కడ ఒక మోడల్ ఎంచుకునే వరకు ఇది మీ డ్రాఫ్ట్ అనువాద మోడల్‌ను అనుసరిస్తుంది.",
-      "videoSuggestionLegacyFollowReview": "మీ పాత సెట్టింగ్ అలాగే ఉంది: మీరు ఇక్కడ ఒక మోడల్ ఎంచుకునే వరకు ఇది మీ సమీక్ష అనువాద మోడల్‌ను అనుసరిస్తుంది."
+      "videoSuggestionLegacyFollowReview": "మీ పాత సెట్టింగ్ అలాగే ఉంది: మీరు ఇక్కడ ఒక మోడల్ ఎంచుకునే వరకు ఇది మీ సమీక్ష అనువాద మోడల్‌ను అనుసరిస్తుంది.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "దీనికి API కీ అన్‌లాక్, మీ Google Gemini కీ అవసరం.",
+      "summaryRequiresGemini": "దీనికి API కీ అన్‌లాక్, మీ Google Gemini కీ అవసరం."
     },
     "apiKeyGuide": {
       "title": "API కీలను ఎలా పొందాలి",
@@ -732,13 +741,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API కీలు",
         "createNewSecretKey": "కొత్త సీక్రెట్ కీ సృష్టించండి",
         "createKey": "కీ సృష్టించండి",
-        "profileApiKey": "ప్రొఫైల్ + API కీ"
+        "profileApiKey": "ప్రొఫైల్ + API కీ",
+        "createApiKey": "API కీ సృష్టించండి"
       },
       "openai": {
         "step1": "వెళ్ళండి",
@@ -765,6 +776,13 @@
         "step4": "సబ్‌స్క్రిప్షన్ సెట్టింగ్‌లలో చెల్లింపు పద్ధతిని జోడించండి (ఉచిత టైర్ కంటే ఎక్కువ API వినియోగానికి అవసరం)",
         "step5": "మీ API కీని కాపీ చేసి Stage5 లో పేస్ట్ చేయండి",
         "audioDescription": "ట్రాన్స్‌క్రిప్షన్ (Scribe), డబ్బింగ్ అన్నీ ElevenLabsతోనే జరుగుతాయి. మీ సొంత ElevenLabs కీ లేకపోతే రెండింటికీ మీ Stage5 నిమిషాలు వాడతాం; సొంత కీలు ఆన్‌లో ఉన్నప్పుడు అవి ఖర్చు కావు."
+      },
+      "gemini": {
+        "step1": "వెళ్ళండి",
+        "step2": "మీ Google ఖాతాతో సైన్ ఇన్ చేయండి",
+        "step3": "క్లిక్ చేయండి",
+        "step4": "ఎక్కువ పరిమితులు కావాలంటే Google Cloud / AI Studioలో బిల్లింగ్ ఎనేబుల్ చేయండి",
+        "step5": "కీని కాపీ చేసి (AIza తో మొదలవుతుంది) Stage5లో పేస్ట్ చేయండి"
       }
     },
     "apiKey": {
@@ -795,11 +813,11 @@
       "signOut": "సైన్ అవుట్"
     },
     "agentControl": {
-      "description": "ఈ కంప్యూటర్‌లో Translatorను నడపడానికి Claude Code, Claude Desktop, Codex లేదా మరో MCP ఏజెంట్‌ను అనుమతించండి. ఆన్ చేస్తే, ఏజెంట్లు వీడియోలు డౌన్‌లోడ్ చేయగలవు, మీ లైబ్రరీని నిర్వహించగలవు, సబ్‌టైటిల్స్ ఎడిట్ చేసి అనువదించగలవు, అనుమతించిన ఫోల్డర్‌లకు ఫైల్‌లను ఎక్స్‌పోర్ట్ చేయగలవు.",
+      "description": "ఈ కంప్యూటర్‌లో Translatorను నడపడానికి Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity లేదా మరో MCP ఏజెంట్‌ను అనుమతించండి. ఆన్ చేస్తే, ఏజెంట్లు వీడియోలు డౌన్‌లోడ్ చేయగలవు, మీ లైబ్రరీని నిర్వహించగలవు, సబ్‌టైటిల్స్ ఎడిట్ చేసి అనువదించగలవు, అనుమతించిన ఫోల్డర్‌లకు ఫైల్‌లను ఎక్స్‌పోర్ట్ చేయగలవు.",
       "enableLabel": "ఈ యాప్‌ను ఏజెంట్లు నియంత్రించడానికి అనుమతించండి",
       "enableAria": "ఏజెంట్ నియంత్రణను ప్రారంభించండి",
       "connection": {
-        "title": "Claude Code, Claude Desktop లేదా Codexను కనెక్ట్ చేయండి",
+        "title": "Claude Code, Claude Desktop, Codex, Gemini CLI లేదా Antigravityను కనెక్ట్ చేయండి",
         "instructions": "“translator” MCP సర్వర్‌ను నమోదు చేయడానికి ఒక బటన్‌ను క్లిక్ చేయండి. ఇతర ఏజెంట్ల కోసం, ఈ లాంచర్ పాత్‌తో “translator” పేరుతో STDIO MCP సర్వర్‌ను జోడించి, కొత్త టూల్స్ కనిపించడానికి ఏజెంట్‌ను పునఃప్రారంభించండి.",
         "copyPath": "పాత్ కాపీ చేయండి",
         "copied": "కాపీ అయింది",
@@ -819,7 +837,9 @@
         "failedCli": "{{app}} ఆటోమేటిక్‌గా కనెక్ట్ కాలేదు. టెర్మినల్‌లో ఇది రన్ చేయండి:",
         "failedGeneric": "{{app}} కనెక్ట్ కాలేదు. మళ్ళీ ప్రయత్నించండి.",
         "appNotFound": "ఈ కంప్యూటర్‌లో {{app}} లేదు. దాన్ని ఇన్‌స్టాల్ చేసి, ఒకసారి తెరిచి, మళ్ళీ కనెక్ట్ చేయండి.",
-        "download": "{{app}} డౌన్‌లోడ్ చేయండి"
+        "download": "{{app}} డౌన్‌లోడ్ చేయండి",
+        "connectGeminiCli": "Gemini CLIను కనెక్ట్ చేయండి",
+        "connectAntigravity": "Antigravityను కనెక్ట్ చేయండి"
       },
       "status": {
         "enabled": "ప్రారంభించబడింది",
@@ -852,7 +872,7 @@
         "addDirectory": "ఫోల్డర్‌ను జోడించలేకపోయాము.",
         "removeDirectory": "ఫోల్డర్‌ను తొలగించలేకపోయాము."
       },
-      "pitch": "మీ వద్ద ఇప్పటికే ఉన్న Claude లేదా Codex సబ్‌స్క్రిప్షన్‌తో ఉచితంగా అనువదించండి.",
+      "pitch": "మీ వద్ద ఇప్పటికే ఉన్న Claude, Codex లేదా Gemini సబ్‌స్క్రిప్షన్‌తో ఉచితంగా అనువదించండి.",
       "freeTitle": "మీ సొంత AIతో ఉచితంగా అనువదించండి"
     },
     "creditTransfer": {
@@ -942,7 +962,8 @@
       "contact": "సపోర్ట్‌ను సంప్రదించండి",
       "retry": "మళ్ళీ ప్రయత్నించండి",
       "supportSubject": "Translatorలో నిమిషాలు కొనలేకపోతున్నాను"
-    }
+    },
+    "usingGemini": "Gemini ఉపయోగంలో ఉంది"
   },
   "branding": {
     "translator": "translator",

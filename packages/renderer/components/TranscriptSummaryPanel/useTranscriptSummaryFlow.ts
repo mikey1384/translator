@@ -374,31 +374,45 @@ export default function useTranscriptSummaryFlow({
   const useApiKeysMode = useAiStore(state => state.useApiKeysMode);
   const byoUnlocked = useAiStore(state => state.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(state => state.byoAnthropicUnlocked);
+  const byoGeminiUnlocked = useAiStore(state => state.byoGeminiUnlocked);
   const useByo = useAiStore(state => state.useByo);
   const useByoAnthropic = useAiStore(state => state.useByoAnthropic);
+  const useByoGemini = useAiStore(state => state.useByoGemini);
   const keyPresent = useAiStore(state => state.keyPresent);
   const anthropicKeyPresent = useAiStore(state => state.anthropicKeyPresent);
+  const geminiKeyPresent = useAiStore(state => state.geminiKeyPresent);
   const preferClaudeSummary = useAiStore(state => state.preferClaudeSummary);
+  const preferredSummaryProvider = useAiStore(
+    state => state.preferredSummaryProvider
+  );
   const summaryByoState = useMemo(
     () => ({
       useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
+      byoGeminiUnlocked,
       useByo,
       useByoAnthropic,
+      useByoGemini,
       keyPresent,
       anthropicKeyPresent,
+      geminiKeyPresent,
       preferClaudeSummary,
+      preferredSummaryProvider,
     }),
     [
       useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
+      byoGeminiUnlocked,
       useByo,
       useByoAnthropic,
+      useByoGemini,
       keyPresent,
       anthropicKeyPresent,
+      geminiKeyPresent,
       preferClaudeSummary,
+      preferredSummaryProvider,
     ]
   );
 

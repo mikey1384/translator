@@ -2,7 +2,12 @@ import type { MonthlyFreeCreditsInfo } from '@shared-types/app';
 import type {
   AnalyticsPrivacyState,
   AllByoSettings,
+  ByoGeminiDraftModel,
+  ByoGeminiReviewModel,
+  ByoGeminiSummaryModel,
+  ByoTextProviderPreference,
   ByoVideoSuggestionModel,
+  EntitlementsSnapshot,
   ErrorReportContext,
   AgentBridgeRequest,
   AgentMcpClientId,
@@ -371,34 +376,16 @@ export function onCheckoutCancelled(callback: () => void): () => void {
   return window.electron.onCheckoutCancelled(callback);
 }
 
-export function getEntitlements(): Promise<{
-  byoOpenAi: boolean;
-  byoAnthropic: boolean;
-  byoElevenLabs: boolean;
-  stage5AnthropicReviewAvailable: boolean;
-  fetchedAt?: string;
-}> {
+export function getEntitlements(): Promise<EntitlementsSnapshot> {
   return window.electron.getEntitlements();
 }
 
-export function refreshEntitlements(): Promise<{
-  byoOpenAi: boolean;
-  byoAnthropic: boolean;
-  byoElevenLabs: boolean;
-  stage5AnthropicReviewAvailable: boolean;
-  fetchedAt?: string;
-}> {
+export function refreshEntitlements(): Promise<EntitlementsSnapshot> {
   return window.electron.refreshEntitlements();
 }
 
 export function onEntitlementsUpdated(
-  callback: (snapshot: {
-    byoOpenAi: boolean;
-    byoAnthropic: boolean;
-    byoElevenLabs: boolean;
-    stage5AnthropicReviewAvailable: boolean;
-    fetchedAt?: string;
-  }) => void
+  callback: (snapshot: EntitlementsSnapshot) => void
 ): () => void {
   return window.electron.onEntitlementsUpdated(callback);
 }
@@ -414,13 +401,7 @@ export function onByoUnlockPending(callback: () => void): () => void {
 }
 
 export function onByoUnlockConfirmed(
-  callback: (snapshot: {
-    byoOpenAi: boolean;
-    byoAnthropic: boolean;
-    byoElevenLabs: boolean;
-    stage5AnthropicReviewAvailable: boolean;
-    fetchedAt?: string;
-  }) => void
+  callback: (snapshot: EntitlementsSnapshot) => void
 ): () => void {
   return window.electron.onByoUnlockConfirmed(callback);
 }
@@ -483,6 +464,46 @@ export function onAnthropicApiKeyChanged(
   callback: (payload: { hasKey: boolean }) => void
 ): () => void {
   return window.electron.onAnthropicApiKeyChanged(callback);
+}
+
+// Gemini API key functions
+export function getGeminiApiKey(): Promise<StoredApiKeySummary> {
+  return window.electron.getGeminiApiKey();
+}
+
+export function setGeminiApiKey(
+  apiKey: string
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setGeminiApiKey(apiKey);
+}
+
+export function clearGeminiApiKey(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  return window.electron.clearGeminiApiKey();
+}
+
+export function validateGeminiApiKey(
+  apiKey?: string
+): Promise<{ ok: boolean; error?: string }> {
+  return window.electron.validateGeminiApiKey(apiKey);
+}
+
+export function getByoGeminiEnabled(): Promise<boolean> {
+  return window.electron.getByoGeminiEnabled();
+}
+
+export function setByoGeminiEnabled(
+  enabled: boolean
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setByoGeminiEnabled(enabled);
+}
+
+export function onGeminiApiKeyChanged(
+  callback: (payload: { hasKey: boolean }) => void
+): () => void {
+  return window.electron.onGeminiApiKeyChanged(callback);
 }
 
 export function isAdminMode(): Promise<boolean> {
@@ -584,6 +605,66 @@ export function setPreferClaudeSummary(
   prefer: boolean
 ): Promise<{ success: boolean; error?: string }> {
   return window.electron.setPreferClaudeSummary(prefer);
+}
+
+export function getPreferredTranslationProvider(): Promise<ByoTextProviderPreference> {
+  return window.electron.getPreferredTranslationProvider();
+}
+
+export function setPreferredTranslationProvider(
+  provider: ByoTextProviderPreference
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setPreferredTranslationProvider(provider);
+}
+
+export function getPreferredReviewProvider(): Promise<ByoTextProviderPreference> {
+  return window.electron.getPreferredReviewProvider();
+}
+
+export function setPreferredReviewProvider(
+  provider: ByoTextProviderPreference
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setPreferredReviewProvider(provider);
+}
+
+export function getPreferredSummaryProvider(): Promise<ByoTextProviderPreference> {
+  return window.electron.getPreferredSummaryProvider();
+}
+
+export function setPreferredSummaryProvider(
+  provider: ByoTextProviderPreference
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setPreferredSummaryProvider(provider);
+}
+
+export function getByoGeminiDraftModel(): Promise<ByoGeminiDraftModel> {
+  return window.electron.getByoGeminiDraftModel();
+}
+
+export function setByoGeminiDraftModel(
+  model: ByoGeminiDraftModel
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setByoGeminiDraftModel(model);
+}
+
+export function getByoGeminiReviewModel(): Promise<ByoGeminiReviewModel> {
+  return window.electron.getByoGeminiReviewModel();
+}
+
+export function setByoGeminiReviewModel(
+  model: ByoGeminiReviewModel
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setByoGeminiReviewModel(model);
+}
+
+export function getByoGeminiSummaryModel(): Promise<ByoGeminiSummaryModel> {
+  return window.electron.getByoGeminiSummaryModel();
+}
+
+export function setByoGeminiSummaryModel(
+  model: ByoGeminiSummaryModel
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setByoGeminiSummaryModel(model);
 }
 
 export function getStage5VideoSuggestionMode(): Promise<Stage5VideoSuggestionMode> {

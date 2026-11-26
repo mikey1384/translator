@@ -6,12 +6,15 @@ import { ApiKeyInputWrapper } from '../../components/ApiKeyOptionBox';
 import {
   hasAnthropicByoConfigured,
   hasElevenLabsByoConfigured,
+  hasGeminiByoConfigured,
   hasOpenAiByoConfigured,
 } from '../../state/byo-runtime';
 import { colors } from '../../styles';
 
 interface ByoApiKeysColumnProps {
-  onOpenGuide: (provider: 'openai' | 'anthropic' | 'elevenlabs') => void;
+  onOpenGuide: (
+    provider: 'openai' | 'anthropic' | 'gemini' | 'elevenlabs'
+  ) => void;
   className?: string;
 }
 
@@ -130,6 +133,18 @@ export default function ByoApiKeysColumn({
   const validateAnthropicKey = useAiStore(state => state.validateAnthropicKey);
   const byoAnthropicUnlocked = useAiStore(state => state.byoAnthropicUnlocked);
 
+  const geminiKeyValue = useAiStore(state => state.geminiKeyValue);
+  const geminiKeyLast4 = useAiStore(state => state.geminiKeyLast4);
+  const geminiKeyPresent = useAiStore(state => state.geminiKeyPresent);
+  const geminiKeyLoading = useAiStore(state => state.geminiKeyLoading);
+  const savingGeminiKey = useAiStore(state => state.savingGeminiKey);
+  const validatingGeminiKey = useAiStore(state => state.validatingGeminiKey);
+  const setGeminiKeyValue = useAiStore(state => state.setGeminiKeyValue);
+  const saveGeminiKey = useAiStore(state => state.saveGeminiKey);
+  const clearGeminiKey = useAiStore(state => state.clearGeminiKey);
+  const validateGeminiKey = useAiStore(state => state.validateGeminiKey);
+  const byoGeminiUnlocked = useAiStore(state => state.byoGeminiUnlocked);
+
   const elevenLabsKeyValue = useAiStore(state => state.elevenLabsKeyValue);
 
   const elevenLabsKeyLast4 = useAiStore(state => state.elevenLabsKeyLast4);
@@ -159,11 +174,17 @@ export default function ByoApiKeysColumn({
     byoAnthropicUnlocked,
     anthropicKeyPresent,
   });
+  const hasGeminiConfigured = hasGeminiByoConfigured({
+    byoUnlocked,
+    byoGeminiUnlocked,
+    geminiKeyPresent,
+  });
   const hasElevenLabsConfigured = hasElevenLabsByoConfigured({
     byoElevenLabsUnlocked,
     elevenLabsKeyPresent,
   });
-  const hasTranslationCoverage = hasOpenAiConfigured || hasAnthropicConfigured;
+  const hasTranslationCoverage =
+    hasOpenAiConfigured || hasAnthropicConfigured || hasGeminiConfigured;
   // Transcription and dubbing are ElevenLabs-only; an OpenAI key no longer
   // covers audio.
   const hasAudioCoverage = hasElevenLabsConfigured;
@@ -172,8 +193,9 @@ export default function ByoApiKeysColumn({
     [
       hasOpenAiConfigured ? 'OpenAI' : '',
       hasAnthropicConfigured ? 'Anthropic' : '',
+      hasGeminiConfigured ? 'Gemini' : '',
     ].filter(Boolean),
-    'OpenAI / Anthropic'
+    'OpenAI / Anthropic / Gemini'
   );
   const audioHint = formatCoverageHint(
     [hasElevenLabsConfigured ? 'ElevenLabs' : ''].filter(Boolean),
@@ -258,6 +280,24 @@ export default function ByoApiKeysColumn({
             validating={validatingAnthropicKey}
             compact
             onHelpClick={() => onOpenGuide('anthropic')}
+          />
+        </ApiKeyInputWrapper>
+
+        <ApiKeyInputWrapper satisfied={hasGeminiConfigured}>
+          <ApiKeyInput
+            provider="gemini"
+            value={geminiKeyValue}
+            onChange={setGeminiKeyValue}
+            onSave={saveGeminiKey}
+            onValidate={validateGeminiKey}
+            onClear={clearGeminiKey}
+            keyPresent={geminiKeyPresent}
+            keyLast4={geminiKeyLast4}
+            loading={geminiKeyLoading}
+            saving={savingGeminiKey}
+            validating={validatingGeminiKey}
+            compact
+            onHelpClick={() => onOpenGuide('gemini')}
           />
         </ApiKeyInputWrapper>
 

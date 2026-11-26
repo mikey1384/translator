@@ -17,7 +17,7 @@ import {
 const VALIDATION_COOLDOWN_MS = 2000;
 
 interface ApiKeyInputProps {
-  provider: 'openai' | 'anthropic' | 'elevenlabs';
+  provider: 'openai' | 'anthropic' | 'gemini' | 'elevenlabs';
   value: string;
   onChange: (value: string) => void;
   onSave: () => Promise<{ success: boolean; error?: string }>;
@@ -36,12 +36,14 @@ interface ApiKeyInputProps {
 const placeholders: Record<string, string> = {
   openai: 'sk-...',
   anthropic: 'sk-ant-...',
+  gemini: 'AIza...',
   elevenlabs: 'sk_...',
 };
 
 const providerNames: Record<string, string> = {
   openai: 'OpenAI',
   anthropic: 'Anthropic',
+  gemini: 'Google Gemini',
   elevenlabs: 'ElevenLabs',
 };
 

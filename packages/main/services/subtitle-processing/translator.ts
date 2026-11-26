@@ -286,14 +286,17 @@ Output format (exactly ${batch.segments.length} lines):
       const isProviderAuthError =
         msg.includes(ERROR_CODES.OPENAI_KEY_INVALID) ||
         msg.includes(ERROR_CODES.ANTHROPIC_KEY_INVALID) ||
+        msg.includes(ERROR_CODES.GEMINI_KEY_INVALID) ||
         msg.includes(ERROR_CODES.ELEVENLABS_KEY_INVALID);
       const isProviderRateLimit =
         msg.includes(ERROR_CODES.OPENAI_RATE_LIMIT) ||
         msg.includes(ERROR_CODES.ANTHROPIC_RATE_LIMIT) ||
+        msg.includes(ERROR_CODES.GEMINI_RATE_LIMIT) ||
         msg.includes(ERROR_CODES.ELEVENLABS_RATE_LIMIT);
       const isProviderQuotaError =
         msg.includes(ERROR_CODES.OPENAI_INSUFFICIENT_QUOTA) ||
         msg.includes(ERROR_CODES.ANTHROPIC_INSUFFICIENT_QUOTA) ||
+        msg.includes(ERROR_CODES.GEMINI_INSUFFICIENT_QUOTA) ||
         msg.includes(ERROR_CODES.ELEVENLABS_INSUFFICIENT_QUOTA) ||
         lowerMsg.includes('insufficient_quota');
 

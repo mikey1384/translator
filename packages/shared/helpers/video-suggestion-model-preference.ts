@@ -14,6 +14,9 @@ export const STAGE5_CREDITS_VIDEO_SUGGESTION_DIRECT_MODELS = [
   STAGE5_REVIEW_TRANSLATION_MODEL,
   AI_MODELS.CLAUDE_SONNET,
   AI_MODELS.CLAUDE_OPUS,
+  AI_MODELS.GEMINI_HYDROGEN,
+  AI_MODELS.GEMINI_NEON,
+  AI_MODELS.GEMINI_CARBON,
 ] as const;
 
 export const BYO_VIDEO_SUGGESTION_DIRECT_MODELS =
@@ -106,6 +109,9 @@ function resolveApiKeyModeVideoSuggestionFallback(
     STAGE5_REVIEW_TRANSLATION_MODEL,
     AI_MODELS.CLAUDE_SONNET,
     AI_MODELS.CLAUDE_OPUS,
+    AI_MODELS.GEMINI_HYDROGEN,
+    AI_MODELS.GEMINI_NEON,
+    AI_MODELS.GEMINI_CARBON,
   ]);
 
   const available = candidates.find(model =>
@@ -118,10 +124,12 @@ function resolveStage5CreditModeDirectSelection(
   selected: DirectVideoSuggestionModelId
 ): DirectVideoSuggestionModelId {
   // Stage5 credits run video suggestions on Claude's current models: an older
-  // explicit GPT pick maps to the same tier (GPT high -> Opus, else Sonnet).
+  // explicit GPT or Gemini pick maps to the same tier (high -> Opus, else Sonnet).
   if (
     selected === AI_MODELS.CLAUDE_OPUS ||
-    selected === STAGE5_REVIEW_TRANSLATION_MODEL
+    selected === STAGE5_REVIEW_TRANSLATION_MODEL ||
+    selected === AI_MODELS.GEMINI_NEON ||
+    selected === AI_MODELS.GEMINI_CARBON
   ) {
     return AI_MODELS.CLAUDE_OPUS;
   }
@@ -152,6 +160,15 @@ export function normalizeVideoSuggestionModelPreference(
   ) {
     return AI_MODELS.CLAUDE_OPUS;
   }
+  if (normalized === AI_MODELS.GEMINI_HYDROGEN) {
+    return AI_MODELS.GEMINI_HYDROGEN;
+  }
+  if (normalized === AI_MODELS.GEMINI_NEON) {
+    return AI_MODELS.GEMINI_NEON;
+  }
+  if (normalized === AI_MODELS.GEMINI_CARBON) {
+    return AI_MODELS.GEMINI_CARBON;
+  }
   if (normalized === 'default') {
     return 'default';
   }
@@ -178,7 +195,9 @@ export function normalizeStage5VideoSuggestionMode(
   );
   return normalized === 'quality' ||
     normalized === STAGE5_REVIEW_TRANSLATION_MODEL ||
-    normalized === AI_MODELS.CLAUDE_OPUS
+    normalized === AI_MODELS.CLAUDE_OPUS ||
+    normalized === AI_MODELS.GEMINI_NEON ||
+    normalized === AI_MODELS.GEMINI_CARBON
     ? 'high'
     : 'standard';
 }
@@ -200,7 +219,10 @@ export function normalizeByoVideoSuggestionModel(
     normalized === AI_MODELS.GPT ||
     normalized === STAGE5_REVIEW_TRANSLATION_MODEL ||
     normalized === AI_MODELS.CLAUDE_SONNET ||
-    normalized === AI_MODELS.CLAUDE_OPUS
+    normalized === AI_MODELS.CLAUDE_OPUS ||
+    normalized === AI_MODELS.GEMINI_HYDROGEN ||
+    normalized === AI_MODELS.GEMINI_NEON ||
+    normalized === AI_MODELS.GEMINI_CARBON
   ) {
     return normalized;
   }
@@ -272,12 +294,17 @@ export function resolveEffectiveVideoSuggestionModel({
     selected === AI_MODELS.GPT ||
     selected === STAGE5_REVIEW_TRANSLATION_MODEL ||
     selected === AI_MODELS.CLAUDE_SONNET ||
-    selected === AI_MODELS.CLAUDE_OPUS
+    selected === AI_MODELS.CLAUDE_OPUS ||
+    selected === AI_MODELS.GEMINI_HYDROGEN ||
+    selected === AI_MODELS.GEMINI_NEON ||
+    selected === AI_MODELS.GEMINI_CARBON
   ) {
     if (apiKeyModeEnabled) {
       return resolveApiKeyModeVideoSuggestionFallback(
         selected === STAGE5_REVIEW_TRANSLATION_MODEL ||
-          selected === AI_MODELS.CLAUDE_OPUS
+          selected === AI_MODELS.CLAUDE_OPUS ||
+          selected === AI_MODELS.GEMINI_NEON ||
+          selected === AI_MODELS.GEMINI_CARBON
           ? [selected, normalizedReviewModel, normalizedDraftModel]
           : [selected, normalizedDraftModel, normalizedReviewModel],
         normalizedAvailableByoModels

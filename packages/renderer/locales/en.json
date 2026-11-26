@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Your ElevenLabs API key is invalid or expired. Please check your key in Settings.",
       "elevenlabsRateLimit": "ElevenLabs rate limit reached. Please wait a moment and try again.",
       "elevenlabsInsufficientQuota": "Your ElevenLabs account has insufficient credits. Please add credits at elevenlabs.io.",
-      "genericApiError": "API request failed. Please check your API key and account status."
+      "genericApiError": "API request failed. Please check your API key and account status.",
+      "geminiKeyInvalid": "Your Google Gemini API key is invalid or expired. Please check your key in Settings.",
+      "geminiRateLimit": "Google Gemini rate limit reached. Please wait a moment and try again.",
+      "geminiInsufficientQuota": "Your Google Gemini API quota is exhausted. Please check billing at aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Transcription (ElevenLabs Scribe) is temporarily unavailable or could not be reached after several attempts. Please try again in a few minutes.",
@@ -625,7 +628,7 @@
       "toggleOff": "Now using your Stage5 minutes.",
       "toggleError": "Failed to update preference.",
       "toggleAria": "Use my API keys",
-      "requirementTranslation": "Needs an OpenAI or Anthropic key for translation",
+      "requirementTranslation": "Needs an OpenAI, Anthropic, or Google Gemini key for translation",
       "activeKeys_one": "{{count}} key ready"
     },
     "performanceQuality": {
@@ -714,7 +717,7 @@
       "summary": "Summary",
       "dubbing": "Dubbing",
       "elevenLabsTts": "ElevenLabs",
-      "videoSuggestionModelUnavailable": "No video recommendation model is available with your own keys. Turn on your OpenAI or Anthropic key to use this.",
+      "videoSuggestionModelUnavailable": "No video recommendation model is available with your own keys. Turn on your OpenAI, Anthropic, or Google Gemini key to use this.",
       "videoSuggestionModelRequiresOpenAi": "Needs the API-key unlock, your OpenAI key, and the OpenAI switch turned on.",
       "videoSuggestionModelRequiresAnthropic": "Needs the API-key unlock, your Anthropic key, and the Anthropic switch turned on.",
       "summaryRequiresOpenAi": "Needs the API-key unlock and your OpenAI key.",
@@ -723,7 +726,13 @@
       "transcriptionRequiresElevenLabs": "Transcription uses ElevenLabs Scribe only. Add an ElevenLabs API key to transcribe with your own keys. Without one, transcription uses your Stage5 minutes, which aren’t used while your own keys are on. Your OpenAI key is still used for translation.",
       "runtimeFallback": "Runtime fallback in API key mode",
       "videoSuggestionLegacyFollowDraft": "Your earlier setting is kept: this follows your draft translation model until you choose a model here.",
-      "videoSuggestionLegacyFollowReview": "Your earlier setting is kept: this follows your review translation model until you choose a model here."
+      "videoSuggestionLegacyFollowReview": "Your earlier setting is kept: this follows your review translation model until you choose a model here.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Needs the API-key unlock and your Google Gemini key.",
+      "summaryRequiresGemini": "Needs the API-key unlock and your Google Gemini key."
     },
     "apiKeyGuide": {
       "title": "How to get API keys",
@@ -732,13 +741,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API Keys",
         "createNewSecretKey": "Create new secret key",
         "createKey": "Create Key",
-        "profileApiKey": "Profile + API key"
+        "profileApiKey": "Profile + API key",
+        "createApiKey": "Create API key"
       },
       "openai": {
         "step1": "Go to",
@@ -765,6 +776,13 @@
         "step4": "Add a payment method in Subscription settings (required for API usage beyond free tier)",
         "step5": "Copy your API key and paste it in Stage5",
         "audioDescription": "ElevenLabs powers all transcription (Scribe) and dubbing. Without your own ElevenLabs key, both use your Stage5 minutes, which aren’t used while your own keys are on."
+      },
+      "gemini": {
+        "step1": "Go to",
+        "step2": "Sign in with your Google account",
+        "step3": "Click",
+        "step4": "Enable billing in Google Cloud / AI Studio if you need higher limits",
+        "step5": "Copy the key (starts with AIza) and paste it in Stage5"
       }
     },
     "apiKey": {
@@ -781,11 +799,11 @@
       "title": "Your AI stack"
     },
     "agentControl": {
-      "description": "Let Claude Code, Claude Desktop, Codex, or another MCP agent control Translator on this computer. When enabled, agents can download videos, manage your library, edit and translate subtitles, and export files to allowed directories.",
+      "description": "Let Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity, or another MCP agent control Translator on this computer. When enabled, agents can download videos, manage your library, edit and translate subtitles, and export files to allowed directories.",
       "enableLabel": "Allow agent control of this app",
       "enableAria": "Enable agent control",
       "connection": {
-        "title": "Connect Claude Code, Claude Desktop, or Codex",
+        "title": "Connect Claude Code, Claude Desktop, Codex, Gemini CLI, or Antigravity",
         "instructions": "Click a button to register the “translator” MCP server. For other agents, add an STDIO MCP server named “translator” with this launcher path, then restart the agent so the new tools appear.",
         "copyPath": "Copy path",
         "copied": "Copied",
@@ -805,7 +823,9 @@
         "failedCli": "Could not connect {{app}} automatically. Run this in a terminal:",
         "failedGeneric": "Could not connect {{app}}. Try again.",
         "appNotFound": "{{app}} isn’t installed on this computer. Install it, open it once, then connect again.",
-        "download": "Download {{app}}"
+        "download": "Download {{app}}",
+        "connectGeminiCli": "Connect Gemini CLI",
+        "connectAntigravity": "Connect Antigravity"
       },
       "status": {
         "enabled": "Enabled",
@@ -838,7 +858,7 @@
         "addDirectory": "Failed to add directory.",
         "removeDirectory": "Failed to remove directory."
       },
-      "pitch": "Translate for free with the Claude or Codex subscription you already have.",
+      "pitch": "Translate for free with the Claude, Codex, or Gemini subscription you already have.",
       "freeTitle": "Translate free with your own AI"
     },
     "siteConnection": {
@@ -942,7 +962,8 @@
       "contact": "Contact support",
       "retry": "Try again",
       "supportSubject": "I can’t buy minutes in Translator"
-    }
+    },
+    "usingGemini": "Using Gemini"
   },
   "branding": {
     "translator": "translator",
@@ -1087,7 +1108,7 @@
       "enable": "Use my API keys",
       "done": "Done",
       "missingTranslation": "Translation still needs {{providers}}.",
-      "messageElevenLabsAudio": "To use your API keys, you need an OpenAI or Anthropic key for translation. Transcription and dubbing use ElevenLabs only, so add an ElevenLabs key for those too.",
+      "messageElevenLabsAudio": "To use your API keys, you need an OpenAI, Anthropic, or Google Gemini key for translation. Transcription and dubbing use ElevenLabs only, so add an ElevenLabs key for those too.",
       "audioNeedsElevenLabs": "Without an ElevenLabs key, transcription and dubbing are unavailable while your API keys are on."
     },
     "saveSrtFileAs": "Save SRT file as",

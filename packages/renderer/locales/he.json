@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "מפתח ה-API של ElevenLabs שלכם לא תקף או שפג תוקפו. בדקו את המפתח בהגדרות.",
       "elevenlabsRateLimit": "הגעתם למגבלת הבקשות של ElevenLabs. חכו רגע ונסו שוב.",
       "elevenlabsInsufficientQuota": "בחשבון ה-ElevenLabs שלכם אין מספיק קרדיטים. הוסיפו קרדיטים ב-elevenlabs.io.",
-      "genericApiError": "בקשת ה-API נכשלה. בדקו את מפתח ה-API ואת מצב החשבון שלכם."
+      "genericApiError": "בקשת ה-API נכשלה. בדקו את מפתח ה-API ואת מצב החשבון שלכם.",
+      "geminiKeyInvalid": "מפתח ה-API של Google Gemini שלכם לא תקף או שפג תוקפו. בדקו את המפתח בהגדרות.",
+      "geminiRateLimit": "הגעתם למגבלת הבקשות של Google Gemini. חכו רגע ונסו שוב.",
+      "geminiInsufficientQuota": "מכסת ה-API של Google Gemini שלכם נגמרה. בדקו את החיוב ב-aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "התמלול (ElevenLabs Scribe) לא זמין כרגע, או שלא הצלחנו להתחבר אליו אחרי כמה ניסיונות. נסו שוב בעוד כמה דקות.",
@@ -724,7 +727,13 @@
       "dubbingRequiresElevenLabs": "הדיבוב משתמש ב-ElevenLabs בלבד. הוסיפו מפתח API של ElevenLabs כדי לדבב עם המפתחות שלכם. בלעדיו, הדיבוב משתמש בדקות של Stage5, שלא נעשה בהן שימוש כל עוד המפתחות שלכם מופעלים.",
       "runtimeFallback": "חלופת זמן ריצה במצב מפתח API",
       "videoSuggestionLegacyFollowDraft": "ההגדרה הקודמת שלכם נשמרה: עד שתבחרו כאן מודל, ייעשה שימוש במודל טיוטת התרגום שלכם.",
-      "videoSuggestionLegacyFollowReview": "ההגדרה הקודמת שלכם נשמרה: עד שתבחרו כאן מודל, ייעשה שימוש במודל בדיקת התרגום שלכם."
+      "videoSuggestionLegacyFollowReview": "ההגדרה הקודמת שלכם נשמרה: עד שתבחרו כאן מודל, ייעשה שימוש במודל בדיקת התרגום שלכם.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "נדרשים: פתיחת מפתחות ה-API ומפתח ה-Google Gemini שלכם.",
+      "summaryRequiresGemini": "נדרשים: פתיחת מפתחות ה-API ומפתח ה-Google Gemini שלכם."
     },
     "apiKeyGuide": {
       "title": "איך להשיג מפתחות API",
@@ -733,13 +742,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "מפתחות API",
         "createNewSecretKey": "צור מפתח סודי חדש",
         "createKey": "צור מפתח",
-        "profileApiKey": "פרופיל + מפתח API"
+        "profileApiKey": "פרופיל + מפתח API",
+        "createApiKey": "צור מפתח API"
       },
       "openai": {
         "step1": "היכנסו אל",
@@ -766,6 +777,13 @@
         "step4": "הוסיפו אמצעי תשלום בהגדרות המנוי (נדרש לשימוש ב-API מעבר לשכבה החינמית)",
         "step5": "העתיקו את מפתח ה-API שלכם והדביקו אותו ב-Stage5",
         "audioDescription": "‏ElevenLabs מפעיל את כל התמלול (Scribe) והדיבוב. בלי מפתח ElevenLabs משלכם, שניהם משתמשים בדקות של Stage5, שלא נעשה בהן שימוש כל עוד המפתחות שלכם מופעלים."
+      },
+      "gemini": {
+        "step1": "היכנסו אל",
+        "step2": "התחברו עם חשבון ה-Google שלכם",
+        "step3": "לחצו על",
+        "step4": "הפעילו חיוב ב-Google Cloud / AI Studio אם אתם צריכים מגבלות גבוהות יותר",
+        "step5": "העתיקו את המפתח (מתחיל ב-AIza) והדביקו אותו ב-Stage5"
       }
     },
     "apiKey": {
@@ -796,11 +814,11 @@
       "signOut": "התנתקות"
     },
     "agentControl": {
-      "description": "אפשרו ל-Claude Code, ל-Claude Desktop, ל-Codex או לסוכן MCP אחר לשלוט ב-Translator במחשב הזה. כשהאפשרות מופעלת, סוכנים יכולים להוריד סרטונים, לנהל את הספרייה שלכם, לערוך ולתרגם כתוביות ולייצא קבצים לתיקיות מורשות.",
+      "description": "אפשרו ל-Claude Code, ל-Claude Desktop, ל-Codex, Gemini CLI, Antigravity או לסוכן MCP אחר לשלוט ב-Translator במחשב הזה. כשהאפשרות מופעלת, סוכנים יכולים להוריד סרטונים, לנהל את הספרייה שלכם, לערוך ולתרגם כתוביות ולייצא קבצים לתיקיות מורשות.",
       "enableLabel": "לאפשר לסוכנים לשלוט ביישום הזה",
       "enableAria": "הפעלת בקרת סוכנים",
       "connection": {
-        "title": "חיבור Claude Code, Claude Desktop או Codex",
+        "title": "חיבור Claude Code, Claude Desktop, Codex, Gemini CLI או Antigravity",
         "instructions": "לחצו על כפתור כדי לרשום את שרת ה-MCP “translator”. לסוכנים אחרים, הוסיפו שרת MCP מסוג STDIO בשם “translator” עם נתיב ההפעלה הזה, ואז הפעילו מחדש את הסוכן כדי שהכלים החדשים יופיעו.",
         "copyPath": "העתקת הנתיב",
         "copied": "הועתק",
@@ -820,7 +838,9 @@
         "failedCli": "לא הצלחנו לחבר את {{app}} אוטומטית. הריצו את זה בטרמינל:",
         "failedGeneric": "לא הצלחנו לחבר את {{app}}. נסו שוב.",
         "appNotFound": "‏{{app}} לא מותקן במחשב הזה. התקינו אותו, פתחו אותו פעם אחת ואז התחברו שוב.",
-        "download": "הורדת {{app}}"
+        "download": "הורדת {{app}}",
+        "connectGeminiCli": "חיבור Gemini CLI",
+        "connectAntigravity": "חיבור Antigravity"
       },
       "status": {
         "enabled": "מופעל",
@@ -852,7 +872,7 @@
         "addDirectory": "לא ניתן היה להוסיף את התיקייה.",
         "removeDirectory": "לא ניתן היה להסיר את התיקייה."
       },
-      "pitch": "תרגמו בחינם עם מנוי Claude או Codex שכבר יש לכם.",
+      "pitch": "תרגמו בחינם עם מנוי Claude, Codex או Gemini שכבר יש לכם.",
       "freeTitle": "תרגמו בחינם עם הבינה המלאכותית שלכם"
     },
     "creditTransfer": {
@@ -942,7 +962,8 @@
       "contact": "פנייה לתמיכה",
       "retry": "לנסות שוב",
       "supportSubject": "בעיה בקניית דקות ב-Translator"
-    }
+    },
+    "usingGemini": "משתמש ב-Gemini"
   },
   "branding": {
     "translator": "translator",

@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "ElevenLabs APIキーが無効または期限切れです。設定でキーを確認してください。",
       "elevenlabsRateLimit": "ElevenLabsのレート制限に達しました。しばらくしてから再試行してください。",
       "elevenlabsInsufficientQuota": "ElevenLabsアカウントのクレジットが不足しています。elevenlabs.ioでクレジットを追加してください。",
-      "genericApiError": "APIリクエストが失敗しました。APIキーとアカウントの状態を確認してください。"
+      "genericApiError": "APIリクエストが失敗しました。APIキーとアカウントの状態を確認してください。",
+      "geminiKeyInvalid": "Google Gemini APIキーが無効または期限切れです。設定でキーを確認してください。",
+      "geminiRateLimit": "Google Geminiのレート制限に達しました。しばらくしてから再試行してください。",
+      "geminiInsufficientQuota": "Google Gemini APIの割り当て上限に達しました。aistudio.google.comで課金設定を確認してください。"
     },
     "transcription": {
       "providerUnavailable": "文字起こし（ElevenLabs Scribe）が一時的に利用できないか、数回試行しても接続できませんでした。数分後にもう一度お試しください。",
@@ -716,7 +719,13 @@
       "dubbingRequiresElevenLabs": "吹き替えにはElevenLabsのみを使用します。自分のキーで吹き替えるには、ElevenLabsのAPIキーを追加してください。キーがない場合はStage5の時間を使いますが、自分のキーがオンの間はStage5の時間は使われません。",
       "runtimeFallback": "APIキーモードでの実行時フォールバック",
       "videoSuggestionLegacyFollowDraft": "以前の設定を引き継いでいます。ここでモデルを選ぶまでは、下書き翻訳モデルに従います。",
-      "videoSuggestionLegacyFollowReview": "以前の設定を引き継いでいます。ここでモデルを選ぶまでは、レビュー翻訳モデルに従います。"
+      "videoSuggestionLegacyFollowReview": "以前の設定を引き継いでいます。ここでモデルを選ぶまでは、レビュー翻訳モデルに従います。",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "APIキーのアンロックとGoogle Geminiキーが必要です。",
+      "summaryRequiresGemini": "APIキーのアンロックとGoogle Geminiキーが必要です。"
     },
     "apiKeyGuide": {
       "title": "APIキーの取得方法",
@@ -725,13 +734,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic（Claude）",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "APIキー",
         "createNewSecretKey": "新しいシークレットキーを作成",
         "createKey": "キーを作成",
-        "profileApiKey": "プロフィール + APIキー"
+        "profileApiKey": "プロフィール + APIキー",
+        "createApiKey": "APIキーを作成"
       },
       "openai": {
         "step1": "アクセス：",
@@ -758,6 +769,13 @@
         "step4": "サブスクリプション設定で支払い方法を追加（無料プラン超過のAPI使用に必須）",
         "step5": "APIキーをコピーしてStage5に貼り付け",
         "audioDescription": "文字起こし（Scribe）と吹き替えはすべて ElevenLabs で行います。自分の ElevenLabs キーがない場合はどちらも Stage5 の時間を使いますが、自分のキーがオンの間は Stage5 の時間は使われません。"
+      },
+      "gemini": {
+        "step1": "アクセス：",
+        "step2": "Googleアカウントでログイン",
+        "step3": "クリック：",
+        "step4": "より高い上限が必要な場合は、Google Cloud / AI Studioで課金を有効化",
+        "step5": "キー（AIzaで始まる）をコピーしてStage5に貼り付け"
       }
     },
     "apiKey": {
@@ -788,11 +806,11 @@
       "signOut": "サインアウト"
     },
     "agentControl": {
-      "description": "このコンピューター上で、Claude Code、Claude Desktop、Codex、またはその他のMCPエージェントがTranslatorを操作できるようにします。有効にすると、エージェントは動画のダウンロード、ライブラリの管理、字幕の編集と翻訳、許可されたフォルダーへのファイルの書き出しを行えます。",
+      "description": "このコンピューター上で、Claude Code、Claude Desktop、Codex、Gemini CLI、Antigravity、またはその他のMCPエージェントがTranslatorを操作できるようにします。有効にすると、エージェントは動画のダウンロード、ライブラリの管理、字幕の編集と翻訳、許可されたフォルダーへのファイルの書き出しを行えます。",
       "enableLabel": "このアプリのエージェント制御を許可",
       "enableAria": "エージェント制御を有効にする",
       "connection": {
-        "title": "Claude Code、Claude Desktop、またはCodexを接続",
+        "title": "Claude Code、Claude Desktop、Codex、Gemini CLI、またはAntigravityを接続",
         "instructions": "ボタンをクリックすると「translator」MCPサーバーが登録されます。その他のエージェントでは、このランチャーのパスで「translator」という名前のSTDIO MCPサーバーを追加し、新しいツールが表示されるようにエージェントを再起動してください。",
         "copyPath": "パスをコピー",
         "copied": "コピーしました",
@@ -812,7 +830,9 @@
         "failedCli": "{{app}}を自動で接続できませんでした。ターミナルで次を実行してください：",
         "failedGeneric": "{{app}}を接続できませんでした。もう一度お試しください。",
         "appNotFound": "このコンピューターに{{app}}がインストールされていません。インストールして一度起動してから、もう一度接続してください。",
-        "download": "{{app}}をダウンロード"
+        "download": "{{app}}をダウンロード",
+        "connectGeminiCli": "Gemini CLIを接続",
+        "connectAntigravity": "Antigravityを接続"
       },
       "status": {
         "enabled": "有効",
@@ -844,7 +864,7 @@
         "addDirectory": "フォルダーを追加できませんでした。",
         "removeDirectory": "フォルダーを削除できませんでした。"
       },
-      "pitch": "すでにお持ちのClaudeまたはCodexのサブスクリプションで、無料で翻訳できます。",
+      "pitch": "すでにお持ちのClaude、Codex、またはGeminiのサブスクリプションで、無料で翻訳できます。",
       "freeTitle": "自分のAIで無料翻訳"
     },
     "creditTransfer": {
@@ -932,7 +952,8 @@
       "contact": "サポートに連絡",
       "retry": "もう一度試す",
       "supportSubject": "Translatorで時間を購入できません"
-    }
+    },
+    "usingGemini": "Geminiを使用中"
   },
   "branding": {
     "translator": "translator",

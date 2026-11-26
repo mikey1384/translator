@@ -58,22 +58,48 @@ test('Stage5 credit explicit model picks run on Claude at the same tier', () => 
   );
 });
 
-test('Stage5 credits direct model list includes OpenAI and Anthropic options', () => {
+test('Stage5 credits direct model list includes OpenAI, Anthropic, and Gemini options', () => {
   assert.deepEqual(getSupportedDirectVideoSuggestionModels(false), [
     AI_MODELS.GPT,
     STAGE5_REVIEW_TRANSLATION_MODEL,
     AI_MODELS.CLAUDE_SONNET,
     AI_MODELS.CLAUDE_OPUS,
+    AI_MODELS.GEMINI_HYDROGEN,
+    AI_MODELS.GEMINI_NEON,
+    AI_MODELS.GEMINI_CARBON,
   ]);
 });
 
-test('BYO direct model list includes both OpenAI and Anthropic options', () => {
+test('BYO direct model list includes OpenAI, Anthropic, and Gemini options', () => {
   assert.deepEqual(getSupportedDirectVideoSuggestionModels(true), [
     AI_MODELS.GPT,
     STAGE5_REVIEW_TRANSLATION_MODEL,
     AI_MODELS.CLAUDE_SONNET,
     AI_MODELS.CLAUDE_OPUS,
+    AI_MODELS.GEMINI_HYDROGEN,
+    AI_MODELS.GEMINI_NEON,
+    AI_MODELS.GEMINI_CARBON,
   ]);
+});
+
+test('BYO Gemini video suggestions resolve Hydrogen, Neon, and Carbon when Gemini BYO is available', () => {
+  const geminiModels = [
+    AI_MODELS.GEMINI_HYDROGEN,
+    AI_MODELS.GEMINI_NEON,
+    AI_MODELS.GEMINI_CARBON,
+  ];
+  for (const model of geminiModels) {
+    assert.equal(
+      resolveEffectiveVideoSuggestionModel({
+        apiKeyModeEnabled: true,
+        byoModel: model,
+        translationDraftModel: AI_MODELS.GEMINI_HYDROGEN,
+        translationReviewModel: AI_MODELS.GEMINI_NEON,
+        availableByoModels: geminiModels,
+      }),
+      model
+    );
+  }
 });
 
 test('legacy GPT-5.4 video suggestion selections normalize to GPT-5.5', () => {

@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "ElevenLabs API anahtarınız geçersiz veya süresi dolmuş. Lütfen Ayarlar'da anahtarınızı kontrol edin.",
       "elevenlabsRateLimit": "ElevenLabs hız sınırına ulaşıldı. Lütfen bir süre bekleyin ve tekrar deneyin.",
       "elevenlabsInsufficientQuota": "ElevenLabs hesabınızda yeterli kredi yok. Lütfen elevenlabs.io adresinden kredi ekleyin.",
-      "genericApiError": "API isteği başarısız. Lütfen API anahtarınızı ve hesap durumunuzu kontrol edin."
+      "genericApiError": "API isteği başarısız. Lütfen API anahtarınızı ve hesap durumunuzu kontrol edin.",
+      "geminiKeyInvalid": "Google Gemini API anahtarınız geçersiz veya süresi dolmuş. Lütfen Ayarlar'da anahtarınızı kontrol edin.",
+      "geminiRateLimit": "Google Gemini hız sınırına ulaşıldı. Lütfen bir süre bekleyin ve tekrar deneyin.",
+      "geminiInsufficientQuota": "Google Gemini API kotanız doldu. Lütfen aistudio.google.com adresinden faturalandırmayı kontrol edin."
     },
     "transcription": {
       "providerUnavailable": "Yazıya dökme hizmeti (ElevenLabs Scribe) geçici olarak kullanılamıyor ya da birkaç denemeden sonra ulaşılamadı. Lütfen birkaç dakika sonra yeniden deneyin.",
@@ -723,7 +726,13 @@
       "dubbingRequiresElevenLabs": "Seslendirme yalnızca ElevenLabs kullanır. Kendi anahtarlarınızla seslendirmek için bir ElevenLabs API anahtarı ekleyin. Anahtar yoksa seslendirme Stage5 dakikalarınızı kullanır; kendi anahtarlarınız açıkken bu dakikalar kullanılmaz.",
       "runtimeFallback": "API anahtarı modunda çalışma zamanı yedeği",
       "videoSuggestionLegacyFollowDraft": "Önceki ayarınız korundu: siz burada bir model seçene kadar bu ayar taslak çeviri modelinizi izler.",
-      "videoSuggestionLegacyFollowReview": "Önceki ayarınız korundu: siz burada bir model seçene kadar bu ayar inceleme çeviri modelinizi izler."
+      "videoSuggestionLegacyFollowReview": "Önceki ayarınız korundu: siz burada bir model seçene kadar bu ayar inceleme çeviri modelinizi izler.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "API anahtarı kilidinin açılmış olması ve Google Gemini anahtarınız gerekir.",
+      "summaryRequiresGemini": "API anahtarı kilidinin açılmış olması ve Google Gemini anahtarınız gerekir."
     },
     "apiKeyGuide": {
       "title": "API anahtarları nasıl alınır",
@@ -732,13 +741,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API anahtarları",
         "createNewSecretKey": "Yeni gizli anahtar oluştur",
         "createKey": "Anahtar oluştur",
-        "profileApiKey": "Profil + API anahtarı"
+        "profileApiKey": "Profil + API anahtarı",
+        "createApiKey": "API anahtarı oluştur"
       },
       "openai": {
         "step1": "Şu adrese gidin:",
@@ -765,6 +776,13 @@
         "step4": "Abonelik ayarlarına bir ödeme yöntemi ekleyin (ücretsiz seviyenin ötesinde API kullanımı için gerekli)",
         "step5": "API anahtarınızı kopyalayın ve Stage5'e yapıştırın",
         "audioDescription": "Tüm yazıya dökme (Scribe) ve seslendirme işlemleri ElevenLabs ile yapılır. Kendi ElevenLabs anahtarınız olmadan ikisi de Stage5 dakikalarınızı kullanır; kendi anahtarlarınız açıkken bu dakikalar kullanılmaz."
+      },
+      "gemini": {
+        "step1": "Şu adrese gidin:",
+        "step2": "Google hesabınızla oturum açın",
+        "step3": "Tıklayın:",
+        "step4": "Daha yüksek limitler gerekiyorsa Google Cloud / AI Studio’da faturalandırmayı etkinleştirin",
+        "step5": "Anahtarı (AIza ile başlar) kopyalayıp Stage5’e yapıştırın"
       }
     },
     "apiKey": {
@@ -795,11 +813,11 @@
       "signOut": "Oturumu kapat"
     },
     "agentControl": {
-      "description": "Claude Code, Claude Desktop, Codex veya başka bir MCP aracısının bu bilgisayardaki Translator’ı denetlemesine izin verin. Etkinleştirildiğinde aracılar video indirebilir, kitaplığınızı yönetebilir, altyazıları düzenleyip çevirebilir ve dosyaları izin verilen klasörlere aktarabilir.",
+      "description": "Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity veya başka bir MCP aracısının bu bilgisayardaki Translator’ı denetlemesine izin verin. Etkinleştirildiğinde aracılar video indirebilir, kitaplığınızı yönetebilir, altyazıları düzenleyip çevirebilir ve dosyaları izin verilen klasörlere aktarabilir.",
       "enableLabel": "Aracıların bu uygulamayı denetlemesine izin ver",
       "enableAria": "Aracı denetimini etkinleştir",
       "connection": {
-        "title": "Claude Code, Claude Desktop veya Codex’i bağlayın",
+        "title": "Claude Code, Claude Desktop, Codex, Gemini CLI veya Antigravity’yi bağlayın",
         "instructions": "“translator” MCP sunucusunu kaydetmek için bir düğmeye tıklayın. Diğer aracılar için bu başlatıcı yolunu kullanarak “translator” adlı bir STDIO MCP sunucusu ekleyin, ardından yeni araçların görünmesi için aracıyı yeniden başlatın.",
         "copyPath": "Yolu kopyala",
         "copied": "Kopyalandı",
@@ -819,7 +837,9 @@
         "failedCli": "{{app}} otomatik olarak bağlanamadı. Bunu bir terminalde çalıştırın:",
         "failedGeneric": "{{app}} bağlanamadı. Yeniden deneyin.",
         "appNotFound": "{{app}} bu bilgisayarda yüklü değil. Yükleyin, bir kez açın, sonra yeniden bağlanın.",
-        "download": "{{app}} indir"
+        "download": "{{app}} indir",
+        "connectGeminiCli": "Gemini CLI’yi bağla",
+        "connectAntigravity": "Antigravity’yi bağla"
       },
       "status": {
         "enabled": "Etkin",
@@ -852,7 +872,7 @@
         "addDirectory": "Klasör eklenemedi.",
         "removeDirectory": "Klasör kaldırılamadı."
       },
-      "pitch": "Zaten sahip olduğunuz Claude veya Codex aboneliğiyle ücretsiz çeviri yapın.",
+      "pitch": "Zaten sahip olduğunuz Claude, Codex veya Gemini aboneliğiyle ücretsiz çeviri yapın.",
       "freeTitle": "Kendi yapay zekânızla ücretsiz çevirin"
     },
     "creditTransfer": {
@@ -942,7 +962,8 @@
       "contact": "Destekle iletişime geç",
       "retry": "Tekrar dene",
       "supportSubject": "Translator'da dakika satın alamıyorum"
-    }
+    },
+    "usingGemini": "Gemini kullanılıyor"
   },
   "branding": {
     "translator": "translator",

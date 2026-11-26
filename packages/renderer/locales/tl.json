@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Hindi wasto o expired na ang ElevenLabs API key mo. Pakisuri ang key mo sa Mga Setting.",
       "elevenlabsRateLimit": "Naabot na ang rate limit ng ElevenLabs. Mangyaring maghintay sandali at subukan ulit.",
       "elevenlabsInsufficientQuota": "Hindi sapat ang credit sa iyong ElevenLabs account. Mangyaring magdagdag ng credit sa elevenlabs.io.",
-      "genericApiError": "Nabigo ang API request. Mangyaring suriin ang iyong API key at status ng account."
+      "genericApiError": "Nabigo ang API request. Mangyaring suriin ang iyong API key at status ng account.",
+      "geminiKeyInvalid": "Hindi wasto o expired na ang Google Gemini API key mo. Pakisuri ang key mo sa Mga Setting.",
+      "geminiRateLimit": "Naabot na ang rate limit ng Google Gemini. Mangyaring maghintay sandali at subukan ulit.",
+      "geminiInsufficientQuota": "Ubos na ang Google Gemini API quota mo. Pakisuri ang billing sa aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Pansamantalang hindi available ang transcription (ElevenLabs Scribe) o hindi ito ma-reach pagkatapos ng ilang pagsubok. Pakisubukang muli pagkalipas ng ilang minuto.",
@@ -723,7 +726,13 @@
       "dubbingRequiresElevenLabs": "ElevenLabs lang ang ginagamit sa dubbing. Magdagdag ng ElevenLabs API key para mag-dub gamit ang sarili mong mga key. Kung wala nito, gagamitin ng dubbing ang minuto mo sa Stage5, na hindi ginagamit habang naka-on ang sarili mong mga key.",
       "runtimeFallback": "Runtime fallback sa API key mode",
       "videoSuggestionLegacyFollowDraft": "Pinanatili ang dati mong setting: sinusunod nito ang iyong draft translation model hanggang pumili ka ng model dito.",
-      "videoSuggestionLegacyFollowReview": "Pinanatili ang dati mong setting: sinusunod nito ang iyong review translation model hanggang pumili ka ng model dito."
+      "videoSuggestionLegacyFollowReview": "Pinanatili ang dati mong setting: sinusunod nito ang iyong review translation model hanggang pumili ka ng model dito.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Kailangan ang API-key unlock at ang iyong Google Gemini key.",
+      "summaryRequiresGemini": "Kailangan ang API-key unlock at ang iyong Google Gemini key."
     },
     "apiKeyGuide": {
       "title": "Paano kumuha ng mga API key",
@@ -732,13 +741,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "Mga API key",
         "createNewSecretKey": "Gumawa ng bagong secret key",
         "createKey": "Gumawa ng key",
-        "profileApiKey": "Profile + API key"
+        "profileApiKey": "Profile + API key",
+        "createApiKey": "Gumawa ng API key"
       },
       "openai": {
         "step1": "Pumunta sa",
@@ -765,6 +776,13 @@
         "step4": "Magdagdag ng paraan ng pagbabayad sa Subscription settings (kinakailangan para sa API usage lampas sa free tier)",
         "step5": "Kopyahin ang iyong API key at i-paste sa Stage5",
         "audioDescription": "Pinapagana ng ElevenLabs ang lahat ng transcription (Scribe) at dubbing. Kung wala kang sariling ElevenLabs key, pareho silang gagamit ng minuto mo sa Stage5, na hindi ginagamit habang naka-on ang sarili mong mga key."
+      },
+      "gemini": {
+        "step1": "Pumunta sa",
+        "step2": "Mag-sign in gamit ang iyong Google account",
+        "step3": "I-click ang",
+        "step4": "I-enable ang billing sa Google Cloud / AI Studio kung kailangan mo ng mas mataas na limitasyon",
+        "step5": "Kopyahin ang key (nagsisimula sa AIza) at i-paste sa Stage5"
       }
     },
     "apiKey": {
@@ -795,11 +813,11 @@
       "signOut": "Mag-sign out"
     },
     "agentControl": {
-      "description": "Payagan ang Claude Code, Claude Desktop, Codex, o ibang MCP agent na kontrolin ang Translator sa computer na ito. Kapag naka-enable, maaaring mag-download ng mga video ang mga agent, pamahalaan ang iyong library, mag-edit at magsalin ng mga subtitle, at mag-export ng mga file sa mga pinapayagang direktoryo.",
+      "description": "Payagan ang Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity, o ibang MCP agent na kontrolin ang Translator sa computer na ito. Kapag naka-enable, maaaring mag-download ng mga video ang mga agent, pamahalaan ang iyong library, mag-edit at magsalin ng mga subtitle, at mag-export ng mga file sa mga pinapayagang direktoryo.",
       "enableLabel": "Payagan ang mga agent na kontrolin ang app na ito",
       "enableAria": "I-enable ang kontrol ng agent",
       "connection": {
-        "title": "Ikonekta ang Claude Code, Claude Desktop, o Codex",
+        "title": "Ikonekta ang Claude Code, Claude Desktop, Codex, Gemini CLI, o Antigravity",
         "instructions": "Mag-click ng button para irehistro ang “translator” MCP server. Para sa ibang agent, magdagdag ng STDIO MCP server na pinangalanang “translator” gamit ang launcher path na ito, pagkatapos ay i-restart ang agent para lumabas ang mga bagong tool.",
         "copyPath": "Kopyahin ang path",
         "copied": "Nakopya na",
@@ -819,7 +837,9 @@
         "failedCli": "Hindi awtomatikong maikonekta ang {{app}}. Patakbuhin ito sa terminal:",
         "failedGeneric": "Hindi maikonekta ang {{app}}. Subukan ulit.",
         "appNotFound": "Hindi naka-install ang {{app}} sa computer na ito. I-install ito, buksan nang isang beses, saka kumonekta ulit.",
-        "download": "I-download ang {{app}}"
+        "download": "I-download ang {{app}}",
+        "connectGeminiCli": "Ikonekta ang Gemini CLI",
+        "connectAntigravity": "Ikonekta ang Antigravity"
       },
       "status": {
         "enabled": "Naka-enable",
@@ -852,7 +872,7 @@
         "addDirectory": "Hindi naidagdag ang folder.",
         "removeDirectory": "Hindi naalis ang folder."
       },
-      "pitch": "Magsalin nang libre gamit ang Claude o Codex subscription na mayroon ka na.",
+      "pitch": "Magsalin nang libre gamit ang Claude, Codex, o Gemini subscription na mayroon ka na.",
       "freeTitle": "Libreng pagsasalin gamit ang sarili mong AI"
     },
     "creditTransfer": {
@@ -942,7 +962,8 @@
       "contact": "Kontakin ang support",
       "retry": "Subukan ulit",
       "supportSubject": "Hindi ako makabili ng minuto sa Translator"
-    }
+    },
+    "usingGemini": "Gamit ang Gemini"
   },
   "branding": {
     "translator": "translator",

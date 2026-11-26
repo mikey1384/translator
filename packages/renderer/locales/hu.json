@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Az ElevenLabs API-kulcsod érvénytelen vagy lejárt. Ellenőrizd a kulcsot a Beállításokban.",
       "elevenlabsRateLimit": "Elérted az ElevenLabs sebességkorlátját. Várj egy kicsit, és próbáld újra.",
       "elevenlabsInsufficientQuota": "Az ElevenLabs-fiókod egyenlege nem elég. Tölts fel kreditet az elevenlabs.io oldalon.",
-      "genericApiError": "Az API-kérés nem sikerült. Ellenőrizd az API-kulcsodat és a fiókod állapotát."
+      "genericApiError": "Az API-kérés nem sikerült. Ellenőrizd az API-kulcsodat és a fiókod állapotát.",
+      "geminiKeyInvalid": "A Google Gemini API-kulcsod érvénytelen vagy lejárt. Ellenőrizd a kulcsot a Beállításokban.",
+      "geminiRateLimit": "Elérted a Google Gemini sebességkorlátját. Várj egy kicsit, és próbáld újra.",
+      "geminiInsufficientQuota": "Kimerült a Google Gemini API-kvótád. Ellenőrizd a számlázást az aistudio.google.com oldalon."
     },
     "transcription": {
       "providerUnavailable": "Az átírás (ElevenLabs Scribe) átmenetileg nem érhető el, vagy több próbálkozás után sem sikerült csatlakozni hozzá. Próbáld újra néhány perc múlva.",
@@ -718,7 +721,13 @@
       "dubbingRequiresElevenLabs": "A szinkronizálás csak az ElevenLabs-t használja. Adj meg egy ElevenLabs API-kulcsot, ha saját kulcsokkal szeretnél szinkronizálni. Enélkül a szinkronizálás a Stage5-perceidet használja, ezek viszont nem fogynak, amíg a saját kulcsaid be vannak kapcsolva.",
       "runtimeFallback": "Futásidejű tartalék API kulcs módban",
       "videoSuggestionLegacyFollowDraft": "A korábbi beállításod megmaradt: a vázlatfordítási modelledet követi, amíg itt nem választasz modellt.",
-      "videoSuggestionLegacyFollowReview": "A korábbi beállításod megmaradt: az ellenőrző fordítási modelledet követi, amíg itt nem választasz modellt."
+      "videoSuggestionLegacyFollowReview": "A korábbi beállításod megmaradt: az ellenőrző fordítási modelledet követi, amíg itt nem választasz modellt.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Kell hozzá az API-kulcs-feloldás és a Google Gemini-kulcsod.",
+      "summaryRequiresGemini": "Kell hozzá az API-kulcs-feloldás és a Google Gemini-kulcsod."
     },
     "apiKeyGuide": {
       "title": "Hogyan szerezz API-kulcsokat",
@@ -727,13 +736,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API-kulcsok",
         "createNewSecretKey": "Új titkos kulcs létrehozása",
         "createKey": "Kulcs létrehozása",
-        "profileApiKey": "Profil + API-kulcs"
+        "profileApiKey": "Profil + API-kulcs",
+        "createApiKey": "API-kulcs létrehozása"
       },
       "openai": {
         "step1": "Menj ide",
@@ -760,6 +771,13 @@
         "step4": "Adj hozzá fizetési módot az Előfizetés beállításokban (szükséges az API használathoz az ingyenes szinten túl)",
         "step5": "Másold ki az API kulcsod és illeszd be a Stage5-be",
         "audioDescription": "Az összes átírást (Scribe) és szinkronizálást az ElevenLabs végzi. Saját ElevenLabs-kulcs nélkül mindkettő a Stage5-perceidet használja, ezek viszont nem fogynak, amíg a saját kulcsaid be vannak kapcsolva."
+      },
+      "gemini": {
+        "step1": "Menj ide",
+        "step2": "Jelentkezz be a Google-fiókoddal",
+        "step3": "Kattints",
+        "step4": "Engedélyezd a számlázást a Google Cloud / AI Studio felületen, ha magasabb limitekre van szükséged",
+        "step5": "Másold ki a kulcsot (AIza-val kezdődik), és illeszd be a Stage5-be"
       }
     },
     "apiKey": {
@@ -790,11 +808,11 @@
       "signOut": "Kijelentkezés"
     },
     "agentControl": {
-      "description": "Engedélyezd, hogy a Claude Code, a Claude Desktop, a Codex vagy egy másik MCP-ügynök vezérelje a Translatort ezen a gépen. Bekapcsolás után az ügynökök videókat tölthetnek le, kezelhetik a médiatárat, szerkeszthetik és fordíthatják a feliratokat, és fájlokat exportálhatnak az engedélyezett mappákba.",
+      "description": "Engedélyezd, hogy a Claude Code, a Claude Desktop, a Codex, Gemini CLI, Antigravity vagy egy másik MCP-ügynök vezérelje a Translatort ezen a gépen. Bekapcsolás után az ügynökök videókat tölthetnek le, kezelhetik a médiatárat, szerkeszthetik és fordíthatják a feliratokat, és fájlokat exportálhatnak az engedélyezett mappákba.",
       "enableLabel": "Az alkalmazás ügynökvezérlésének engedélyezése",
       "enableAria": "Ügynökvezérlés bekapcsolása",
       "connection": {
-        "title": "A Claude Code, a Claude Desktop vagy a Codex csatlakoztatása",
+        "title": "A Claude Code, a Claude Desktop, a Codex, a Gemini CLI vagy az Antigravity csatlakoztatása",
         "instructions": "Kattints egy gombra a „translator” MCP-kiszolgáló regisztrálásához. Más ügynököknél adj hozzá egy „translator” nevű STDIO MCP-kiszolgálót ezzel az indítási útvonallal, majd indítsd újra az ügynököt, hogy megjelenjenek az új eszközök.",
         "copyPath": "Útvonal másolása",
         "copied": "Másolva",
@@ -814,7 +832,9 @@
         "failedCli": "Nem sikerült automatikusan csatlakoztatni: {{app}}. Futtasd ezt egy terminálban:",
         "failedGeneric": "Nem sikerült csatlakoztatni: {{app}}. Próbáld újra.",
         "appNotFound": "A(z) {{app}} nincs telepítve ezen a gépen. Telepítsd, nyisd meg egyszer, aztán csatlakozz újra.",
-        "download": "{{app}} letöltése"
+        "download": "{{app}} letöltése",
+        "connectGeminiCli": "Gemini CLI csatlakoztatása",
+        "connectAntigravity": "Antigravity csatlakoztatása"
       },
       "status": {
         "enabled": "Bekapcsolva",
@@ -846,7 +866,7 @@
         "addDirectory": "Nem sikerült hozzáadni a mappát.",
         "removeDirectory": "Nem sikerült eltávolítani a mappát."
       },
-      "pitch": "Fordíts ingyen a már meglévő Claude- vagy Codex-előfizetéseddel.",
+      "pitch": "Fordíts ingyen a már meglévő Claude-, Codex- vagy Gemini-előfizetéseddel.",
       "freeTitle": "Fordíts ingyen a saját AI-oddal"
     },
     "creditTransfer": {
@@ -934,7 +954,8 @@
       "contact": "Írok az ügyfélszolgálatnak",
       "retry": "Próbáld újra",
       "supportSubject": "Nem tudok perceket venni a Translatorban"
-    }
+    },
+    "usingGemini": "Gemini használatban"
   },
   "branding": {
     "translator": "translator",

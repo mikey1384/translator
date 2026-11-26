@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "你的 ElevenLabs API 金鑰無效或已過期。請在設定中檢查你的金鑰。",
       "elevenlabsRateLimit": "已達 ElevenLabs 速率限制。請稍候再試。",
       "elevenlabsInsufficientQuota": "你的 ElevenLabs 帳戶額度不足。請至 elevenlabs.io 增加額度。",
-      "genericApiError": "API 請求失敗。請檢查你的 API 金鑰和帳戶狀態。"
+      "genericApiError": "API 請求失敗。請檢查你的 API 金鑰和帳戶狀態。",
+      "geminiKeyInvalid": "你的 Google Gemini API 金鑰無效或已過期。請在設定中檢查你的金鑰。",
+      "geminiRateLimit": "已達 Google Gemini 速率限制。請稍候再試。",
+      "geminiInsufficientQuota": "你的 Google Gemini API 配額已用完。請至 aistudio.google.com 檢查帳單設定。"
     },
     "transcription": {
       "providerUnavailable": "轉錄服務（ElevenLabs Scribe）暫時無法使用，或多次嘗試後仍無法連線。請於幾分鐘後再試一次。",
@@ -716,7 +719,13 @@
       "dubbingRequiresElevenLabs": "配音只使用 ElevenLabs。新增 ElevenLabs API 金鑰，就能用你自己的金鑰配音。沒有金鑰時，配音會使用你的 Stage5 時數；開啟自己的金鑰期間則不會扣除時數。",
       "runtimeFallback": "API 金鑰模式下的執行階段備援",
       "videoSuggestionLegacyFollowDraft": "已保留你之前的設定：在這裡選擇模型之前，會沿用你的草稿翻譯模型。",
-      "videoSuggestionLegacyFollowReview": "已保留你之前的設定：在這裡選擇模型之前，會沿用你的複審翻譯模型。"
+      "videoSuggestionLegacyFollowReview": "已保留你之前的設定：在這裡選擇模型之前，會沿用你的複審翻譯模型。",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "需要解鎖 API 金鑰功能，並新增你的 Google Gemini 金鑰。",
+      "summaryRequiresGemini": "需要解鎖 API 金鑰功能，並新增你的 Google Gemini 金鑰。"
     },
     "apiKeyGuide": {
       "title": "如何取得 API 金鑰",
@@ -725,13 +734,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic（Claude）",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API 金鑰",
         "createNewSecretKey": "建立新的祕密金鑰",
         "createKey": "建立金鑰",
-        "profileApiKey": "個人資料 + API 金鑰"
+        "profileApiKey": "個人資料 + API 金鑰",
+        "createApiKey": "建立 API 金鑰"
       },
       "openai": {
         "step1": "前往",
@@ -758,6 +769,13 @@
         "step4": "在訂閱設定中新增付款方式（超出免費額度時需要）",
         "step5": "複製你的 API 金鑰並貼上到 Stage5 中",
         "audioDescription": "所有轉錄（Scribe）和配音都由 ElevenLabs 提供。沒有你自己的 ElevenLabs 金鑰時，兩者都會使用你的 Stage5 時數；開啟自己的金鑰期間則不會扣除時數。"
+      },
+      "gemini": {
+        "step1": "前往",
+        "step2": "使用你的 Google 帳戶登入",
+        "step3": "點擊",
+        "step4": "如需更高額度，請在 Google Cloud / AI Studio 中啟用帳單",
+        "step5": "複製金鑰（以 AIza 開頭）並貼到 Stage5 中"
       }
     },
     "apiKey": {
@@ -788,11 +806,11 @@
       "signOut": "登出"
     },
     "agentControl": {
-      "description": "允許 Claude Code、Claude Desktop、Codex 或其他 MCP 代理程式在這台電腦上控制 Translator。啟用後，代理程式可以下載影片、管理你的媒體庫、編輯和翻譯字幕，並將檔案匯出至允許的目錄。",
+      "description": "允許 Claude Code、Claude Desktop、Codex、Gemini CLI、Antigravity 或其他 MCP 代理程式在這台電腦上控制 Translator。啟用後，代理程式可以下載影片、管理你的媒體庫、編輯和翻譯字幕，並將檔案匯出至允許的目錄。",
       "enableLabel": "允許代理程式控制此應用程式",
       "enableAria": "啟用代理程式控制",
       "connection": {
-        "title": "連接 Claude Code、Claude Desktop 或 Codex",
+        "title": "連接 Claude Code、Claude Desktop、Codex、Gemini CLI 或 Antigravity",
         "instructions": "點擊按鈕即可註冊「translator」MCP 伺服器。若是其他代理程式，請使用此啟動器路徑新增名為「translator」的 STDIO MCP 伺服器，然後重新啟動代理程式以顯示新工具。",
         "copyPath": "複製路徑",
         "copied": "已複製",
@@ -812,7 +830,9 @@
         "failedCli": "無法自動連接 {{app}}。請在終端機中執行：",
         "failedGeneric": "無法連接 {{app}}，請再試一次。",
         "appNotFound": "這台電腦上沒有安裝 {{app}}。請先安裝並開啟一次，再重新連接。",
-        "download": "下載 {{app}}"
+        "download": "下載 {{app}}",
+        "connectGeminiCli": "連接 Gemini CLI",
+        "connectAntigravity": "連接 Antigravity"
       },
       "status": {
         "enabled": "已啟用",
@@ -844,7 +864,7 @@
         "addDirectory": "無法新增資料夾。",
         "removeDirectory": "無法移除資料夾。"
       },
-      "pitch": "用你已有的 Claude 或 Codex 訂閱免費翻譯。",
+      "pitch": "用你已有的 Claude、Codex 或 Gemini 訂閱免費翻譯。",
       "freeTitle": "用你自己的 AI 免費翻譯"
     },
     "creditTransfer": {
@@ -932,7 +952,8 @@
       "contact": "聯絡客服",
       "retry": "再試一次",
       "supportSubject": "我無法在 Translator 購買時數"
-    }
+    },
+    "usingGemini": "使用Gemini"
   },
   "branding": {
     "translator": "translator",

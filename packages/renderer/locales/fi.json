@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "ElevenLabs API -avaimesi on virheellinen tai vanhentunut. Tarkista avaimesi Asetuksista.",
       "elevenlabsRateLimit": "ElevenLabs-nopeusrajoitus saavutettu. Odota hetki ja yritä uudelleen.",
       "elevenlabsInsufficientQuota": "ElevenLabs-tililläsi ei ole riittävästi krediittejä. Lisää krediittejä osoitteessa elevenlabs.io.",
-      "genericApiError": "API-pyyntö epäonnistui. Tarkista API-avaimesi ja tilisi tila."
+      "genericApiError": "API-pyyntö epäonnistui. Tarkista API-avaimesi ja tilisi tila.",
+      "geminiKeyInvalid": "Google Gemini API -avaimesi on virheellinen tai vanhentunut. Tarkista avaimesi Asetuksista.",
+      "geminiRateLimit": "Google Gemini -nopeusrajoitus saavutettu. Odota hetki ja yritä uudelleen.",
+      "geminiInsufficientQuota": "Google Gemini API -kiintiösi on täynnä. Tarkista laskutus osoitteessa aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Litterointi (ElevenLabs Scribe) ei ole tilapäisesti käytettävissä, tai siihen ei saatu yhteyttä useista yrityksistä huolimatta. Yritä uudelleen muutaman minuutin kuluttua.",
@@ -723,7 +726,13 @@
       "dubbingRequiresElevenLabs": "Dubbaus käyttää vain ElevenLabsia. Lisää ElevenLabs-API-avain, jotta voit dubata omilla avaimillasi. Ilman sitä dubbaus käyttää Stage5-minuuttejasi, joita ei käytetä, kun omat avaimesi ovat päällä.",
       "runtimeFallback": "Ajonaikainen varavaihtoehto API-avaintilassa",
       "videoSuggestionLegacyFollowDraft": "Aiempi asetuksesi on säilytetty: tämä seuraa luonnoskäännösmalliasi, kunnes valitset mallin tästä.",
-      "videoSuggestionLegacyFollowReview": "Aiempi asetuksesi on säilytetty: tämä seuraa tarkistuskäännösmalliasi, kunnes valitset mallin tästä."
+      "videoSuggestionLegacyFollowReview": "Aiempi asetuksesi on säilytetty: tämä seuraa tarkistuskäännösmalliasi, kunnes valitset mallin tästä.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Tarvitaan API-avainten avaus ja Google Gemini -avaimesi.",
+      "summaryRequiresGemini": "Tarvitaan API-avainten avaus ja Google Gemini -avaimesi."
     },
     "apiKeyGuide": {
       "title": "API-avainten hankkiminen",
@@ -732,13 +741,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API-avaimet",
         "createNewSecretKey": "Luo uusi salainen avain",
         "createKey": "Luo avain",
-        "profileApiKey": "Profiili + API-avain"
+        "profileApiKey": "Profiili + API-avain",
+        "createApiKey": "Luo API-avain"
       },
       "openai": {
         "step1": "Siirry osoitteeseen",
@@ -765,6 +776,13 @@
         "step4": "Lisää maksutapa tilausasetuksissa (vaaditaan API-käyttöön ilmaistason yli)",
         "step5": "Kopioi API-avaimesi ja liitä se Stage5:een",
         "audioDescription": "ElevenLabs hoitaa kaiken litteroinnin (Scribe) ja dubbauksen. Ilman omaa ElevenLabs-avainta molemmat käyttävät Stage5-minuuttejasi, joita ei käytetä, kun omat avaimesi ovat päällä."
+      },
+      "gemini": {
+        "step1": "Siirry osoitteeseen",
+        "step2": "Kirjaudu sisään Google-tililläsi",
+        "step3": "Napsauta",
+        "step4": "Ota laskutus käyttöön Google Cloud / AI Studiossa, jos tarvitset korkeammat rajat",
+        "step5": "Kopioi avain (alkaa AIza) ja liitä se Stage5:een"
       }
     },
     "apiKey": {
@@ -795,11 +813,11 @@
       "signOut": "Kirjaudu ulos"
     },
     "agentControl": {
-      "description": "Anna Claude Coden, Claude Desktopin, Codexin tai muun MCP-agentin ohjata Translatoria tällä tietokoneella. Kun asetus on käytössä, agentit voivat ladata videoita, hallita kirjastoasi, muokata ja kääntää tekstityksiä sekä viedä tiedostoja sallittuihin kansioihin.",
+      "description": "Anna Claude Coden, Claude Desktopin, Codex, Gemini CLI, Antigravityin tai muun MCP-agentin ohjata Translatoria tällä tietokoneella. Kun asetus on käytössä, agentit voivat ladata videoita, hallita kirjastoasi, muokata ja kääntää tekstityksiä sekä viedä tiedostoja sallittuihin kansioihin.",
       "enableLabel": "Salli tämän sovelluksen agenttiohjaus",
       "enableAria": "Ota agenttiohjaus käyttöön",
       "connection": {
-        "title": "Yhdistä Claude Code, Claude Desktop tai Codex",
+        "title": "Yhdistä Claude Code, Claude Desktop, Codex, Gemini CLI tai Antigravity",
         "instructions": "Rekisteröi ”translator”-MCP-palvelin napsauttamalla painiketta. Muita agentteja varten lisää STDIO-MCP-palvelin nimeltä ”translator” käyttäen tätä käynnistyspolkua ja käynnistä agentti sitten uudelleen, jotta uudet työkalut tulevat näkyviin.",
         "copyPath": "Kopioi polku",
         "copied": "Kopioitu",
@@ -819,7 +837,9 @@
         "failedCli": "Sovellusta {{app}} ei voitu yhdistää automaattisesti. Suorita tämä päätteessä:",
         "failedGeneric": "Yhdistäminen sovellukseen {{app}} epäonnistui. Yritä uudelleen.",
         "appNotFound": "Sovellusta {{app}} ei ole asennettu tälle tietokoneelle. Asenna se, avaa se kerran ja yhdistä sitten uudelleen.",
-        "download": "Lataa {{app}}"
+        "download": "Lataa {{app}}",
+        "connectGeminiCli": "Yhdistä Gemini CLI",
+        "connectAntigravity": "Yhdistä Antigravity"
       },
       "status": {
         "enabled": "Käytössä",
@@ -852,7 +872,7 @@
         "addDirectory": "Kansiota ei voitu lisätä.",
         "removeDirectory": "Kansiota ei voitu poistaa."
       },
-      "pitch": "Käännä ilmaiseksi Claude- tai Codex-tilauksella, joka sinulla jo on.",
+      "pitch": "Käännä ilmaiseksi Claude-, Codex- tai Gemini-tilauksella, joka sinulla jo on.",
       "freeTitle": "Käännä ilmaiseksi omalla tekoälylläsi"
     },
     "creditTransfer": {
@@ -942,7 +962,8 @@
       "contact": "Ota yhteyttä tukeen",
       "retry": "Yritä uudelleen",
       "supportSubject": "En pysty ostamaan minuutteja Translatorissa"
-    }
+    },
+    "usingGemini": "Käytössä Gemini"
   },
   "branding": {
     "translator": "translator",

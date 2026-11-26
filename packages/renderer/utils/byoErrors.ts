@@ -65,6 +65,9 @@ export function getByoErrorMessage(errorMessage: string | undefined): string {
     if (errorMessage.toLowerCase().includes('anthropic')) {
       return i18n.t('errors.byo.anthropicInsufficientQuota');
     }
+    if (errorMessage.toLowerCase().includes('gemini')) {
+      return i18n.t('errors.byo.geminiInsufficientQuota');
+    }
     if (errorMessage.toLowerCase().includes('elevenlabs')) {
       return i18n.t('errors.byo.elevenlabsInsufficientQuota');
     }
@@ -79,7 +82,7 @@ export function getByoErrorMessage(errorMessage: string | undefined): string {
  */
 export function getByoErrorProvider(
   errorMessage: string | undefined
-): 'openai' | 'anthropic' | 'elevenlabs' | null {
+): 'openai' | 'anthropic' | 'gemini' | 'elevenlabs' | null {
   if (!errorMessage) return null;
 
   if (
@@ -96,6 +99,15 @@ export function getByoErrorProvider(
     errorMessage.toLowerCase().includes('anthropic')
   ) {
     return 'anthropic';
+  }
+
+  if (
+    errorMessage.includes(ERROR_CODES.GEMINI_KEY_INVALID) ||
+    errorMessage.includes(ERROR_CODES.GEMINI_RATE_LIMIT) ||
+    errorMessage.includes(ERROR_CODES.GEMINI_INSUFFICIENT_QUOTA) ||
+    errorMessage.toLowerCase().includes('gemini')
+  ) {
+    return 'gemini';
   }
 
   if (

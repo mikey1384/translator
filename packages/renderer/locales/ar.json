@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "مفتاح ElevenLabs API غير صالح أو منتهي الصلاحية. يرجى التحقق من المفتاح في الإعدادات.",
       "elevenlabsRateLimit": "تم الوصول إلى حد معدل ElevenLabs. يرجى الانتظار لحظة والمحاولة مرة أخرى.",
       "elevenlabsInsufficientQuota": "حساب ElevenLabs الخاص بك لا يحتوي على رصيد كافٍ. يرجى إضافة رصيد على elevenlabs.io.",
-      "genericApiError": "فشل طلب API. يرجى التحقق من مفتاح API وحالة الحساب."
+      "genericApiError": "فشل طلب API. يرجى التحقق من مفتاح API وحالة الحساب.",
+      "geminiKeyInvalid": "مفتاح Google Gemini API غير صالح أو منتهي الصلاحية. يرجى التحقق من المفتاح في الإعدادات.",
+      "geminiRateLimit": "تم الوصول إلى حد معدل Google Gemini. يرجى الانتظار لحظة والمحاولة مرة أخرى.",
+      "geminiInsufficientQuota": "تم استنفاد حصة Google Gemini API الخاصة بك. يرجى التحقق من الفوترة على aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "خدمة النسخ (ElevenLabs Scribe) غير متاحة مؤقتًا أو تعذّر الوصول إليها بعد عدة محاولات. يُرجى المحاولة مرة أخرى بعد بضع دقائق.",
@@ -740,7 +743,13 @@
       "dubbingRequiresElevenLabs": "تستخدم الدبلجة ElevenLabs فقط. أضف مفتاح API من ElevenLabs لتدبلج بمفاتيحك الخاصة. بدونه تستخدم الدبلجة دقائق Stage5، وهي لا تُستخدم ما دامت مفاتيحك الخاصة مفعّلة.",
       "runtimeFallback": "البديل الاحتياطي أثناء التشغيل في وضع مفتاح API",
       "videoSuggestionLegacyFollowDraft": "أبقينا على إعدادك السابق: يتبع هذا نموذج مسودة الترجمة حتى تختار نموذجًا هنا.",
-      "videoSuggestionLegacyFollowReview": "أبقينا على إعدادك السابق: يتبع هذا نموذج مراجعة الترجمة حتى تختار نموذجًا هنا."
+      "videoSuggestionLegacyFollowReview": "أبقينا على إعدادك السابق: يتبع هذا نموذج مراجعة الترجمة حتى تختار نموذجًا هنا.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "يحتاج إلى فتح مفاتيح API ومفتاح Google Gemini الخاص بك.",
+      "summaryRequiresGemini": "يحتاج إلى فتح مفاتيح API ومفتاح Google Gemini الخاص بك."
     },
     "apiKeyGuide": {
       "title": "كيفية الحصول على مفاتيح API",
@@ -749,13 +758,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "مفاتيح API",
         "createNewSecretKey": "إنشاء مفتاح سري جديد",
         "createKey": "إنشاء مفتاح",
-        "profileApiKey": "الملف الشخصي + مفتاح API"
+        "profileApiKey": "الملف الشخصي + مفتاح API",
+        "createApiKey": "إنشاء مفتاح API"
       },
       "openai": {
         "step1": "اذهب إلى",
@@ -782,6 +793,13 @@
         "step4": "أضف طريقة دفع في إعدادات الاشتراك (مطلوب لاستخدام API بعد الطبقة المجانية)",
         "step5": "انسخ مفتاح API الخاص بك والصقه في Stage5",
         "audioDescription": "يتولى ElevenLabs كل عمليات النسخ (Scribe) والدبلجة. بدون مفتاح ElevenLabs خاص بك، يستخدم كلاهما دقائق Stage5، وهي لا تُستخدم ما دامت مفاتيحك الخاصة مفعّلة."
+      },
+      "gemini": {
+        "step1": "اذهب إلى",
+        "step2": "سجّل الدخول بحساب Google الخاص بك",
+        "step3": "انقر",
+        "step4": "فعّل الفوترة في Google Cloud / AI Studio إذا كنت بحاجة إلى حدود أعلى",
+        "step5": "انسخ المفتاح (يبدأ بـ AIza) والصقه في Stage5"
       }
     },
     "apiKey": {
@@ -812,11 +830,11 @@
       "signOut": "تسجيل الخروج"
     },
     "agentControl": {
-      "description": "اسمح لـ Claude Code أو Claude Desktop أو Codex أو أي وكيل MCP آخر بالتحكم في Translator على هذا الكمبيوتر. عند التمكين، يمكن للوكلاء تنزيل مقاطع الفيديو وإدارة مكتبتك وتحرير الترجمات النصية وترجمتها وتصدير الملفات إلى المجلدات المسموح بها.",
+      "description": "اسمح لـ Claude Code أو Claude Desktop أو Codex أو Gemini CLI أو Antigravity أو أي وكيل MCP آخر بالتحكم في Translator على هذا الكمبيوتر. عند التمكين، يمكن للوكلاء تنزيل مقاطع الفيديو وإدارة مكتبتك وتحرير الترجمات النصية وترجمتها وتصدير الملفات إلى المجلدات المسموح بها.",
       "enableLabel": "السماح للوكلاء بالتحكم في هذا التطبيق",
       "enableAria": "تمكين التحكم بالوكلاء",
       "connection": {
-        "title": "ربط Claude Code أو Claude Desktop أو Codex",
+        "title": "ربط Claude Code أو Claude Desktop أو Codex أو Gemini CLI أو Antigravity",
         "instructions": "انقر على زر لتسجيل خادم MCP المسمى “translator”. للوكلاء الآخرين، أضف خادم MCP من نوع STDIO باسم “translator” باستخدام مسار المشغّل هذا، ثم أعد تشغيل الوكيل لتظهر الأدوات الجديدة.",
         "copyPath": "نسخ المسار",
         "copied": "تم النسخ",
@@ -836,7 +854,9 @@
         "failedCli": "تعذّر ربط {{app}} تلقائيًا. شغّل هذا الأمر في الطرفية:",
         "failedGeneric": "تعذّر ربط {{app}}. حاول مرة أخرى.",
         "appNotFound": "التطبيق {{app}} غير مثبّت على هذا الكمبيوتر. ثبّته وافتحه مرة واحدة، ثم أعد الاتصال.",
-        "download": "تنزيل {{app}}"
+        "download": "تنزيل {{app}}",
+        "connectGeminiCli": "ربط Gemini CLI",
+        "connectAntigravity": "ربط Antigravity"
       },
       "status": {
         "enabled": "مفعّل",
@@ -868,7 +888,7 @@
         "addDirectory": "تعذرت إضافة المجلد.",
         "removeDirectory": "تعذرت إزالة المجلد."
       },
-      "pitch": "ترجم مجانًا باشتراك Claude أو Codex الذي لديك بالفعل.",
+      "pitch": "ترجم مجانًا باشتراك Claude أو Codex أو Gemini الذي لديك بالفعل.",
       "freeTitle": "ترجم مجانًا بأداة الذكاء الاصطناعي الخاصة بك"
     },
     "creditTransfer": {
@@ -959,7 +979,8 @@
       "contact": "مراسلة الدعم",
       "retry": "إعادة المحاولة",
       "supportSubject": "لا أستطيع شراء دقائق في Translator"
-    }
+    },
+    "usingGemini": "يتم استخدام Gemini"
   },
   "branding": {
     "translator": "translator",

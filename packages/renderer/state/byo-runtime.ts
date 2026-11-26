@@ -10,32 +10,50 @@ import {
   AI_MODELS,
   STAGE5_CREDIT_MODELS,
   STAGE5_REVIEW_TRANSLATION_MODEL,
+  type ByoGeminiDraftModel,
+  type ByoGeminiReviewModel,
+  type ByoGeminiSummaryModel,
 } from '../../shared/constants';
 
 export type ByoPreferenceProvider = 'elevenlabs' | 'openai' | 'stage5';
+export type ByoTextProvider = 'openai' | 'anthropic' | 'gemini';
 // Transcription is ElevenLabs Scribe only (OpenAI whisper-1 retires
 // 2027-02-26 and its replacement returns no timestamps).
 export type TranscriptionPreferenceProvider = 'elevenlabs' | 'stage5';
 // Dubbing is ElevenLabs-only (OpenAI TTS retires 2027-01-06).
 export type DubbingPreferenceProvider = 'elevenlabs' | 'stage5';
 export type DubbingCreditProvider = 'elevenlabs';
-export type RuntimeProvider = 'stage5' | 'openai' | 'anthropic' | 'elevenlabs';
+export type RuntimeProvider =
+  | 'stage5'
+  | 'openai'
+  | 'anthropic'
+  | 'gemini'
+  | 'elevenlabs';
 
 export type ByoRuntimeState = {
   useApiKeysMode: boolean;
   byoUnlocked: boolean;
   byoAnthropicUnlocked: boolean;
+  byoGeminiUnlocked?: boolean;
   byoElevenLabsUnlocked: boolean;
   stage5AnthropicReviewAvailable: boolean;
   useByo: boolean;
   useByoAnthropic: boolean;
+  useByoGemini?: boolean;
   useByoElevenLabs: boolean;
   keyPresent: boolean;
   anthropicKeyPresent: boolean;
+  geminiKeyPresent?: boolean;
   elevenLabsKeyPresent: boolean;
   preferClaudeTranslation: boolean;
   preferClaudeReview: boolean;
   preferClaudeSummary: boolean;
+  preferredTranslationProvider?: ByoTextProvider;
+  preferredReviewProvider?: ByoTextProvider;
+  preferredSummaryProvider?: ByoTextProvider;
+  byoGeminiDraftModel?: ByoGeminiDraftModel;
+  byoGeminiReviewModel?: ByoGeminiReviewModel;
+  byoGeminiSummaryModel?: ByoGeminiSummaryModel;
   preferredTranscriptionProvider: TranscriptionPreferenceProvider;
   preferredDubbingProvider: DubbingPreferenceProvider;
   stage5DubbingTtsProvider: DubbingCreditProvider;
@@ -44,12 +62,16 @@ export type ByoRuntimeState = {
 export function hasAnyByoEntitlementUnlocked(
   state: Pick<
     ByoRuntimeState,
-    'byoUnlocked' | 'byoAnthropicUnlocked' | 'byoElevenLabsUnlocked'
+    | 'byoUnlocked'
+    | 'byoAnthropicUnlocked'
+    | 'byoGeminiUnlocked'
+    | 'byoElevenLabsUnlocked'
   >
 ): boolean {
   return Boolean(
     state.byoUnlocked ||
     state.byoAnthropicUnlocked ||
+    state.byoGeminiUnlocked ||
     state.byoElevenLabsUnlocked
   );
 }
@@ -77,6 +99,16 @@ export function hasAnthropicByoConfigured(
   return Boolean(state.byoAnthropicUnlocked && state.anthropicKeyPresent);
 }
 
+export function hasGeminiByoConfigured(
+  state: Pick<ByoRuntimeState, 'byoGeminiUnlocked' | 'geminiKeyPresent'> & {
+    byoUnlocked?: boolean;
+  }
+): boolean {
+  return Boolean(
+    (state.byoGeminiUnlocked ?? state.byoUnlocked) && state.geminiKeyPresent
+  );
+}
+
 export function hasElevenLabsByoConfigured(
   state: Pick<ByoRuntimeState, 'byoElevenLabsUnlocked' | 'elevenLabsKeyPresent'>
 ): boolean {
@@ -88,12 +120,16 @@ export function hasByoTranslationConfiguredCoverage(
     ByoRuntimeState,
     | 'byoUnlocked'
     | 'byoAnthropicUnlocked'
+    | 'byoGeminiUnlocked'
     | 'keyPresent'
     | 'anthropicKeyPresent'
+    | 'geminiKeyPresent'
   >
 ): boolean {
   return Boolean(
-    hasOpenAiByoConfigured(state) || hasAnthropicByoConfigured(state)
+    hasOpenAiByoConfigured(state) ||
+    hasAnthropicByoConfigured(state) ||
+    hasGeminiByoConfigured(state)
   );
 }
 
@@ -121,9 +157,11 @@ export function hasApiKeyModeConfiguredCoverage(
     ByoRuntimeState,
     | 'byoUnlocked'
     | 'byoAnthropicUnlocked'
+    | 'byoGeminiUnlocked'
     | 'byoElevenLabsUnlocked'
     | 'keyPresent'
     | 'anthropicKeyPresent'
+    | 'geminiKeyPresent'
     | 'elevenLabsKeyPresent'
   >
 ): boolean {
@@ -157,6 +195,17 @@ export function hasAnthropicByoAvailable(
   );
 }
 
+export function hasGeminiByoAvailable(
+  state: Pick<
+    ByoRuntimeState,
+    'useApiKeysMode' | 'useByoGemini' | 'byoGeminiUnlocked' | 'geminiKeyPresent'
+  > & { byoUnlocked?: boolean }
+): boolean {
+  return Boolean(
+    state.useApiKeysMode && state.useByoGemini && hasGeminiByoConfigured(state)
+  );
+}
+
 export function hasElevenLabsByoAvailable(
   state: Pick<
     ByoRuntimeState,
@@ -179,18 +228,23 @@ export function hasApiKeyModeActiveCoverage(
     | 'useApiKeysMode'
     | 'byoUnlocked'
     | 'byoAnthropicUnlocked'
+    | 'byoGeminiUnlocked'
     | 'byoElevenLabsUnlocked'
     | 'useByo'
     | 'useByoAnthropic'
+    | 'useByoGemini'
     | 'useByoElevenLabs'
     | 'keyPresent'
     | 'anthropicKeyPresent'
+    | 'geminiKeyPresent'
     | 'elevenLabsKeyPresent'
   >
 ): boolean {
   // Translation coverage only; see hasApiKeyModeConfiguredCoverage.
   return Boolean(
-    hasOpenAiByoAvailable(state) || hasAnthropicByoAvailable(state)
+    hasOpenAiByoAvailable(state) ||
+    hasAnthropicByoAvailable(state) ||
+    hasGeminiByoAvailable(state)
   );
 }
 
@@ -302,9 +356,19 @@ export function resolveTranslationDraftProvider(
 ): RuntimeProvider {
   const hasOpenAi = hasOpenAiByoAvailable(state);
   const hasAnthropic = hasAnthropicByoAvailable(state);
+  const hasGemini = hasGeminiByoAvailable(state);
+  const preferred: ByoTextProvider =
+    state.preferredTranslationProvider ??
+    (state.preferClaudeTranslation ? 'anthropic' : 'openai');
 
-  if (state.preferClaudeTranslation && hasAnthropic) {
+  if (preferred === 'gemini' && hasGemini) {
+    return 'gemini';
+  }
+  if (preferred === 'anthropic' && hasAnthropic) {
     return 'anthropic';
+  }
+  if (preferred === 'openai' && hasOpenAi) {
+    return 'openai';
   }
   if (hasOpenAi) {
     return 'openai';
@@ -312,11 +376,17 @@ export function resolveTranslationDraftProvider(
   if (hasAnthropic) {
     return 'anthropic';
   }
+  if (hasGemini) {
+    return 'gemini';
+  }
   return 'stage5';
 }
 
 export function resolveTranslationDraftModel(state: ByoRuntimeState): string {
   const provider = resolveTranslationDraftProvider(state);
+  if (provider === 'gemini') {
+    return state.byoGeminiDraftModel ?? AI_MODELS.GEMINI_HYDROGEN;
+  }
   if (provider === 'anthropic') return AI_MODELS.CLAUDE_SONNET;
   if (provider === 'openai') return AI_MODELS.GPT;
   // Stage5 credits draft on Claude Haiku 5.5 (the servers choose it).
@@ -338,8 +408,15 @@ function resolveStage5TranslationReviewProvider(
 ): RuntimeProvider {
   const hasOpenAi = hasOpenAiByoAvailable(state);
   const hasAnthropic = hasAnthropicByoAvailable(state);
+  const hasGemini = hasGeminiByoAvailable(state);
+  const preferred: ByoTextProvider =
+    state.preferredReviewProvider ??
+    (state.preferClaudeReview ? 'anthropic' : 'openai');
 
-  if (state.preferClaudeReview) {
+  if (preferred === 'gemini') {
+    return hasGemini ? 'gemini' : 'stage5';
+  }
+  if (preferred === 'anthropic') {
     return hasAnthropic ? 'anthropic' : 'stage5';
   }
 
@@ -351,11 +428,18 @@ function resolveByoTranslationReviewProvider(
 ): RuntimeProvider {
   const hasOpenAi = hasOpenAiByoAvailable(state);
   const hasAnthropic = hasAnthropicByoAvailable(state);
+  const hasGemini = hasGeminiByoAvailable(state);
+  const preferred: ByoTextProvider =
+    state.preferredReviewProvider ??
+    (state.preferClaudeReview ? 'anthropic' : 'openai');
 
-  if (state.preferClaudeReview && hasAnthropic) {
+  if (preferred === 'gemini' && hasGemini) {
+    return 'gemini';
+  }
+  if (preferred === 'anthropic' && hasAnthropic) {
     return 'anthropic';
   }
-  if (!state.preferClaudeReview && hasOpenAi) {
+  if (preferred === 'openai' && hasOpenAi) {
     return 'openai';
   }
   if (hasAnthropic) {
@@ -363,6 +447,9 @@ function resolveByoTranslationReviewProvider(
   }
   if (hasOpenAi) {
     return 'openai';
+  }
+  if (hasGemini) {
+    return 'gemini';
   }
   return 'stage5';
 }
@@ -372,6 +459,10 @@ export function resolveTranslationReviewModel(state: ByoRuntimeState): {
   reasoning?: { effort: 'high' };
 } {
   const provider = resolveTranslationReviewProvider(state);
+
+  if (provider === 'gemini') {
+    return { model: state.byoGeminiReviewModel ?? AI_MODELS.GEMINI_NEON };
+  }
 
   if (provider === 'anthropic') {
     return { model: AI_MODELS.CLAUDE_OPUS };
@@ -406,20 +497,31 @@ export function resolveSummaryProvider(
     | 'useApiKeysMode'
     | 'byoUnlocked'
     | 'byoAnthropicUnlocked'
+    | 'byoGeminiUnlocked'
     | 'useByo'
     | 'useByoAnthropic'
+    | 'useByoGemini'
     | 'keyPresent'
     | 'anthropicKeyPresent'
+    | 'geminiKeyPresent'
     | 'preferClaudeSummary'
+    | 'preferredSummaryProvider'
   >
 ): RuntimeProvider {
   const hasOpenAi = hasOpenAiByoAvailable(state);
   const hasAnthropic = hasAnthropicByoAvailable(state);
+  const hasGemini = hasGeminiByoAvailable(state);
+  const preferred: ByoTextProvider =
+    state.preferredSummaryProvider ??
+    (state.preferClaudeSummary ? 'anthropic' : 'openai');
 
-  if (state.preferClaudeSummary && hasAnthropic) {
+  if (preferred === 'gemini' && hasGemini) {
+    return 'gemini';
+  }
+  if (preferred === 'anthropic' && hasAnthropic) {
     return 'anthropic';
   }
-  if (!state.preferClaudeSummary && hasOpenAi) {
+  if (preferred === 'openai' && hasOpenAi) {
     return 'openai';
   }
   if (hasAnthropic) {
@@ -427,6 +529,9 @@ export function resolveSummaryProvider(
   }
   if (hasOpenAi) {
     return 'openai';
+  }
+  if (hasGemini) {
+    return 'gemini';
   }
   return 'stage5';
 }
@@ -437,11 +542,15 @@ export function isSummaryByo(
     | 'useApiKeysMode'
     | 'byoUnlocked'
     | 'byoAnthropicUnlocked'
+    | 'byoGeminiUnlocked'
     | 'useByo'
     | 'useByoAnthropic'
+    | 'useByoGemini'
     | 'keyPresent'
     | 'anthropicKeyPresent'
+    | 'geminiKeyPresent'
     | 'preferClaudeSummary'
+    | 'preferredSummaryProvider'
   >
 ): boolean {
   return resolveSummaryProvider(state) !== 'stage5';

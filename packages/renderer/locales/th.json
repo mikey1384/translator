@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "คีย์ API ของ ElevenLabs ไม่ถูกต้องหรือหมดอายุ ตรวจสอบคีย์ในการตั้งค่า",
       "elevenlabsRateLimit": "ถึงขีดจำกัดอัตราการใช้งาน ElevenLabs รอสักครู่แล้วลองอีกครั้ง",
       "elevenlabsInsufficientQuota": "บัญชี ElevenLabs ของคุณมีเครดิตไม่พอ เติมเครดิตได้ที่ elevenlabs.io",
-      "genericApiError": "คำขอ API ล้มเหลว ตรวจสอบคีย์ API และสถานะบัญชีของคุณ"
+      "genericApiError": "คำขอ API ล้มเหลว ตรวจสอบคีย์ API และสถานะบัญชีของคุณ",
+      "geminiKeyInvalid": "คีย์ API ของ Google Gemini ไม่ถูกต้องหรือหมดอายุ ตรวจสอบคีย์ในการตั้งค่า",
+      "geminiRateLimit": "ถึงขีดจำกัดอัตราการใช้งาน Google Gemini รอสักครู่แล้วลองอีกครั้ง",
+      "geminiInsufficientQuota": "โควต้า Google Gemini API ของคุณหมดแล้ว ตรวจสอบการเรียกเก็บเงินได้ที่ aistudio.google.com"
     },
     "transcription": {
       "providerUnavailable": "การถอดเสียง (ElevenLabs Scribe) ใช้งานไม่ได้ชั่วคราว หรือเชื่อมต่อไม่ได้หลังจากลองหลายครั้ง ลองอีกครั้งในอีกไม่กี่นาที",
@@ -716,7 +719,13 @@
       "dubbingRequiresElevenLabs": "การพากย์เสียงใช้ ElevenLabs เท่านั้น เพิ่มคีย์ API ของ ElevenLabs เพื่อพากย์ด้วยคีย์ของคุณเอง ถ้าไม่มี การพากย์จะใช้นาทีของ Stage5 ซึ่งจะไม่ถูกหักขณะเปิดใช้คีย์ API ของคุณ",
       "runtimeFallback": "ตัวสำรองระหว่างทำงานในโหมดคีย์ API",
       "videoSuggestionLegacyFollowDraft": "คงการตั้งค่าเดิมของคุณไว้: ใช้ตามโมเดลแปลฉบับร่างจนกว่าคุณจะเลือกโมเดลที่นี่",
-      "videoSuggestionLegacyFollowReview": "คงการตั้งค่าเดิมของคุณไว้: ใช้ตามโมเดลตรวจทานคำแปลจนกว่าคุณจะเลือกโมเดลที่นี่"
+      "videoSuggestionLegacyFollowReview": "คงการตั้งค่าเดิมของคุณไว้: ใช้ตามโมเดลตรวจทานคำแปลจนกว่าคุณจะเลือกโมเดลที่นี่",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "ต้องปลดล็อกการใช้คีย์ API และมีคีย์ Google Gemini",
+      "summaryRequiresGemini": "ต้องปลดล็อกการใช้คีย์ API และมีคีย์ Google Gemini"
     },
     "apiKeyGuide": {
       "title": "วิธีรับคีย์ API",
@@ -725,13 +734,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "คีย์ API",
         "createNewSecretKey": "สร้างคีย์ลับใหม่",
         "createKey": "สร้างคีย์",
-        "profileApiKey": "โปรไฟล์ + คีย์ API"
+        "profileApiKey": "โปรไฟล์ + คีย์ API",
+        "createApiKey": "สร้างคีย์ API"
       },
       "openai": {
         "step1": "ไปที่",
@@ -758,6 +769,13 @@
         "step4": "เพิ่มวิธีการชำระเงินในการตั้งค่าการสมัครสมาชิก (จำเป็นสำหรับการใช้ API นอกเหนือจากระดับฟรี)",
         "step5": "คัดลอกคีย์ API ของคุณและวางใน Stage5",
         "audioDescription": "ElevenLabs ใช้ทำการถอดเสียง (Scribe) และการพากย์ทั้งหมด ถ้าไม่มีคีย์ ElevenLabs ของคุณเอง ทั้งสองอย่างจะใช้นาทีของ Stage5 ซึ่งจะไม่ถูกหักขณะเปิดใช้คีย์ API ของคุณ"
+      },
+      "gemini": {
+        "step1": "ไปที่",
+        "step2": "ลงชื่อเข้าใช้ด้วยบัญชี Google ของคุณ",
+        "step3": "คลิก",
+        "step4": "เปิดการเรียกเก็บเงินใน Google Cloud / AI Studio หากต้องการขีดจำกัดที่สูงขึ้น",
+        "step5": "คัดลอกคีย์ (ขึ้นต้นด้วย AIza) แล้ววางใน Stage5"
       }
     },
     "apiKey": {
@@ -788,11 +806,11 @@
       "signOut": "ออกจากระบบ"
     },
     "agentControl": {
-      "description": "อนุญาตให้ Claude Code, Claude Desktop, Codex หรือเอเจนต์ MCP อื่นควบคุม Translator บนคอมพิวเตอร์เครื่องนี้ เมื่อเปิดใช้งาน เอเจนต์จะดาวน์โหลดวิดีโอ จัดการคลัง แก้ไขและแปลซับ และส่งออกไฟล์ไปยังโฟลเดอร์ที่อนุญาตได้",
+      "description": "อนุญาตให้ Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity หรือเอเจนต์ MCP อื่นควบคุม Translator บนคอมพิวเตอร์เครื่องนี้ เมื่อเปิดใช้งาน เอเจนต์จะดาวน์โหลดวิดีโอ จัดการคลัง แก้ไขและแปลซับ และส่งออกไฟล์ไปยังโฟลเดอร์ที่อนุญาตได้",
       "enableLabel": "อนุญาตให้เอเจนต์ควบคุมแอปนี้",
       "enableAria": "เปิดใช้การควบคุมโดยเอเจนต์",
       "connection": {
-        "title": "เชื่อมต่อ Claude Code, Claude Desktop หรือ Codex",
+        "title": "เชื่อมต่อ Claude Code, Claude Desktop, Codex, Gemini CLI หรือ Antigravity",
         "instructions": "คลิกปุ่มเพื่อลงทะเบียนเซิร์ฟเวอร์ MCP “translator” สำหรับเอเจนต์อื่น ให้เพิ่มเซิร์ฟเวอร์ STDIO MCP ชื่อ “translator” พร้อมพาธตัวเปิดนี้ แล้วรีสตาร์ตเอเจนต์เพื่อให้เครื่องมือใหม่ปรากฏ",
         "copyPath": "คัดลอกพาธ",
         "copied": "คัดลอกแล้ว",
@@ -812,7 +830,9 @@
         "failedCli": "เชื่อมต่อ {{app}} อัตโนมัติไม่ได้ รันคำสั่งนี้ในเทอร์มินัล:",
         "failedGeneric": "เชื่อมต่อ {{app}} ไม่ได้ ลองอีกครั้ง",
         "appNotFound": "ยังไม่ได้ติดตั้ง {{app}} ในคอมพิวเตอร์เครื่องนี้ ติดตั้งแล้วเปิดสักครั้ง จากนั้นเชื่อมต่ออีกครั้ง",
-        "download": "ดาวน์โหลด {{app}}"
+        "download": "ดาวน์โหลด {{app}}",
+        "connectGeminiCli": "เชื่อมต่อ Gemini CLI",
+        "connectAntigravity": "เชื่อมต่อ Antigravity"
       },
       "status": {
         "enabled": "เปิดใช้งานแล้ว",
@@ -844,7 +864,7 @@
         "addDirectory": "เพิ่มโฟลเดอร์ไม่สำเร็จ",
         "removeDirectory": "นำโฟลเดอร์ออกไม่สำเร็จ"
       },
-      "pitch": "แปลฟรีด้วยการสมัครสมาชิก Claude หรือ Codex ที่คุณมีอยู่แล้ว",
+      "pitch": "แปลฟรีด้วยการสมัครสมาชิก Claude, Codex หรือ Gemini ที่คุณมีอยู่แล้ว",
       "freeTitle": "แปลฟรีด้วย AI ของคุณเอง"
     },
     "creditTransfer": {
@@ -932,7 +952,8 @@
       "contact": "ติดต่อฝ่ายช่วยเหลือ",
       "retry": "ลองอีกครั้ง",
       "supportSubject": "ซื้อนาทีใน Translator ไม่ได้"
-    }
+    },
+    "usingGemini": "ใช้ Gemini"
   },
   "branding": {
     "translator": "translator",

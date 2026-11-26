@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Το κλειδί ElevenLabs API είναι μη έγκυρο ή έχει λήξει. Ελέγξτε το κλειδί σας στις Ρυθμίσεις.",
       "elevenlabsRateLimit": "Συμπληρώθηκε το όριο αιτημάτων ElevenLabs. Περιμένετε λίγο και δοκιμάστε ξανά.",
       "elevenlabsInsufficientQuota": "Ο λογαριασμός ElevenLabs έχει ανεπαρκές υπόλοιπο. Προσθέστε πιστώσεις στο elevenlabs.io.",
-      "genericApiError": "Το αίτημα API απέτυχε. Ελέγξτε το κλειδί API και την κατάσταση του λογαριασμού σας."
+      "genericApiError": "Το αίτημα API απέτυχε. Ελέγξτε το κλειδί API και την κατάσταση του λογαριασμού σας.",
+      "geminiKeyInvalid": "Το κλειδί Google Gemini API είναι μη έγκυρο ή έχει λήξει. Ελέγξτε το κλειδί σας στις Ρυθμίσεις.",
+      "geminiRateLimit": "Συμπληρώθηκε το όριο αιτημάτων Google Gemini. Περιμένετε λίγο και δοκιμάστε ξανά.",
+      "geminiInsufficientQuota": "Εξαντλήθηκε το όριο χρήσης του Google Gemini API. Ελέγξτε τη χρέωση στο aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Η μεταγραφή (ElevenLabs Scribe) δεν είναι προσωρινά διαθέσιμη ή δεν ήταν δυνατή η σύνδεση μετά από αρκετές προσπάθειες. Δοκιμάστε ξανά σε λίγα λεπτά.",
@@ -722,7 +725,13 @@
       "dubbingRequiresElevenLabs": "Η μεταγλώττιση χρησιμοποιεί μόνο ElevenLabs. Προσθέστε ένα κλειδί API ElevenLabs για μεταγλώττιση με τα δικά σας κλειδιά. Χωρίς αυτό, η μεταγλώττιση χρησιμοποιεί τα λεπτά Stage5 σας, τα οποία δεν χρησιμοποιούνται όσο είναι ενεργά τα δικά σας κλειδιά.",
       "runtimeFallback": "Εναλλακτική λύση κατά την εκτέλεση σε λειτουργία κλειδιού API",
       "videoSuggestionLegacyFollowDraft": "Η προηγούμενη ρύθμισή σας διατηρείται: ακολουθεί το μοντέλο πρόχειρης μετάφρασης μέχρι να επιλέξετε μοντέλο εδώ.",
-      "videoSuggestionLegacyFollowReview": "Η προηγούμενη ρύθμισή σας διατηρείται: ακολουθεί το μοντέλο αναθεώρησης μετάφρασης μέχρι να επιλέξετε μοντέλο εδώ."
+      "videoSuggestionLegacyFollowReview": "Η προηγούμενη ρύθμισή σας διατηρείται: ακολουθεί το μοντέλο αναθεώρησης μετάφρασης μέχρι να επιλέξετε μοντέλο εδώ.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Απαιτεί το ξεκλείδωμα κλειδιών API και το κλειδί σας Google Gemini.",
+      "summaryRequiresGemini": "Απαιτεί το ξεκλείδωμα κλειδιών API και το κλειδί σας Google Gemini."
     },
     "apiKeyGuide": {
       "title": "Πώς να αποκτήσετε κλειδιά API",
@@ -731,13 +740,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "Κλειδιά API",
         "createNewSecretKey": "Δημιουργία νέου μυστικού κλειδιού",
         "createKey": "Δημιουργία κλειδιού",
-        "profileApiKey": "Προφίλ + κλειδί API"
+        "profileApiKey": "Προφίλ + κλειδί API",
+        "createApiKey": "Δημιουργία κλειδιού API"
       },
       "openai": {
         "step1": "Μεταβείτε στο",
@@ -764,6 +775,13 @@
         "step4": "Προσθέστε τρόπο πληρωμής στις ρυθμίσεις Συνδρομής (απαιτείται για χρήση API πέρα από το δωρεάν επίπεδο)",
         "step5": "Αντιγράψτε το κλειδί API και επικολλήστε το στο Stage5",
         "audioDescription": "Το ElevenLabs κάνει όλη τη μεταγραφή (Scribe) και τη μεταγλώττιση. Χωρίς δικό σας κλειδί ElevenLabs, και οι δύο χρησιμοποιούν τα λεπτά Stage5 σας, τα οποία δεν χρησιμοποιούνται όσο είναι ενεργά τα δικά σας κλειδιά."
+      },
+      "gemini": {
+        "step1": "Μεταβείτε στο",
+        "step2": "Συνδεθείτε με τον λογαριασμό σας Google",
+        "step3": "Κάντε κλικ",
+        "step4": "Ενεργοποιήστε τη χρέωση στο Google Cloud / AI Studio αν χρειάζεστε υψηλότερα όρια",
+        "step5": "Αντιγράψτε το κλειδί (ξεκινά με AIza) και επικολλήστε το στο Stage5"
       }
     },
     "apiKey": {
@@ -794,11 +812,11 @@
       "signOut": "Αποσύνδεση"
     },
     "agentControl": {
-      "description": "Επιτρέψτε στο Claude Code, στο Claude Desktop, στο Codex ή σε άλλον πράκτορα MCP να ελέγχει το Translator σε αυτόν τον υπολογιστή. Όταν ενεργοποιηθεί, οι πράκτορες μπορούν να κατεβάζουν βίντεο, να διαχειρίζονται τη βιβλιοθήκη σας, να επεξεργάζονται και να μεταφράζουν υπότιτλους και να εξάγουν αρχεία σε επιτρεπόμενους φακέλους.",
+      "description": "Επιτρέψτε στο Claude Code, στο Claude Desktop, στο Codex, Gemini CLI, Antigravity ή σε άλλον πράκτορα MCP να ελέγχει το Translator σε αυτόν τον υπολογιστή. Όταν ενεργοποιηθεί, οι πράκτορες μπορούν να κατεβάζουν βίντεο, να διαχειρίζονται τη βιβλιοθήκη σας, να επεξεργάζονται και να μεταφράζουν υπότιτλους και να εξάγουν αρχεία σε επιτρεπόμενους φακέλους.",
       "enableLabel": "Να επιτρέπεται ο έλεγχος αυτής της εφαρμογής από πράκτορες",
       "enableAria": "Ενεργοποίηση ελέγχου πρακτόρων",
       "connection": {
-        "title": "Σύνδεση Claude Code, Claude Desktop ή Codex",
+        "title": "Σύνδεση Claude Code, Claude Desktop, Codex, Gemini CLI ή Antigravity",
         "instructions": "Πατήστε ένα κουμπί για να καταχωρίσετε τον διακομιστή MCP «translator». Για άλλους πράκτορες, προσθέστε έναν διακομιστή MCP STDIO με όνομα «translator» με αυτήν τη διαδρομή εκκίνησης και, στη συνέχεια, επανεκκινήστε τον πράκτορα για να εμφανιστούν τα νέα εργαλεία.",
         "copyPath": "Αντιγραφή διαδρομής",
         "copied": "Αντιγράφηκε",
@@ -818,7 +836,9 @@
         "failedCli": "Δεν ήταν δυνατή η αυτόματη σύνδεση του {{app}}. Εκτελέστε αυτό σε ένα τερματικό:",
         "failedGeneric": "Δεν ήταν δυνατή η σύνδεση του {{app}}. Δοκιμάστε ξανά.",
         "appNotFound": "Το {{app}} δεν είναι εγκατεστημένο σε αυτόν τον υπολογιστή. Εγκαταστήστε το, ανοίξτε το μία φορά και συνδεθείτε ξανά.",
-        "download": "Λήψη {{app}}"
+        "download": "Λήψη {{app}}",
+        "connectGeminiCli": "Σύνδεση Gemini CLI",
+        "connectAntigravity": "Σύνδεση Antigravity"
       },
       "status": {
         "enabled": "Ενεργοποιημένο",
@@ -850,7 +870,7 @@
         "addDirectory": "Δεν ήταν δυνατή η προσθήκη του φακέλου.",
         "removeDirectory": "Δεν ήταν δυνατή η κατάργηση του φακέλου."
       },
-      "pitch": "Μεταφράστε δωρεάν με τη συνδρομή Claude ή Codex που ήδη έχετε.",
+      "pitch": "Μεταφράστε δωρεάν με τη συνδρομή Claude, Codex ή Gemini που ήδη έχετε.",
       "freeTitle": "Μεταφράστε δωρεάν με τη δική σας AI"
     },
     "creditTransfer": {
@@ -940,7 +960,8 @@
       "contact": "Επικοινωνία με την υποστήριξη",
       "retry": "Δοκιμάστε ξανά",
       "supportSubject": "Δεν μπορώ να αγοράσω λεπτά στο Translator"
-    }
+    },
+    "usingGemini": "Χρήση Gemini"
   },
   "branding": {
     "translator": "translator",

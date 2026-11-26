@@ -12,11 +12,14 @@ export function useCreditSystem() {
   const useApiKeysMode = useAiStore(s => s.useApiKeysMode);
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
+  const byoGeminiUnlocked = useAiStore(s => s.byoGeminiUnlocked);
   const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
   const useByo = useAiStore(s => s.useByo);
   const keyPresent = useAiStore(s => s.keyPresent);
   const useByoAnthropic = useAiStore(s => s.useByoAnthropic);
   const anthropicKeyPresent = useAiStore(s => s.anthropicKeyPresent);
+  const useByoGemini = useAiStore(s => s.useByoGemini);
+  const geminiKeyPresent = useAiStore(s => s.geminiKeyPresent);
   const useByoElevenLabs = useAiStore(s => s.useByoElevenLabs);
   const elevenLabsKeyPresent = useAiStore(s => s.elevenLabsKeyPresent);
   const aiInitialized = useAiStore(s => s.initialized);
@@ -24,12 +27,15 @@ export function useCreditSystem() {
     useApiKeysMode,
     byoUnlocked,
     byoAnthropicUnlocked,
+    byoGeminiUnlocked,
     byoElevenLabsUnlocked,
     useByo,
     useByoAnthropic,
+    useByoGemini,
     useByoElevenLabs,
     keyPresent,
     anthropicKeyPresent,
+    geminiKeyPresent,
     elevenLabsKeyPresent,
   });
 

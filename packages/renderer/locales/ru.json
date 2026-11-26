@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Ваш API-ключ ElevenLabs недействителен или истёк. Пожалуйста, проверьте ключ в Настройках.",
       "elevenlabsRateLimit": "Достигнут лимит запросов ElevenLabs. Пожалуйста, подождите и попробуйте снова.",
       "elevenlabsInsufficientQuota": "На вашем счёте ElevenLabs недостаточно кредитов. Пожалуйста, пополните баланс на elevenlabs.io.",
-      "genericApiError": "Ошибка API-запроса. Пожалуйста, проверьте ваш API-ключ и статус аккаунта."
+      "genericApiError": "Ошибка API-запроса. Пожалуйста, проверьте ваш API-ключ и статус аккаунта.",
+      "geminiKeyInvalid": "Ваш API-ключ Google Gemini недействителен или истёк. Пожалуйста, проверьте ключ в Настройках.",
+      "geminiRateLimit": "Достигнут лимит запросов Google Gemini. Пожалуйста, подождите и попробуйте снова.",
+      "geminiInsufficientQuota": "Квота Google Gemini API исчерпана. Пожалуйста, проверьте биллинг на aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Расшифровка (ElevenLabs Scribe) временно недоступна или не удалось подключиться после нескольких попыток. Попробуйте снова через несколько минут.",
@@ -732,7 +735,13 @@
       "dubbingRequiresElevenLabs": "Озвучка работает только через ElevenLabs. Добавьте API-ключ ElevenLabs, чтобы озвучивать со своими ключами. Без него озвучка идёт за ваши минуты Stage5, а они не расходуются, пока вы работаете со своими ключами.",
       "runtimeFallback": "Резервный вариант во время работы в режиме API-ключей",
       "videoSuggestionLegacyFollowDraft": "Ваша прежняя настройка сохранена: используется модель черновика перевода, пока вы не выберете модель здесь.",
-      "videoSuggestionLegacyFollowReview": "Ваша прежняя настройка сохранена: используется модель проверки перевода, пока вы не выберете модель здесь."
+      "videoSuggestionLegacyFollowReview": "Ваша прежняя настройка сохранена: используется модель проверки перевода, пока вы не выберете модель здесь.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Нужны разблокировка API-ключей и ваш ключ Google Gemini.",
+      "summaryRequiresGemini": "Нужны разблокировка API-ключей и ваш ключ Google Gemini."
     },
     "apiKeyGuide": {
       "title": "Как получить API-ключи",
@@ -741,13 +750,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API-ключи",
         "createNewSecretKey": "Создать новый секретный ключ",
         "createKey": "Создать ключ",
-        "profileApiKey": "Профиль + API-ключ"
+        "profileApiKey": "Профиль + API-ключ",
+        "createApiKey": "Создать API-ключ"
       },
       "openai": {
         "step1": "Перейдите на",
@@ -774,6 +785,13 @@
         "step4": "Добавьте способ оплаты в настройках подписки (требуется для использования API сверх бесплатного лимита)",
         "step5": "Скопируйте свой API-ключ и вставьте в Stage5",
         "audioDescription": "Вся расшифровка (Scribe) и озвучка идут через ElevenLabs. Без своего ключа ElevenLabs обе идут за ваши минуты Stage5, а они не расходуются, пока вы работаете со своими ключами."
+      },
+      "gemini": {
+        "step1": "Перейдите на",
+        "step2": "Войдите в свой аккаунт Google",
+        "step3": "Нажмите",
+        "step4": "Включите биллинг в Google Cloud / AI Studio, если нужны более высокие лимиты",
+        "step5": "Скопируйте ключ (начинается с AIza) и вставьте его в Stage5"
       }
     },
     "apiKey": {
@@ -804,11 +822,11 @@
       "signOut": "Выйти"
     },
     "agentControl": {
-      "description": "Разрешите Claude Code, Claude Desktop, Codex или другому MCP-агенту управлять Translator на этом компьютере. После включения агенты смогут скачивать видео, управлять вашей медиатекой, редактировать и переводить субтитры, а также экспортировать файлы в разрешённые папки.",
+      "description": "Разрешите Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity или другому MCP-агенту управлять Translator на этом компьютере. После включения агенты смогут скачивать видео, управлять вашей медиатекой, редактировать и переводить субтитры, а также экспортировать файлы в разрешённые папки.",
       "enableLabel": "Разрешить агентам управлять этим приложением",
       "enableAria": "Включить управление агентами",
       "connection": {
-        "title": "Подключить Claude Code, Claude Desktop или Codex",
+        "title": "Подключить Claude Code, Claude Desktop, Codex, Gemini CLI или Antigravity",
         "instructions": "Нажмите кнопку, чтобы зарегистрировать MCP-сервер «translator». Для других агентов добавьте сервер MCP типа STDIO с именем «translator» и этим путём запуска, затем перезапустите агента, чтобы появились новые инструменты.",
         "copyPath": "Копировать путь",
         "copied": "Скопировано",
@@ -828,7 +846,9 @@
         "failedCli": "Не удалось подключить {{app}} автоматически. Выполните в терминале:",
         "failedGeneric": "Не удалось подключить {{app}}. Попробуйте снова.",
         "appNotFound": "{{app}} не установлен на этом компьютере. Установите его, откройте один раз и подключите снова.",
-        "download": "Скачать {{app}}"
+        "download": "Скачать {{app}}",
+        "connectGeminiCli": "Подключить Gemini CLI",
+        "connectAntigravity": "Подключить Antigravity"
       },
       "status": {
         "enabled": "Включено",
@@ -863,7 +883,7 @@
         "addDirectory": "Не удалось добавить папку.",
         "removeDirectory": "Не удалось удалить папку."
       },
-      "pitch": "Переводите бесплатно с подпиской Claude или Codex, которая у вас уже есть.",
+      "pitch": "Переводите бесплатно с подпиской Claude, Codex или Gemini, которая у вас уже есть.",
       "freeTitle": "Переводите бесплатно через свой ИИ"
     },
     "creditTransfer": {
@@ -951,7 +971,8 @@
       "contact": "Написать в поддержку",
       "retry": "Повторить",
       "supportSubject": "Не получается купить минуты в Translator"
-    }
+    },
+    "usingGemini": "Используется Gemini"
   },
   "branding": {
     "translator": "translator",

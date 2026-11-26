@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const byoUnlocked = useAiStore(state => state.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(state => state.byoAnthropicUnlocked);
+  const byoGeminiUnlocked = useAiStore(state => state.byoGeminiUnlocked);
   const byoElevenLabsUnlocked = useAiStore(
     state => state.byoElevenLabsUnlocked
   );
@@ -34,6 +35,7 @@ export default function SettingsPage() {
     hasAnyByoEntitlementUnlocked({
       byoUnlocked,
       byoAnthropicUnlocked,
+      byoGeminiUnlocked,
       byoElevenLabsUnlocked,
     }) && !adminByoPreviewMode;
 

@@ -4,10 +4,18 @@ import os from 'node:os';
 import path from 'node:path';
 
 // One-click registration of the Translator MCP launcher with the agent apps
-// people already pay for: Claude Code and Codex (through their own CLIs) and
-// Claude Desktop (through its JSON config). No shell is involved anywhere.
+// people already pay for: Claude Code, Codex, and Gemini CLI (through their
+// own CLIs), plus Claude Desktop and Antigravity (through their JSON configs).
+// No shell is involved anywhere.
 
-export type AgentMcpClient = 'claude-code' | 'codex' | 'claude-desktop';
+export type AgentMcpClient =
+  | 'claude-code'
+  | 'codex'
+  | 'gemini-cli'
+  | 'antigravity'
+  | 'claude-desktop';
+
+export type AgentMcpCliClient = 'claude-code' | 'codex' | 'gemini-cli';
 
 export type AgentMcpConnectResult =
   | {
@@ -48,24 +56,42 @@ export type AgentMcpConnectFailureReason =
 export const TRANSLATOR_MCP_SERVER_NAME = 'translator';
 
 export const CLAUDE_DESKTOP_DOWNLOAD_URL = 'https://claude.ai/download';
+export const ANTIGRAVITY_DOWNLOAD_URL = 'https://antigravity.google';
 
-type CliName = 'claude' | 'codex';
+type CliName = 'claude' | 'codex' | 'gemini';
 
-const CLI_FOR_CLIENT: Record<'claude-code' | 'codex', CliName> = {
+const CLI_FOR_CLIENT: Record<AgentMcpCliClient, CliName> = {
   'claude-code': 'claude',
   codex: 'codex',
+  'gemini-cli': 'gemini',
 };
 
 export function isAgentMcpClient(value: unknown): value is AgentMcpClient {
   return (
-    value === 'claude-code' || value === 'codex' || value === 'claude-desktop'
+    value === 'claude-code' ||
+    value === 'codex' ||
+    value === 'gemini-cli' ||
+    value === 'antigravity' ||
+    value === 'claude-desktop'
   );
 }
 
 export function buildMcpAddArgs(
-  client: 'claude-code' | 'codex',
+  client: AgentMcpCliClient,
   launcherPath: string
 ): string[] {
+  if (client === 'gemini-cli') {
+    // Gemini CLI defaults to project scope; `-s user` writes to ~/.gemini/settings.json
+    // and expects positional `<name> <command>` without `--`.
+    return [
+      'mcp',
+      'add',
+      '-s',
+      'user',
+      TRANSLATOR_MCP_SERVER_NAME,
+      launcherPath,
+    ];
+  }
   // Claude Code defaults to a per-project scope, which would bind the server to
   // whatever directory the app happens to run in; user scope works everywhere.
   const scope = client === 'claude-code' ? ['--scope', 'user'] : [];
@@ -214,7 +240,7 @@ export async function connectAgentCli({
   search,
   exec = defaultExecFile,
 }: {
-  client: 'claude-code' | 'codex';
+  client: AgentMcpCliClient;
   launcherPath: string;
   search: CliSearchEnv;
   exec?: ExecFileLike;
@@ -420,14 +446,66 @@ export const defaultConfigFs: ConfigFs = {
   mkdirp: dirPath => fs.mkdirSync(dirPath, { recursive: true }),
 };
 
-export function connectClaudeDesktop({
+export function getAntigravityConfigPath({
+  platform,
+  homeDir,
+}: {
+  platform: NodeJS.Platform;
+  homeDir: string;
+}): string {
+  const p = platform === 'win32' ? path.win32 : path.posix;
+  return p.join(homeDir, '.gemini', 'config', 'mcp_config.json');
+}
+
+export function isAntigravityInstalled({
+  platform,
+  env,
+  homeDir,
+  configPath,
+  exists,
+}: {
+  platform: NodeJS.Platform;
+  env: NodeJS.ProcessEnv;
+  homeDir: string;
+  configPath: string;
+  exists: (p: string) => boolean;
+}): boolean {
+  const p = platform === 'win32' ? path.win32 : path.posix;
+  const candidates: string[] = [
+    p.dirname(configPath),
+    p.join(homeDir, '.gemini', 'antigravity'),
+  ];
+  if (platform === 'darwin') {
+    candidates.push(
+      '/Applications/Antigravity.app',
+      path.posix.join(homeDir, 'Applications', 'Antigravity.app')
+    );
+  } else if (platform === 'win32') {
+    const localAppData =
+      env.LOCALAPPDATA || path.win32.join(homeDir, 'AppData', 'Local');
+    candidates.push(path.win32.join(localAppData, 'Programs', 'Antigravity'));
+  }
+  return candidates.some(candidate => {
+    try {
+      return exists(candidate);
+    } catch {
+      return false;
+    }
+  });
+}
+
+export function connectJsonMcpConfig({
+  client,
   launcherPath,
   configPath,
+  downloadUrl,
   fsApi = defaultConfigFs,
   isInstalled = () => true,
 }: {
+  client: 'claude-desktop' | 'antigravity';
   launcherPath: string;
   configPath: string;
+  downloadUrl: string;
   fsApi?: ConfigFs;
   isInstalled?: () => boolean;
 }): AgentMcpConnectResult {
@@ -438,15 +516,15 @@ export function connectClaudeDesktop({
     if (existing === null && !isInstalled()) {
       return {
         status: 'app-not-found',
-        client: 'claude-desktop',
-        downloadUrl: CLAUDE_DESKTOP_DOWNLOAD_URL,
+        client,
+        downloadUrl,
       };
     }
     const merged = mergeClaudeDesktopConfig(existing, launcherPath);
     if (!merged.changed) {
       return {
         status: 'already-connected',
-        client: 'claude-desktop',
+        client,
         configPath,
       };
     }
@@ -460,14 +538,14 @@ export function connectClaudeDesktop({
     fsApi.writeFile(configPath, merged.text);
     return {
       status: 'connected',
-      client: 'claude-desktop',
+      client,
       configPath,
       backupPath,
     };
   } catch (error: any) {
     return {
       status: 'failed',
-      client: 'claude-desktop',
+      client,
       reason:
         error instanceof ClaudeDesktopConfigError
           ? 'config_invalid'
@@ -475,6 +553,48 @@ export function connectClaudeDesktop({
       message: String(error?.message || error),
     };
   }
+}
+
+export function connectClaudeDesktop({
+  launcherPath,
+  configPath,
+  fsApi = defaultConfigFs,
+  isInstalled = () => true,
+}: {
+  launcherPath: string;
+  configPath: string;
+  fsApi?: ConfigFs;
+  isInstalled?: () => boolean;
+}): AgentMcpConnectResult {
+  return connectJsonMcpConfig({
+    client: 'claude-desktop',
+    launcherPath,
+    configPath,
+    downloadUrl: CLAUDE_DESKTOP_DOWNLOAD_URL,
+    fsApi,
+    isInstalled,
+  });
+}
+
+export function connectAntigravity({
+  launcherPath,
+  configPath,
+  fsApi = defaultConfigFs,
+  isInstalled = () => true,
+}: {
+  launcherPath: string;
+  configPath: string;
+  fsApi?: ConfigFs;
+  isInstalled?: () => boolean;
+}): AgentMcpConnectResult {
+  return connectJsonMcpConfig({
+    client: 'antigravity',
+    launcherPath,
+    configPath,
+    downloadUrl: ANTIGRAVITY_DOWNLOAD_URL,
+    fsApi,
+    isInstalled,
+  });
 }
 
 export async function connectAgentMcpClient({
@@ -505,6 +625,24 @@ export async function connectAgentMcpClient({
       configPath,
       isInstalled: () =>
         isClaudeDesktopInstalled({
+          platform: process.platform,
+          env: process.env,
+          homeDir,
+          configPath,
+          exists: p => fs.existsSync(p),
+        }),
+    });
+  }
+  if (client === 'antigravity') {
+    const configPath = getAntigravityConfigPath({
+      platform: process.platform,
+      homeDir,
+    });
+    return connectAntigravity({
+      launcherPath,
+      configPath,
+      isInstalled: () =>
+        isAntigravityInstalled({
           platform: process.platform,
           env: process.env,
           homeDir,

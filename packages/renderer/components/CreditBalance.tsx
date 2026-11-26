@@ -8,6 +8,7 @@ import { colors, metaPillStyles } from '../styles';
 import {
   hasAnthropicByoAvailable,
   hasElevenLabsByoAvailable,
+  hasGeminiByoAvailable,
   hasOpenAiByoAvailable,
   resolveDubbingProvider,
   resolveTranscriptionProvider,
@@ -67,14 +68,15 @@ interface CreditBalanceProps {
 
 /**
  * Determine what provider is being used for a specific operation type.
- * Returns: 'credits' | 'openai' | 'anthropic' | 'elevenlabs' | 'mixed'
+ * Returns: 'credits' | 'openai' | 'anthropic' | 'gemini' | 'elevenlabs' | 'mixed'
  */
 export function useActiveProvider(
   operationType: OperationType
-): 'credits' | 'openai' | 'anthropic' | 'elevenlabs' | 'mixed' {
+): 'credits' | 'openai' | 'anthropic' | 'gemini' | 'elevenlabs' | 'mixed' {
   const useApiKeysMode = useAiStore(s => s.useApiKeysMode);
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
+  const byoGeminiUnlocked = useAiStore(s => s.byoGeminiUnlocked);
   const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
   const stage5AnthropicReviewAvailable = useAiStore(
     s => s.stage5AnthropicReviewAvailable
@@ -83,11 +85,18 @@ export function useActiveProvider(
   const keyPresent = useAiStore(s => s.keyPresent);
   const useByoAnthropic = useAiStore(s => s.useByoAnthropic);
   const anthropicKeyPresent = useAiStore(s => s.anthropicKeyPresent);
+  const useByoGemini = useAiStore(s => s.useByoGemini);
+  const geminiKeyPresent = useAiStore(s => s.geminiKeyPresent);
   const useByoElevenLabs = useAiStore(s => s.useByoElevenLabs);
   const elevenLabsKeyPresent = useAiStore(s => s.elevenLabsKeyPresent);
   const preferClaudeTranslation = useAiStore(s => s.preferClaudeTranslation);
   const preferClaudeReview = useAiStore(s => s.preferClaudeReview);
   const preferClaudeSummary = useAiStore(s => s.preferClaudeSummary);
+  const preferredTranslationProvider = useAiStore(
+    s => s.preferredTranslationProvider
+  );
+  const preferredReviewProvider = useAiStore(s => s.preferredReviewProvider);
+  const preferredSummaryProvider = useAiStore(s => s.preferredSummaryProvider);
   const preferredTranscriptionProvider = useAiStore(
     s => s.preferredTranscriptionProvider
   );
@@ -99,17 +108,23 @@ export function useActiveProvider(
       useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
+      byoGeminiUnlocked,
       byoElevenLabsUnlocked,
       stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
+      useByoGemini,
       useByoElevenLabs,
       keyPresent,
       anthropicKeyPresent,
+      geminiKeyPresent,
       elevenLabsKeyPresent,
       preferClaudeTranslation,
       preferClaudeReview,
       preferClaudeSummary,
+      preferredTranslationProvider,
+      preferredReviewProvider,
+      preferredSummaryProvider,
       preferredTranscriptionProvider,
       preferredDubbingProvider,
       stage5DubbingTtsProvider,
@@ -118,17 +133,23 @@ export function useActiveProvider(
       useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
+      byoGeminiUnlocked,
       byoElevenLabsUnlocked,
       stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
+      useByoGemini,
       useByoElevenLabs,
       keyPresent,
       anthropicKeyPresent,
+      geminiKeyPresent,
       elevenLabsKeyPresent,
       preferClaudeTranslation,
       preferClaudeReview,
       preferClaudeSummary,
+      preferredTranslationProvider,
+      preferredReviewProvider,
+      preferredSummaryProvider,
       preferredTranscriptionProvider,
       preferredDubbingProvider,
       stage5DubbingTtsProvider,
@@ -163,8 +184,11 @@ export function useActiveProvider(
       const activeProviders = [
         hasOpenAiByoAvailable(runtimeState) ? 'openai' : null,
         hasAnthropicByoAvailable(runtimeState) ? 'anthropic' : null,
+        hasGeminiByoAvailable(runtimeState) ? 'gemini' : null,
         hasElevenLabsByoAvailable(runtimeState) ? 'elevenlabs' : null,
-      ].filter(Boolean) as Array<'openai' | 'anthropic' | 'elevenlabs'>;
+      ].filter(Boolean) as Array<
+        'openai' | 'anthropic' | 'gemini' | 'elevenlabs'
+      >;
 
       if (activeProviders.length === 0) {
         return 'credits';
@@ -213,6 +237,9 @@ export default function CreditBalance({
         break;
       case 'anthropic':
         badgeText = t('credits.usingAnthropic', 'Using Claude');
+        break;
+      case 'gemini':
+        badgeText = t('credits.usingGemini', 'Using Gemini');
         break;
       case 'elevenlabs':
         badgeText = t('credits.usingElevenLabs', 'Using ElevenLabs');

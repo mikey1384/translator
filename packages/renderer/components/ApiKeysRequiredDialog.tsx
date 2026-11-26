@@ -154,10 +154,12 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
   const { t } = useTranslation();
   const [showGuide, setShowGuide] = useState(false);
   const [guideProvider, setGuideProvider] = useState<
-    'openai' | 'anthropic' | 'elevenlabs' | undefined
+    'openai' | 'anthropic' | 'gemini' | 'elevenlabs' | undefined
   >();
 
-  const openGuide = (provider?: 'openai' | 'anthropic' | 'elevenlabs') => {
+  const openGuide = (
+    provider?: 'openai' | 'anthropic' | 'gemini' | 'elevenlabs'
+  ) => {
     setGuideProvider(provider);
     setShowGuide(true);
   };
@@ -186,6 +188,18 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
   const validatingAnthropicKey = useAiStore(s => s.validatingAnthropicKey);
   const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
 
+  // Google Gemini state
+  const geminiKeyValue = useAiStore(s => s.geminiKeyValue);
+  const geminiKeyLast4 = useAiStore(s => s.geminiKeyLast4);
+  const geminiKeyPresent = useAiStore(s => s.geminiKeyPresent);
+  const setGeminiKeyValue = useAiStore(s => s.setGeminiKeyValue);
+  const saveGeminiKey = useAiStore(s => s.saveGeminiKey);
+  const validateGeminiKey = useAiStore(s => s.validateGeminiKey);
+  const clearGeminiKey = useAiStore(s => s.clearGeminiKey);
+  const savingGeminiKey = useAiStore(s => s.savingGeminiKey);
+  const validatingGeminiKey = useAiStore(s => s.validatingGeminiKey);
+  const byoGeminiUnlocked = useAiStore(s => s.byoGeminiUnlocked);
+
   // ElevenLabs state
   const elevenLabsKeyValue = useAiStore(s => s.elevenLabsKeyValue);
   const elevenLabsKeyLast4 = useAiStore(s => s.elevenLabsKeyLast4);
@@ -200,9 +214,11 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
 
   const hasOpenAiConfigured = byoUnlocked && keyPresent;
   const hasAnthropicConfigured = byoAnthropicUnlocked && anthropicKeyPresent;
+  const hasGeminiConfigured = byoGeminiUnlocked && geminiKeyPresent;
   const hasElevenLabsConfigured = byoElevenLabsUnlocked && elevenLabsKeyPresent;
 
-  const hasTranslationCoverage = hasOpenAiConfigured || hasAnthropicConfigured;
+  const hasTranslationCoverage =
+    hasOpenAiConfigured || hasAnthropicConfigured || hasGeminiConfigured;
   // Transcription and dubbing are ElevenLabs-only. API key mode needs
   // translation coverage; without ElevenLabs, transcription and dubbing show a
   // blocked state instead (see hasApiKeyModeConfiguredCoverage).
@@ -212,8 +228,9 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
     [
       hasOpenAiConfigured ? 'OpenAI' : '',
       hasAnthropicConfigured ? 'Anthropic' : '',
+      hasGeminiConfigured ? 'Google Gemini' : '',
     ].filter(Boolean),
-    'OpenAI / Anthropic'
+    'OpenAI / Anthropic / Google Gemini'
   );
   const audioHint = formatCoverageHint(
     [hasElevenLabsConfigured ? 'ElevenLabs' : ''].filter(Boolean),
@@ -223,6 +240,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
     [
       byoUnlocked ? 'OpenAI' : '',
       byoAnthropicUnlocked ? 'Anthropic' : '',
+      byoGeminiUnlocked ? 'Google Gemini' : '',
     ].filter(Boolean) || [];
 
   const formatProviderList = (providers: string[], fallback: string[]) => {
@@ -236,7 +254,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
 
   const translationProvidersLabel = formatProviderList(
     translationProviderOptions,
-    ['OpenAI', 'Anthropic']
+    ['OpenAI', 'Anthropic', 'Google Gemini']
   );
   const coverageStatusMessage = !conditionsMet
     ? t(
@@ -302,7 +320,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
         <p className={`${settingsBodyTextStyles} ${introStyles}`}>
           {t(
             'dialogs.apiKeysRequired.messageElevenLabsAudio',
-            'To use your API keys, you need an OpenAI or Anthropic key for translation. Transcription and dubbing use ElevenLabs only, so add an ElevenLabs key for those too.'
+            'To use your API keys, you need an OpenAI, Anthropic, or Google Gemini key for translation. Transcription and dubbing use ElevenLabs only, so add an ElevenLabs key for those too.'
           )}{' '}
           <button
             onClick={() => openGuide()}
@@ -386,6 +404,23 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
               validating={validatingAnthropicKey}
               compact
               onHelpClick={() => openGuide('anthropic')}
+            />
+          </ApiKeyInputWrapper>
+
+          <ApiKeyInputWrapper satisfied={hasGeminiConfigured}>
+            <ApiKeyInput
+              provider="gemini"
+              value={geminiKeyValue}
+              onChange={setGeminiKeyValue}
+              onSave={saveGeminiKey}
+              onValidate={validateGeminiKey}
+              onClear={clearGeminiKey}
+              keyPresent={geminiKeyPresent}
+              keyLast4={geminiKeyLast4}
+              saving={savingGeminiKey}
+              validating={validatingGeminiKey}
+              compact
+              onHelpClick={() => openGuide('gemini')}
             />
           </ApiKeyInputWrapper>
 

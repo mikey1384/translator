@@ -32,6 +32,7 @@ export function useCreditCostEstimates() {
   const credits = useCreditStore(s => s.credits);
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
+  const byoGeminiUnlocked = useAiStore(s => s.byoGeminiUnlocked);
   const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
   const stage5AnthropicReviewAvailable = useAiStore(
     s => s.stage5AnthropicReviewAvailable
@@ -46,28 +47,41 @@ export function useCreditCostEstimates() {
   const keyPresent = useAiStore(s => s.keyPresent);
   const anthropicKeyPresent = useAiStore(s => s.anthropicKeyPresent);
   const useByoAnthropic = useAiStore(s => s.useByoAnthropic);
+  const geminiKeyPresent = useAiStore(s => s.geminiKeyPresent);
+  const useByoGemini = useAiStore(s => s.useByoGemini);
   const useByoElevenLabs = useAiStore(s => s.useByoElevenLabs);
   const elevenLabsKeyPresent = useAiStore(s => s.elevenLabsKeyPresent);
   const preferClaudeTranslation = useAiStore(s => s.preferClaudeTranslation);
   const preferClaudeReview = useAiStore(s => s.preferClaudeReview);
   const preferClaudeSummary = useAiStore(s => s.preferClaudeSummary);
+  const preferredTranslationProvider = useAiStore(
+    s => s.preferredTranslationProvider
+  );
+  const preferredReviewProvider = useAiStore(s => s.preferredReviewProvider);
+  const preferredSummaryProvider = useAiStore(s => s.preferredSummaryProvider);
 
   const runtimeState = useMemo<ByoRuntimeState>(
     () => ({
       useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
+      byoGeminiUnlocked,
       byoElevenLabsUnlocked,
       stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
+      useByoGemini,
       useByoElevenLabs,
       keyPresent,
       anthropicKeyPresent,
+      geminiKeyPresent,
       elevenLabsKeyPresent,
       preferClaudeTranslation,
       preferClaudeReview,
       preferClaudeSummary,
+      preferredTranslationProvider,
+      preferredReviewProvider,
+      preferredSummaryProvider,
       preferredTranscriptionProvider,
       preferredDubbingProvider,
       stage5DubbingTtsProvider,
@@ -76,17 +90,23 @@ export function useCreditCostEstimates() {
       useApiKeysMode,
       byoUnlocked,
       byoAnthropicUnlocked,
+      byoGeminiUnlocked,
       byoElevenLabsUnlocked,
       stage5AnthropicReviewAvailable,
       useByo,
       useByoAnthropic,
+      useByoGemini,
       useByoElevenLabs,
       keyPresent,
       anthropicKeyPresent,
+      geminiKeyPresent,
       elevenLabsKeyPresent,
       preferClaudeTranslation,
       preferClaudeReview,
       preferClaudeSummary,
+      preferredTranslationProvider,
+      preferredReviewProvider,
+      preferredSummaryProvider,
       preferredTranscriptionProvider,
       preferredDubbingProvider,
       stage5DubbingTtsProvider,

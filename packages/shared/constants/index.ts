@@ -19,9 +19,13 @@ import {
 } from './estimate-heuristics';
 import {
   AI_MODELS,
+  BYO_GEMINI_DRAFT_MODELS,
+  BYO_GEMINI_REVIEW_MODELS,
+  BYO_GEMINI_SUMMARY_MODELS,
   getStage5ReviewOption,
   getStage5ReviewOptionForPreference,
   getStage5ReviewProvider,
+  isGeminiModelId,
   normalizeAiModelId,
   STAGE5_REVIEW_PROVIDER_OPTIONS,
   STAGE5_ELEVENLABS_SCRIBE_MODEL,
@@ -34,6 +38,9 @@ import {
   STAGE5_TRANSLATION_MODEL_PRICING,
   STAGE5_CREDIT_MODELS,
   toStage5CreditModel,
+  type ByoGeminiDraftModel,
+  type ByoGeminiReviewModel,
+  type ByoGeminiSummaryModel,
 } from './model-catalog';
 import {
   CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR as STAGE5_SCRIBE_CREDITS_PER_AUDIO_HOUR,
@@ -60,6 +67,7 @@ export type { UsdRange } from './byo-estimates';
 import {
   ANTHROPIC_WEB_SEARCH_USD_PER_CALL,
   ELEVENLABS_PLAN_TIERS,
+  GEMINI_WEB_SEARCH_USD_PER_CALL,
   OPENAI_WEB_SEARCH_USD_PER_CALL,
   VENDOR_TOKEN_MODEL_PRICING,
   VENDOR_TRANSCRIPTION_MODEL_PRICING,
@@ -72,6 +80,10 @@ export {
   toStage5CreditModel,
   CLAUDE_TOKENS_PER_GPT_TOKEN,
   AI_MODELS,
+  BYO_GEMINI_DRAFT_MODELS,
+  BYO_GEMINI_REVIEW_MODELS,
+  BYO_GEMINI_SUMMARY_MODELS,
+  isGeminiModelId,
   getStage5ReviewOption,
   getStage5ReviewOptionForPreference,
   getStage5ReviewProvider,
@@ -85,6 +97,11 @@ export {
   STAGE5_TTS_MODEL_PRICING,
   STAGE5_TRANSCRIPTION_MODEL_PRICING,
   STAGE5_TRANSLATION_MODEL_PRICING,
+};
+export type {
+  ByoGeminiDraftModel,
+  ByoGeminiReviewModel,
+  ByoGeminiSummaryModel,
 };
 export {
   CHARS_PER_TOKEN,
@@ -118,6 +135,7 @@ export {
 export {
   ANTHROPIC_WEB_SEARCH_USD_PER_CALL,
   ELEVENLABS_PLAN_TIERS,
+  GEMINI_WEB_SEARCH_USD_PER_CALL,
   OPENAI_WEB_SEARCH_USD_PER_CALL,
   VENDOR_TOKEN_MODEL_PRICING,
   VENDOR_TRANSCRIPTION_MODEL_PRICING,
@@ -139,6 +157,10 @@ export const AI_MODEL_DISPLAY_NAMES: Record<string, string> = {
   [AI_MODELS.CLAUDE_SONNET]: 'Claude Sonnet',
   [AI_MODELS.CLAUDE_OPUS]: 'Claude Opus',
   [AI_MODELS.CLAUDE_HAIKU]: 'Claude Haiku',
+  [AI_MODELS.GEMINI_FLASH_LITE]: 'Gemini 3.5 Flash-Lite',
+  [AI_MODELS.GEMINI_HYDROGEN]: 'Gemini 4 Hydrogen',
+  [AI_MODELS.GEMINI_NEON]: 'Gemini 4 Neon',
+  [AI_MODELS.GEMINI_CARBON]: 'Gemini 4 Carbon',
   [STAGE5_TTS_MODEL_ELEVEN_V3]: 'ElevenLabs v3',
   [STAGE5_TTS_MODEL_ELEVEN_V4]: 'ElevenLabs v4',
 };
@@ -152,6 +174,10 @@ export const AI_MODEL_EXACT_DISPLAY_NAMES: Record<string, string> = {
   [AI_MODELS.CLAUDE_SONNET]: 'Claude Sonnet 5.5',
   [AI_MODELS.CLAUDE_OPUS]:
     STAGE5_REVIEW_PROVIDER_OPTIONS.anthropic.exactModelLabel,
+  [AI_MODELS.GEMINI_FLASH_LITE]: 'Gemini 3.5 Flash-Lite',
+  [AI_MODELS.GEMINI_HYDROGEN]: 'Gemini 4 Hydrogen',
+  [AI_MODELS.GEMINI_NEON]: 'Gemini 4 Neon',
+  [AI_MODELS.GEMINI_CARBON]: 'Gemini 4 Carbon',
   [STAGE5_TTS_MODEL_ELEVEN_V3]: 'ElevenLabs v3',
   [STAGE5_TTS_MODEL_ELEVEN_V4]: 'ElevenLabs v4',
 };
@@ -177,6 +203,9 @@ export const ERROR_CODES = {
   ANTHROPIC_KEY_INVALID: 'anthropic-key-invalid',
   ANTHROPIC_RATE_LIMIT: 'anthropic-rate-limit',
   ANTHROPIC_INSUFFICIENT_QUOTA: 'anthropic-insufficient-quota',
+  GEMINI_KEY_INVALID: 'gemini-key-invalid',
+  GEMINI_RATE_LIMIT: 'gemini-rate-limit',
+  GEMINI_INSUFFICIENT_QUOTA: 'gemini-insufficient-quota',
   ELEVENLABS_KEY_INVALID: 'elevenlabs-key-invalid',
   ELEVENLABS_RATE_LIMIT: 'elevenlabs-rate-limit',
   ELEVENLABS_INSUFFICIENT_QUOTA: 'elevenlabs-insufficient-quota',

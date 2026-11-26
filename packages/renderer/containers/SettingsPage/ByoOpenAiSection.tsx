@@ -22,10 +22,12 @@ export default function ByoOpenAiSection() {
   const { t } = useTranslation();
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideProvider, setGuideProvider] = useState<
-    'openai' | 'anthropic' | 'elevenlabs' | undefined
+    'openai' | 'anthropic' | 'gemini' | 'elevenlabs' | undefined
   >();
 
-  const openGuide = (provider: 'openai' | 'anthropic' | 'elevenlabs') => {
+  const openGuide = (
+    provider: 'openai' | 'anthropic' | 'gemini' | 'elevenlabs'
+  ) => {
     logButton(`settings_byo_guide_open_${provider}`);
     setGuideProvider(provider);
     setGuideOpen(true);
@@ -35,6 +37,7 @@ export default function ByoOpenAiSection() {
   const initialize = useAiStore(state => state.initialize);
   const byoUnlocked = useAiStore(state => state.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(state => state.byoAnthropicUnlocked);
+  const byoGeminiUnlocked = useAiStore(state => state.byoGeminiUnlocked);
   const byoElevenLabsUnlocked = useAiStore(
     state => state.byoElevenLabsUnlocked
   );
@@ -45,12 +48,14 @@ export default function ByoOpenAiSection() {
 
   const loadKey = useAiStore(state => state.loadKey);
   const loadAnthropicKey = useAiStore(state => state.loadAnthropicKey);
+  const loadGeminiKey = useAiStore(state => state.loadGeminiKey);
   const loadElevenLabsKey = useAiStore(state => state.loadElevenLabsKey);
 
   const effectiveByoUnlocked =
     hasAnyByoEntitlementUnlocked({
       byoUnlocked,
       byoAnthropicUnlocked,
+      byoGeminiUnlocked,
       byoElevenLabsUnlocked,
     }) && !adminByoPreviewMode;
 
@@ -65,8 +70,9 @@ export default function ByoOpenAiSection() {
   useEffect(() => {
     loadKey();
     loadAnthropicKey();
+    loadGeminiKey();
     loadElevenLabsKey();
-  }, [loadKey, loadAnthropicKey, loadElevenLabsKey]);
+  }, [loadKey, loadAnthropicKey, loadGeminiKey, loadElevenLabsKey]);
 
   if (!effectiveByoUnlocked || !useApiKeysMode) {
     return null;

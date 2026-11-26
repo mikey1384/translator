@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Ufunguo wako wa API wa ElevenLabs si sahihi au umekwisha muda. Tafadhali angalia ufunguo wako katika Mipangilio.",
       "elevenlabsRateLimit": "Kikomo cha kiwango cha ElevenLabs kimefikiwa. Tafadhali subiri kidogo na ujaribu tena.",
       "elevenlabsInsufficientQuota": "Akaunti yako ya ElevenLabs haina krediti za kutosha. Tafadhali ongeza krediti kwenye elevenlabs.io.",
-      "genericApiError": "Ombi la API limeshindikana. Tafadhali angalia ufunguo wako wa API na hali ya akaunti."
+      "genericApiError": "Ombi la API limeshindikana. Tafadhali angalia ufunguo wako wa API na hali ya akaunti.",
+      "geminiKeyInvalid": "Ufunguo wako wa API wa Google Gemini si sahihi au umekwisha muda. Tafadhali angalia ufunguo wako katika Mipangilio.",
+      "geminiRateLimit": "Kikomo cha kiwango cha Google Gemini kimefikiwa. Tafadhali subiri kidogo na ujaribu tena.",
+      "geminiInsufficientQuota": "Kiwango chako cha Google Gemini API kimeisha. Tafadhali angalia malipo kwenye aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Unakili (ElevenLabs Scribe) haupatikani kwa muda au haukuweza kufikiwa baada ya majaribio kadhaa. Tafadhali jaribu tena baada ya dakika chache.",
@@ -723,7 +726,13 @@
       "dubbingRequiresElevenLabs": "Kuweka sauti hutumia ElevenLabs pekee. Ongeza ufunguo wa API wa ElevenLabs ili kuweka sauti kwa funguo zako mwenyewe. Bila ufunguo huo, kuweka sauti hutumia dakika zako za Stage5, ambazo hazitumiki wakati funguo zako mwenyewe zimewashwa.",
       "runtimeFallback": "Mbadala wakati wa kuendesha katika hali ya funguo za API",
       "videoSuggestionLegacyFollowDraft": "Mpangilio wako wa awali umehifadhiwa: huu unafuata modeli yako ya tafsiri ya rasimu hadi uchague modeli hapa.",
-      "videoSuggestionLegacyFollowReview": "Mpangilio wako wa awali umehifadhiwa: huu unafuata modeli yako ya tafsiri ya ukaguzi hadi uchague modeli hapa."
+      "videoSuggestionLegacyFollowReview": "Mpangilio wako wa awali umehifadhiwa: huu unafuata modeli yako ya tafsiri ya ukaguzi hadi uchague modeli hapa.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Inahitaji ufunguaji wa funguo za API na ufunguo wako wa Google Gemini.",
+      "summaryRequiresGemini": "Inahitaji ufunguaji wa funguo za API na ufunguo wako wa Google Gemini."
     },
     "apiKeyGuide": {
       "title": "Jinsi ya kupata funguo za API",
@@ -732,13 +741,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "Funguo za API",
         "createNewSecretKey": "Unda ufunguo mpya wa siri",
         "createKey": "Unda ufunguo",
-        "profileApiKey": "Wasifu + ufunguo wa API"
+        "profileApiKey": "Wasifu + ufunguo wa API",
+        "createApiKey": "Unda ufunguo wa API"
       },
       "openai": {
         "step1": "Nenda",
@@ -765,6 +776,13 @@
         "step4": "Ongeza njia ya malipo katika mipangilio ya Usajili (inahitajika kwa matumizi ya API zaidi ya ngazi ya bure)",
         "step5": "Nakili ufunguo wako wa API na ubandike kwenye Stage5",
         "audioDescription": "ElevenLabs huendesha kunakili kote (Scribe) na kuweka sauti. Bila ufunguo wako mwenyewe wa ElevenLabs, vyote viwili hutumia dakika zako za Stage5, ambazo hazitumiki wakati funguo zako mwenyewe zimewashwa."
+      },
+      "gemini": {
+        "step1": "Nenda",
+        "step2": "Ingia ukitumia akaunti yako ya Google",
+        "step3": "Bofya",
+        "step4": "Washa malipo katika Google Cloud / AI Studio ikiwa unahitaji viwango vya juu zaidi",
+        "step5": "Nakili ufunguo (huanza na AIza) na uubandike katika Stage5"
       }
     },
     "apiKey": {
@@ -795,11 +813,11 @@
       "signOut": "Toka"
     },
     "agentControl": {
-      "description": "Ruhusu Claude Code, Claude Desktop, Codex au wakala mwingine wa MCP kudhibiti Translator kwenye kompyuta hii. Ikishawashwa, mawakala wanaweza kupakua video, kusimamia maktaba yako, kuhariri na kutafsiri manukuu, na kuhamisha faili kwenye folda zinazoruhusiwa.",
+      "description": "Ruhusu Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity au wakala mwingine wa MCP kudhibiti Translator kwenye kompyuta hii. Ikishawashwa, mawakala wanaweza kupakua video, kusimamia maktaba yako, kuhariri na kutafsiri manukuu, na kuhamisha faili kwenye folda zinazoruhusiwa.",
       "enableLabel": "Ruhusu mawakala kudhibiti programu hii",
       "enableAria": "Washa udhibiti wa mawakala",
       "connection": {
-        "title": "Unganisha Claude Code, Claude Desktop au Codex",
+        "title": "Unganisha Claude Code, Claude Desktop, Codex, Gemini CLI au Antigravity",
         "instructions": "Bofya kitufe ili kusajili seva ya MCP ya “translator”. Kwa mawakala wengine, ongeza seva ya MCP ya STDIO inayoitwa “translator” yenye njia hii ya kizindua, kisha uanzishe upya wakala ili zana mpya zionekane.",
         "copyPath": "Nakili njia",
         "copied": "Imenakiliwa",
@@ -819,7 +837,9 @@
         "failedCli": "Imeshindwa kuunganisha {{app}} kiotomatiki. Endesha hii kwenye terminal:",
         "failedGeneric": "Imeshindwa kuunganisha {{app}}. Jaribu tena.",
         "appNotFound": "{{app}} haijasakinishwa kwenye kompyuta hii. Isakinishe, ifungue mara moja, kisha uunganishe tena.",
-        "download": "Pakua {{app}}"
+        "download": "Pakua {{app}}",
+        "connectGeminiCli": "Unganisha Gemini CLI",
+        "connectAntigravity": "Unganisha Antigravity"
       },
       "status": {
         "enabled": "Imewashwa",
@@ -852,7 +872,7 @@
         "addDirectory": "Imeshindikana kuongeza folda.",
         "removeDirectory": "Imeshindikana kuondoa folda."
       },
-      "pitch": "Tafsiri bure kwa usajili wa Claude au Codex ambao tayari unao.",
+      "pitch": "Tafsiri bure kwa usajili wa Claude, Codex au Gemini ambao tayari unao.",
       "freeTitle": "Tafsiri bure kwa AI yako mwenyewe"
     },
     "creditTransfer": {
@@ -942,7 +962,8 @@
       "contact": "Wasiliana na huduma kwa wateja",
       "retry": "Jaribu tena",
       "supportSubject": "Siwezi kununua dakika kwenye Translator"
-    }
+    },
+    "usingGemini": "Unatumia Gemini"
   },
   "branding": {
     "translator": "translator",

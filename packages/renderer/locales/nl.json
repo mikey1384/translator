@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Je ElevenLabs API-sleutel is ongeldig of verlopen. Controleer je sleutel in Instellingen.",
       "elevenlabsRateLimit": "ElevenLabs rate limit bereikt. Wacht even en probeer het opnieuw.",
       "elevenlabsInsufficientQuota": "Je ElevenLabs-account heeft onvoldoende credits. Voeg credits toe op elevenlabs.io.",
-      "genericApiError": "API-verzoek mislukt. Controleer je API-sleutel en accountstatus."
+      "genericApiError": "API-verzoek mislukt. Controleer je API-sleutel en accountstatus.",
+      "geminiKeyInvalid": "Je Google Gemini API-sleutel is ongeldig of verlopen. Controleer je sleutel in Instellingen.",
+      "geminiRateLimit": "Google Gemini rate limit bereikt. Wacht even en probeer het opnieuw.",
+      "geminiInsufficientQuota": "Je Google Gemini API-quotum is op. Controleer de facturering op aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Uitschrijven (ElevenLabs Scribe) is tijdelijk niet beschikbaar of kon na meerdere pogingen niet worden bereikt. Probeer het over een paar minuten opnieuw.",
@@ -723,7 +726,13 @@
       "dubbingRequiresElevenLabs": "Nasynchroniseren gebeurt alleen met ElevenLabs. Voeg een ElevenLabs API-sleutel toe om met je eigen sleutels na te synchroniseren. Zonder sleutel gebruikt nasynchronisatie je Stage5-minuten, die niet worden gebruikt zolang je eigen sleutels aan staan.",
       "runtimeFallback": "Runtime-terugval in API-sleutelmodus",
       "videoSuggestionLegacyFollowDraft": "Je eerdere instelling blijft behouden: dit volgt je vertaalmodel voor het concept totdat je hier een model kiest.",
-      "videoSuggestionLegacyFollowReview": "Je eerdere instelling blijft behouden: dit volgt je vertaalmodel voor de beoordeling totdat je hier een model kiest."
+      "videoSuggestionLegacyFollowReview": "Je eerdere instelling blijft behouden: dit volgt je vertaalmodel voor de beoordeling totdat je hier een model kiest.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Vereist de API-sleutelontgrendeling en je Google Gemini-sleutel.",
+      "summaryRequiresGemini": "Vereist de API-sleutelontgrendeling en je Google Gemini-sleutel."
     },
     "apiKeyGuide": {
       "title": "Hoe API-sleutels te verkrijgen",
@@ -732,13 +741,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API-sleutels",
         "createNewSecretKey": "Nieuwe geheime sleutel maken",
         "createKey": "Sleutel maken",
-        "profileApiKey": "Profiel + API-sleutel"
+        "profileApiKey": "Profiel + API-sleutel",
+        "createApiKey": "API-sleutel maken"
       },
       "openai": {
         "step1": "Ga naar",
@@ -765,6 +776,13 @@
         "step4": "Voeg een betaalmethode toe in Abonnementsinstellingen (vereist voor API-gebruik buiten de gratis laag)",
         "step5": "Kopieer je API-sleutel en plak deze in Stage5",
         "audioDescription": "ElevenLabs verzorgt al het uitschrijven (Scribe) en nasynchroniseren. Zonder eigen ElevenLabs-sleutel gebruiken beide je Stage5-minuten, die niet worden gebruikt zolang je eigen sleutels aan staan."
+      },
+      "gemini": {
+        "step1": "Ga naar",
+        "step2": "Log in met je Google-account",
+        "step3": "Klik op",
+        "step4": "Schakel facturering in Google Cloud / AI Studio in als je hogere limieten nodig hebt",
+        "step5": "Kopieer de sleutel (begint met AIza) en plak deze in Stage5"
       }
     },
     "apiKey": {
@@ -795,11 +813,11 @@
       "signOut": "Uitloggen"
     },
     "agentControl": {
-      "description": "Laat Claude Code, Claude Desktop, Codex of een andere MCP-agent Translator op deze computer besturen. Wanneer dit is ingeschakeld, kunnen agents video's downloaden, je bibliotheek beheren, ondertitels bewerken en vertalen en bestanden naar toegestane mappen exporteren.",
+      "description": "Laat Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity of een andere MCP-agent Translator op deze computer besturen. Wanneer dit is ingeschakeld, kunnen agents video's downloaden, je bibliotheek beheren, ondertitels bewerken en vertalen en bestanden naar toegestane mappen exporteren.",
       "enableLabel": "Agentbesturing voor deze app toestaan",
       "enableAria": "Agentbesturing inschakelen",
       "connection": {
-        "title": "Claude Code, Claude Desktop of Codex verbinden",
+        "title": "Claude Code, Claude Desktop, Codex, Gemini CLI of Antigravity verbinden",
         "instructions": "Klik op een knop om de MCP-server ‘translator’ te registreren. Voeg voor andere agents een STDIO-MCP-server met de naam ‘translator’ toe met dit opstartpad en start de agent daarna opnieuw zodat de nieuwe hulpmiddelen verschijnen.",
         "copyPath": "Pad kopiëren",
         "copied": "Gekopieerd",
@@ -819,7 +837,9 @@
         "failedCli": "Kan {{app}} niet automatisch verbinden. Voer dit uit in een terminal:",
         "failedGeneric": "Kan {{app}} niet verbinden. Probeer het opnieuw.",
         "appNotFound": "{{app}} is niet geïnstalleerd op deze computer. Installeer het, open het één keer en maak dan opnieuw verbinding.",
-        "download": "{{app}} downloaden"
+        "download": "{{app}} downloaden",
+        "connectGeminiCli": "Gemini CLI verbinden",
+        "connectAntigravity": "Antigravity verbinden"
       },
       "status": {
         "enabled": "Ingeschakeld",
@@ -852,7 +872,7 @@
         "addDirectory": "De map kon niet worden toegevoegd.",
         "removeDirectory": "De map kon niet worden verwijderd."
       },
-      "pitch": "Vertaal gratis met het Claude- of Codex-abonnement dat je al hebt.",
+      "pitch": "Vertaal gratis met het Claude-, Codex- of Gemini-abonnement dat je al hebt.",
       "freeTitle": "Gratis vertalen met je eigen AI"
     },
     "creditTransfer": {
@@ -942,7 +962,8 @@
       "contact": "Contact opnemen",
       "retry": "Opnieuw proberen",
       "supportSubject": "Ik kan geen minuten kopen in Translator"
-    }
+    },
+    "usingGemini": "Gebruikt Gemini"
   },
   "branding": {
     "translator": "translator",

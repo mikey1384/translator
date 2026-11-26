@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "ElevenLabs API key của bạn không hợp lệ hoặc đã hết hạn. Hãy kiểm tra key trong Cài đặt.",
       "elevenlabsRateLimit": "Đã đạt giới hạn tốc độ ElevenLabs. Hãy đợi một chút rồi thử lại.",
       "elevenlabsInsufficientQuota": "Tài khoản ElevenLabs của bạn không đủ tín dụng. Hãy nạp thêm tại elevenlabs.io.",
-      "genericApiError": "Yêu cầu API thất bại. Hãy kiểm tra API key và trạng thái tài khoản của bạn."
+      "genericApiError": "Yêu cầu API thất bại. Hãy kiểm tra API key và trạng thái tài khoản của bạn.",
+      "geminiKeyInvalid": "Google Gemini API key của bạn không hợp lệ hoặc đã hết hạn. Hãy kiểm tra key trong Cài đặt.",
+      "geminiRateLimit": "Đã đạt giới hạn tốc độ Google Gemini. Hãy đợi một chút rồi thử lại.",
+      "geminiInsufficientQuota": "Hạn mức Google Gemini API của bạn đã hết. Hãy kiểm tra thanh toán tại aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Chép lời (ElevenLabs Scribe) tạm thời không khả dụng hoặc không thể kết nối sau nhiều lần thử. Hãy thử lại sau vài phút.",
@@ -716,7 +719,13 @@
       "dubbingRequiresElevenLabs": "Lồng tiếng chỉ dùng ElevenLabs. Hãy thêm API key ElevenLabs để lồng tiếng bằng key riêng. Nếu không có, lồng tiếng sẽ dùng số phút Stage5 của bạn — số phút này không bị dùng khi key riêng của bạn đang bật.",
       "runtimeFallback": "Phương án dự phòng khi chạy ở chế độ API key",
       "videoSuggestionLegacyFollowDraft": "Đã giữ thiết lập trước đây của bạn: mục này theo mô hình dịch nháp cho đến khi bạn chọn một mô hình ở đây.",
-      "videoSuggestionLegacyFollowReview": "Đã giữ thiết lập trước đây của bạn: mục này theo mô hình rà soát bản dịch cho đến khi bạn chọn một mô hình ở đây."
+      "videoSuggestionLegacyFollowReview": "Đã giữ thiết lập trước đây của bạn: mục này theo mô hình rà soát bản dịch cho đến khi bạn chọn một mô hình ở đây.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Cần mở khóa API key và có key Google Gemini của bạn.",
+      "summaryRequiresGemini": "Cần mở khóa API key và có key Google Gemini của bạn."
     },
     "apiKeyGuide": {
       "title": "Cách lấy API key",
@@ -725,13 +734,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "Khóa API",
         "createNewSecretKey": "Tạo khóa bí mật mới",
         "createKey": "Tạo khóa",
-        "profileApiKey": "Hồ sơ + khóa API"
+        "profileApiKey": "Hồ sơ + khóa API",
+        "createApiKey": "Tạo khóa API"
       },
       "openai": {
         "step1": "Truy cập",
@@ -758,6 +769,13 @@
         "step4": "Thêm phương thức thanh toán trong cài đặt Đăng ký (bắt buộc để sử dụng API vượt mức miễn phí)",
         "step5": "Sao chép API key của bạn và dán vào Stage5",
         "audioDescription": "ElevenLabs xử lý toàn bộ việc chép lời (Scribe) và lồng tiếng. Nếu không có key ElevenLabs riêng, cả hai sẽ dùng số phút Stage5 của bạn — số phút này không bị dùng khi key riêng của bạn đang bật."
+      },
+      "gemini": {
+        "step1": "Truy cập",
+        "step2": "Đăng nhập bằng tài khoản Google của bạn",
+        "step3": "Nhấp vào",
+        "step4": "Bật thanh toán trong Google Cloud / AI Studio nếu bạn cần giới hạn cao hơn",
+        "step5": "Sao chép khóa (bắt đầu bằng AIza) và dán vào Stage5"
       }
     },
     "apiKey": {
@@ -788,11 +806,11 @@
       "signOut": "Đăng xuất"
     },
     "agentControl": {
-      "description": "Cho phép Claude Code, Claude Desktop, Codex hoặc tác nhân MCP khác điều khiển Translator trên máy tính này. Khi bật, tác nhân có thể tải video xuống, quản lý thư viện, chỉnh sửa và dịch phụ đề, và xuất tệp vào các thư mục được phép.",
+      "description": "Cho phép Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity hoặc tác nhân MCP khác điều khiển Translator trên máy tính này. Khi bật, tác nhân có thể tải video xuống, quản lý thư viện, chỉnh sửa và dịch phụ đề, và xuất tệp vào các thư mục được phép.",
       "enableLabel": "Cho phép tác nhân điều khiển ứng dụng này",
       "enableAria": "Bật điều khiển tác nhân",
       "connection": {
-        "title": "Kết nối Claude Code, Claude Desktop hoặc Codex",
+        "title": "Kết nối Claude Code, Claude Desktop, Codex, Gemini CLI hoặc Antigravity",
         "instructions": "Nhấp vào một nút để đăng ký máy chủ MCP “translator”. Với các tác nhân khác, hãy thêm một máy chủ STDIO MCP tên “translator” với đường dẫn trình khởi chạy này, rồi khởi động lại tác nhân để các công cụ mới xuất hiện.",
         "copyPath": "Sao chép đường dẫn",
         "copied": "Đã sao chép",
@@ -812,7 +830,9 @@
         "failedCli": "Không thể tự động kết nối {{app}}. Hãy chạy lệnh này trong Terminal:",
         "failedGeneric": "Không thể kết nối {{app}}. Hãy thử lại.",
         "appNotFound": "Máy tính này chưa cài {{app}}. Hãy cài đặt, mở ứng dụng một lần rồi kết nối lại.",
-        "download": "Tải {{app}}"
+        "download": "Tải {{app}}",
+        "connectGeminiCli": "Kết nối Gemini CLI",
+        "connectAntigravity": "Kết nối Antigravity"
       },
       "status": {
         "enabled": "Đã bật",
@@ -844,7 +864,7 @@
         "addDirectory": "Không thể thêm thư mục.",
         "removeDirectory": "Không thể xóa thư mục."
       },
-      "pitch": "Dịch miễn phí bằng gói đăng ký Claude hoặc Codex mà bạn đang có.",
+      "pitch": "Dịch miễn phí bằng gói đăng ký Claude, Codex hoặc Gemini mà bạn đang có.",
       "freeTitle": "Dịch miễn phí bằng AI của riêng bạn"
     },
     "creditTransfer": {
@@ -932,7 +952,8 @@
       "contact": "Liên hệ hỗ trợ",
       "retry": "Thử lại",
       "supportSubject": "Tôi không mua được phút trong Translator"
-    }
+    },
+    "usingGemini": "Đang dùng Gemini"
   },
   "branding": {
     "translator": "translator",

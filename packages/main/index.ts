@@ -84,6 +84,7 @@ import {
   initAiProvider,
   validateApiKey,
   validateAnthropicApiKey,
+  validateGeminiApiKey,
 } from './services/ai-provider.js';
 import { getErrorReportContext } from './services/error-report.js';
 import {
@@ -1437,6 +1438,37 @@ try {
     settingsHandlers.setUseByoAnthropic(Boolean(value))
   );
 
+  // Gemini API key handlers
+  ipcMain.handle('get-gemini-api-key', () =>
+    summarizeStoredApiKey(settingsHandlers.getGeminiApiKey())
+  );
+  ipcMain.handle('set-gemini-api-key', async (event, apiKey: string) => {
+    const result = await settingsHandlers.setGeminiApiKey(event, apiKey);
+    broadcastToApp('gemini-api-key-changed', {
+      hasKey: result.success && Boolean(apiKey?.trim?.()),
+    });
+    return result;
+  });
+  ipcMain.handle('clear-gemini-api-key', async () => {
+    const result = await settingsHandlers.clearGeminiApiKey();
+    broadcastToApp('gemini-api-key-changed', { hasKey: false });
+    return result;
+  });
+  ipcMain.handle('validate-gemini-api-key', async (_event, apiKey?: string) => {
+    const provided = typeof apiKey === 'string' ? apiKey.trim() : '';
+    const keyToCheck = provided || settingsHandlers.getGeminiApiKey();
+    if (!keyToCheck) {
+      return { ok: false, error: 'Missing API key' };
+    }
+    return validateGeminiApiKey(keyToCheck);
+  });
+  ipcMain.handle('get-byo-gemini-enabled', () =>
+    settingsHandlers.getUseByoGemini()
+  );
+  ipcMain.handle('set-byo-gemini-enabled', (_event, value: boolean) =>
+    settingsHandlers.setUseByoGemini(Boolean(value))
+  );
+
   // ElevenLabs API key handlers
   ipcMain.handle('get-elevenlabs-api-key', () =>
     summarizeStoredApiKey(settingsHandlers.getElevenLabsApiKey())
@@ -1714,6 +1746,49 @@ try {
   );
   ipcMain.handle('set-prefer-claude-summary', (_event, value: boolean) =>
     settingsHandlers.setPreferClaudeSummary(Boolean(value))
+  );
+  // 3-provider BYO text preferences & Gemini tiers
+  ipcMain.handle('get-preferred-translation-provider', () =>
+    settingsHandlers.getPreferredTranslationProvider()
+  );
+  ipcMain.handle(
+    'set-preferred-translation-provider',
+    (_event, value: 'openai' | 'anthropic' | 'gemini') =>
+      settingsHandlers.setPreferredTranslationProvider(value)
+  );
+  ipcMain.handle('get-preferred-review-provider', () =>
+    settingsHandlers.getPreferredReviewProvider()
+  );
+  ipcMain.handle(
+    'set-preferred-review-provider',
+    (_event, value: 'openai' | 'anthropic' | 'gemini') =>
+      settingsHandlers.setPreferredReviewProvider(value)
+  );
+  ipcMain.handle('get-preferred-summary-provider', () =>
+    settingsHandlers.getPreferredSummaryProvider()
+  );
+  ipcMain.handle(
+    'set-preferred-summary-provider',
+    (_event, value: 'openai' | 'anthropic' | 'gemini') =>
+      settingsHandlers.setPreferredSummaryProvider(value)
+  );
+  ipcMain.handle('get-byo-gemini-draft-model', () =>
+    settingsHandlers.getByoGeminiDraftModel()
+  );
+  ipcMain.handle('set-byo-gemini-draft-model', (_event, value: string) =>
+    settingsHandlers.setByoGeminiDraftModel(value)
+  );
+  ipcMain.handle('get-byo-gemini-review-model', () =>
+    settingsHandlers.getByoGeminiReviewModel()
+  );
+  ipcMain.handle('set-byo-gemini-review-model', (_event, value: string) =>
+    settingsHandlers.setByoGeminiReviewModel(value)
+  );
+  ipcMain.handle('get-byo-gemini-summary-model', () =>
+    settingsHandlers.getByoGeminiSummaryModel()
+  );
+  ipcMain.handle('set-byo-gemini-summary-model', (_event, value: string) =>
+    settingsHandlers.setByoGeminiSummaryModel(value)
   );
   ipcMain.handle('get-stage5-video-suggestion-mode', () =>
     settingsHandlers.getStage5VideoSuggestionMode()

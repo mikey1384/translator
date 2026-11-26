@@ -19,6 +19,11 @@ import {
   testAnthropicApiKey,
 } from './anthropic-client.js';
 import {
+  translateWithGemini,
+  respondWithGeminiWebSearch,
+  testGeminiApiKey,
+} from './gemini-client.js';
+import {
   transcribeWithElevenLabs,
   synthesizeDubWithElevenLabs,
   testElevenLabsApiKey,
@@ -28,8 +33,12 @@ import {
   ERROR_CODES,
   STAGE5_CREDIT_MODELS,
   STAGE5_REVIEW_TRANSLATION_MODEL,
+  isGeminiModelId,
   normalizeAiModelId,
   normalizeDubVoice,
+  type ByoGeminiDraftModel,
+  type ByoGeminiReviewModel,
+  type ByoGeminiSummaryModel,
 } from '@shared/constants';
 import {
   API_KEY_MODE_DUBBING_BLOCKER_MESSAGES,
@@ -62,24 +71,38 @@ import {
 } from '../utils/summary-model-routing.js';
 import {
   APP_SETTINGS_DEFAULTS,
+  normalizeByoGeminiDraftModelSetting,
+  normalizeByoGeminiReviewModelSetting,
+  normalizeByoGeminiSummaryModelSetting,
+  normalizeByoTextProviderSetting,
   normalizeByoVideoSuggestionModelSetting,
   normalizeDubbingProviderSetting,
   normalizeStage5VideoSuggestionModeSetting,
   normalizeStage5DubbingTtsProviderSetting,
   normalizeTranscriptionProviderSetting,
   normalizeVideoSuggestionModelPreferenceSetting,
+  type ByoTextProviderPreference,
   type DubbingProviderPreference,
   type Stage5DubbingTtsProviderPreference,
   type TranscriptionProviderPreference,
 } from '../store/settings-schema.js';
 
-export type ProviderKind = 'stage5' | 'openai' | 'anthropic' | 'elevenlabs';
+export type ProviderKind =
+  | 'stage5'
+  | 'openai'
+  | 'anthropic'
+  | 'gemini'
+  | 'elevenlabs';
 export type VideoSuggestionModelPreference =
   VideoSuggestionModelPreferenceValue;
 
 function isClaudeModel(model: string | undefined): boolean {
   const normalizedModel = normalizeAiModelId(model);
   return Boolean(normalizedModel && normalizedModel.startsWith('claude-'));
+}
+
+function isGeminiModel(model: string | undefined): boolean {
+  return isGeminiModelId(model);
 }
 
 type Stage5TranscribeOptions = Parameters<typeof stage5Client.transcribe>[0];
@@ -133,9 +156,11 @@ function createByoToggleChecker(
     const fallback =
       toggleKey === 'useByoAnthropic'
         ? APP_SETTINGS_DEFAULTS.useByoAnthropic
-        : toggleKey === 'useByoElevenLabs'
-          ? APP_SETTINGS_DEFAULTS.useByoElevenLabs
-          : false;
+        : toggleKey === 'useByoGemini'
+          ? APP_SETTINGS_DEFAULTS.useByoGemini
+          : toggleKey === 'useByoElevenLabs'
+            ? APP_SETTINGS_DEFAULTS.useByoElevenLabs
+            : false;
     if (!settingsStoreRef) return fallback;
     if (requiresApiKeyMode && !isApiKeyModeEnabled()) return false;
     try {
@@ -155,6 +180,7 @@ const getStoredAnthropicApiKey = createApiKeyGetter(
   'anthropicApiKey',
   'Anthropic'
 );
+const getStoredGeminiApiKey = createApiKeyGetter('geminiApiKey', 'Gemini');
 const getStoredElevenLabsApiKey = createApiKeyGetter(
   'elevenLabsApiKey',
   'ElevenLabs'
@@ -163,6 +189,10 @@ const getStoredElevenLabsApiKey = createApiKeyGetter(
 const isByoAnthropicToggleEnabled = createByoToggleChecker(
   'useByoAnthropic',
   'Anthropic'
+);
+const isByoGeminiToggleEnabled = createByoToggleChecker(
+  'useByoGemini',
+  'Gemini'
 );
 const isByoElevenLabsToggleEnabled = createByoToggleChecker(
   'useByoElevenLabs',
@@ -229,20 +259,119 @@ export function prefersClaudeSummary(): boolean {
   }
 }
 
+export function getPreferredTranslationProvider(): ByoTextProviderPreference {
+  const legacyFallback: ByoTextProviderPreference = prefersClaudeTranslation()
+    ? 'anthropic'
+    : 'openai';
+  if (!settingsStoreRef) return legacyFallback;
+  try {
+    return normalizeByoTextProviderSetting(
+      settingsStoreRef.get('preferredTranslationProvider'),
+      legacyFallback
+    );
+  } catch {
+    return legacyFallback;
+  }
+}
+
+export function getPreferredReviewProvider(): ByoTextProviderPreference {
+  const legacyFallback: ByoTextProviderPreference = prefersClaudeReview()
+    ? 'anthropic'
+    : 'openai';
+  if (!settingsStoreRef) return legacyFallback;
+  try {
+    return normalizeByoTextProviderSetting(
+      settingsStoreRef.get('preferredReviewProvider'),
+      legacyFallback
+    );
+  } catch {
+    return legacyFallback;
+  }
+}
+
+export function getPreferredSummaryProvider(): ByoTextProviderPreference {
+  const legacyFallback: ByoTextProviderPreference = prefersClaudeSummary()
+    ? 'anthropic'
+    : 'openai';
+  if (!settingsStoreRef) return legacyFallback;
+  try {
+    return normalizeByoTextProviderSetting(
+      settingsStoreRef.get('preferredSummaryProvider'),
+      legacyFallback
+    );
+  } catch {
+    return legacyFallback;
+  }
+}
+
+export function getByoGeminiDraftModel(): ByoGeminiDraftModel {
+  if (!settingsStoreRef) return APP_SETTINGS_DEFAULTS.byoGeminiDraftModel;
+  try {
+    return normalizeByoGeminiDraftModelSetting(
+      settingsStoreRef.get(
+        'byoGeminiDraftModel',
+        APP_SETTINGS_DEFAULTS.byoGeminiDraftModel
+      )
+    );
+  } catch {
+    return APP_SETTINGS_DEFAULTS.byoGeminiDraftModel;
+  }
+}
+
+export function getByoGeminiReviewModel(): ByoGeminiReviewModel {
+  if (!settingsStoreRef) return APP_SETTINGS_DEFAULTS.byoGeminiReviewModel;
+  try {
+    return normalizeByoGeminiReviewModelSetting(
+      settingsStoreRef.get(
+        'byoGeminiReviewModel',
+        APP_SETTINGS_DEFAULTS.byoGeminiReviewModel
+      )
+    );
+  } catch {
+    return APP_SETTINGS_DEFAULTS.byoGeminiReviewModel;
+  }
+}
+
+export function getByoGeminiSummaryModel(): ByoGeminiSummaryModel {
+  if (!settingsStoreRef) return APP_SETTINGS_DEFAULTS.byoGeminiSummaryModel;
+  try {
+    return normalizeByoGeminiSummaryModelSetting(
+      settingsStoreRef.get(
+        'byoGeminiSummaryModel',
+        APP_SETTINGS_DEFAULTS.byoGeminiSummaryModel
+      )
+    );
+  } catch {
+    return APP_SETTINGS_DEFAULTS.byoGeminiSummaryModel;
+  }
+}
+
 export function resolveTranslationDraftModel(): string {
-  const prefersClaude = prefersClaudeTranslation();
+  const preferredProvider = getPreferredTranslationProvider();
+  const geminiDraftModel = getByoGeminiDraftModel();
   const canUseAnthropicByo =
     getActiveProviderForModel(AI_MODELS.CLAUDE_SONNET) === 'anthropic';
   const canUseOpenAiByo = getActiveProviderForModel(AI_MODELS.GPT) === 'openai';
+  const canUseGeminiByo =
+    getActiveProviderForModel(geminiDraftModel) === 'gemini';
 
-  if (prefersClaude && canUseAnthropicByo) {
+  if (preferredProvider === 'gemini' && canUseGeminiByo) {
+    return geminiDraftModel;
+  }
+  if (preferredProvider === 'anthropic' && canUseAnthropicByo) {
     return AI_MODELS.CLAUDE_SONNET;
+  }
+  if (preferredProvider === 'openai' && canUseOpenAiByo) {
+    return AI_MODELS.GPT;
   }
   if (canUseOpenAiByo) {
     return AI_MODELS.GPT;
   }
   if (canUseAnthropicByo) {
     return AI_MODELS.CLAUDE_SONNET;
+  }
+  if (canUseGeminiByo) {
+    return geminiDraftModel;
   }
   // Stage5 credits draft on Claude Haiku 5.5 (the servers choose it).
   return STAGE5_CREDIT_MODELS.DRAFT;
@@ -252,24 +381,35 @@ export function resolveTranslationReviewModel(): {
   model: string;
   reasoning?: { effort: 'high' };
 } {
+  const preferredProvider = getPreferredReviewProvider();
+  const geminiReviewModel = getByoGeminiReviewModel();
   const canUseAnthropicByo =
     getActiveProviderForModel(AI_MODELS.CLAUDE_OPUS) === 'anthropic';
   const canUseOpenAiByo = getActiveProviderForModel(AI_MODELS.GPT) === 'openai';
+  const canUseGeminiByo =
+    getActiveProviderForModel(geminiReviewModel) === 'gemini';
   const prefersClaude = prefersClaudeReview();
 
-  if (prefersClaude && canUseAnthropicByo) {
+  if (preferredProvider === 'gemini' && canUseGeminiByo) {
+    return { model: geminiReviewModel };
+  }
+
+  if (preferredProvider === 'anthropic' && canUseAnthropicByo) {
     return { model: AI_MODELS.CLAUDE_OPUS };
   }
 
-  if (!prefersClaude && canUseOpenAiByo) {
+  if (preferredProvider === 'openai' && canUseOpenAiByo) {
     return { model: STAGE5_REVIEW_TRANSLATION_MODEL };
   }
 
   if (isApiKeyModeEnabled()) {
     return resolveByoTranslationReviewModelConfig({
       prefersClaude,
+      preferredProvider,
       canUseAnthropicByo,
       canUseOpenAiByo,
+      canUseGeminiByo,
+      geminiReviewModel,
     });
   }
 
@@ -356,6 +496,11 @@ function getAvailableByoVideoSuggestionModels(): string[] {
   if (getActiveProviderForModel(AI_MODELS.CLAUDE_OPUS) === 'anthropic') {
     availableModels.push(AI_MODELS.CLAUDE_OPUS);
   }
+  if (getActiveProviderForModel(AI_MODELS.GEMINI_NEON) === 'gemini') {
+    availableModels.push(AI_MODELS.GEMINI_HYDROGEN);
+    availableModels.push(AI_MODELS.GEMINI_NEON);
+    availableModels.push(AI_MODELS.GEMINI_CARBON);
+  }
 
   return availableModels;
 }
@@ -382,7 +527,9 @@ export function resolveVideoSuggestionTranslationPhase(
   );
   return selected === 'quality' ||
     selected === STAGE5_REVIEW_TRANSLATION_MODEL ||
-    selected === AI_MODELS.CLAUDE_OPUS
+    selected === AI_MODELS.CLAUDE_OPUS ||
+    selected === AI_MODELS.GEMINI_NEON ||
+    selected === AI_MODELS.GEMINI_CARBON
     ? 'review'
     : 'draft';
 }
@@ -470,6 +617,11 @@ const PROVIDER_ERROR_CODES = {
     rateLimit: ERROR_CODES.ANTHROPIC_RATE_LIMIT,
     insufficientQuota: ERROR_CODES.ANTHROPIC_INSUFFICIENT_QUOTA,
   },
+  gemini: {
+    authInvalid: ERROR_CODES.GEMINI_KEY_INVALID,
+    rateLimit: ERROR_CODES.GEMINI_RATE_LIMIT,
+    insufficientQuota: ERROR_CODES.GEMINI_INSUFFICIENT_QUOTA,
+  },
   elevenlabs: {
     authInvalid: ERROR_CODES.ELEVENLABS_KEY_INVALID,
     rateLimit: ERROR_CODES.ELEVENLABS_RATE_LIMIT,
@@ -531,6 +683,10 @@ function mapAnthropicError(error: any): never {
   return mapProviderError('anthropic', error);
 }
 
+function mapGeminiError(error: any): never {
+  return mapProviderError('gemini', error);
+}
+
 function mapElevenLabsError(error: any): never {
   return mapProviderError('elevenlabs', error);
 }
@@ -541,6 +697,10 @@ export function hasUserApiKey(): boolean {
 
 export function hasUserAnthropicApiKey(): boolean {
   return Boolean(getStoredAnthropicApiKey());
+}
+
+export function hasUserGeminiApiKey(): boolean {
+  return Boolean(getStoredGeminiApiKey());
 }
 
 export function hasUserElevenLabsApiKey(): boolean {
@@ -569,6 +729,19 @@ export function getActiveProviderForModel(model?: string): ProviderKind {
       return 'anthropic';
     }
     return 'stage5'; // Stage5 will handle Claude via relay
+  }
+
+  // For Gemini models, check Gemini BYO key
+  if (isGeminiModel(model)) {
+    const hasKey = hasUserGeminiApiKey();
+    const toggleEnabled = isByoGeminiToggleEnabled();
+    log.debug(
+      `[ai-provider] Gemini model detected. byoGemini=${entitlements.byoGemini}, hasKey=${hasKey}, toggleEnabled=${toggleEnabled}`
+    );
+    if (entitlements.byoGemini && hasKey && toggleEnabled) {
+      return 'gemini';
+    }
+    return 'stage5';
   }
 
   // For OpenAI models
@@ -881,6 +1054,35 @@ export async function translate(
     }
   }
 
+  // Handle Gemini models with BYO key
+  if (provider === 'gemini') {
+    const geminiKey = getStoredGeminiApiKey();
+    if (!geminiKey) {
+      if (apiKeyModeEnabled) {
+        throw new Error(ERROR_CODES.GEMINI_KEY_INVALID);
+      }
+      log.warn(
+        '[ai-provider] Gemini provider selected but API key missing. Falling back to Stage5.'
+      );
+      return stage5Client.translate(stage5Options);
+    }
+
+    log.debug('[ai-provider] Using Gemini direct translation.');
+    try {
+      return await translateWithGemini({
+        messages,
+        model: normalizedModel,
+        apiKey: geminiKey,
+        signal,
+        effort: effectiveReasoning?.effort,
+        tools,
+        toolChoice,
+      });
+    } catch (error) {
+      mapGeminiError(error);
+    }
+  }
+
   // Handle OpenAI models with BYO key
   if (provider === 'openai') {
     const apiKey = getStoredApiKey();
@@ -912,6 +1114,24 @@ export async function translate(
 
   if (apiKeyModeEnabled) {
     const entitlements = getCachedEntitlements();
+    if (isGeminiModel(normalizedModel)) {
+      if (!entitlements.byoGemini) {
+        throw new Error(
+          'BYO Gemini is not unlocked for this account. Switch to Stage5 credits or unlock API keys to continue.'
+        );
+      }
+      if (!isByoGeminiToggleEnabled()) {
+        throw new Error(
+          'BYO Gemini is disabled in Settings. Enable it to use Gemini models with your own API keys.'
+        );
+      }
+      if (!hasUserGeminiApiKey()) {
+        throw new Error(ERROR_CODES.GEMINI_KEY_INVALID);
+      }
+      throw new Error(
+        'Using your API keys is on, but Gemini translation is currently unavailable.'
+      );
+    }
     if (isClaudeModel(normalizedModel)) {
       if (!entitlements.byoAnthropic) {
         throw new Error(
@@ -1034,9 +1254,49 @@ export async function translateWithWebSearch(
     }
   }
 
+  if (provider === 'gemini') {
+    const apiKey = getStoredGeminiApiKey();
+    if (!apiKey) {
+      throw new Error(ERROR_CODES.GEMINI_KEY_INVALID);
+    }
+    log.debug(
+      `[ai-provider] Using Gemini web search (model=${preferredModel}).`
+    );
+    try {
+      return await respondWithGeminiWebSearch({
+        messages,
+        model: preferredModel,
+        apiKey,
+        signal,
+        effort: effectiveReasoning?.effort,
+        onTextDelta,
+      });
+    } catch (error) {
+      mapGeminiError(error);
+    }
+  }
+
   // In API key mode, never silently spend Stage5 credits.
   if (apiKeyModeEnabled) {
     const entitlements = getCachedEntitlements();
+    if (isGeminiModel(preferredModel)) {
+      if (!entitlements.byoGemini) {
+        throw new Error(
+          'BYO Gemini is not unlocked for this account. Switch to Stage5 credits or unlock API keys to continue.'
+        );
+      }
+      if (!isByoGeminiToggleEnabled()) {
+        throw new Error(
+          'BYO Gemini is disabled in Settings. Enable it to use Gemini video search.'
+        );
+      }
+      if (!hasUserGeminiApiKey()) {
+        throw new Error(ERROR_CODES.GEMINI_KEY_INVALID);
+      }
+      throw new Error(
+        'BYO Gemini is enabled but unavailable for web search. Please verify your model and API settings.'
+      );
+    }
     if (isClaudeModel(preferredModel)) {
       if (!entitlements.byoAnthropic) {
         throw new Error(
@@ -1221,6 +1481,25 @@ export function getCurrentAnthropicApiKey(): string | null {
   return getStoredAnthropicApiKey();
 }
 
+export async function validateGeminiApiKey(
+  apiKey: string
+): Promise<TestKeyResult> {
+  try {
+    await testGeminiApiKey(apiKey);
+    return { ok: true };
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.error?.message ||
+      error?.message ||
+      'Unknown error';
+    return { ok: false, error: message };
+  }
+}
+
+export function getCurrentGeminiApiKey(): string | null {
+  return getStoredGeminiApiKey();
+}
+
 export async function validateElevenLabsApiKey(
   apiKey: string
 ): Promise<TestKeyResult> {
@@ -1264,11 +1543,18 @@ export function getSummaryModelConfig(
     entitlements.byoAnthropic &&
     hasUserAnthropicApiKey() &&
     isByoAnthropicToggleEnabled();
+  const hasGeminiByo =
+    entitlements.byoGemini &&
+    hasUserGeminiApiKey() &&
+    isByoGeminiToggleEnabled();
 
   return resolveSummaryModelConfig({
     effortLevel,
     prefersClaude: prefersClaudeSummary(),
+    preferredProvider: getPreferredSummaryProvider(),
     canUseAnthropicByo: hasAnthropicByo,
     canUseOpenAiByo: hasOpenAiByo,
+    canUseGeminiByo: hasGeminiByo,
+    geminiSummaryModel: getByoGeminiSummaryModel(),
   });
 }

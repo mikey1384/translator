@@ -61,6 +61,10 @@ import {
   parseRedeemTransferResponse,
   summarizeCreditLedger,
 } from '../utils/credit-transfer.js';
+import {
+  assertCheckoutSessionPackCount,
+  decideCreditCheckoutCollision,
+} from '../utils/credit-checkout-guard.js';
 import { appBuildHeaders } from '../utils/app-build-kind.js';
 
 // Generate or retrieve device ID using proper UUID v4
@@ -321,49 +325,47 @@ function tryBeginCheckoutCreation(
   requestedPackId?: CreditPackId,
   requestedQuantity = 1
 ): boolean {
-  if (checkoutCreationInFlight[mode]) {
-    reassertCheckoutTransition(mode);
-    return false;
-  }
   const existingSessionId = getActiveCheckoutSessionId(mode);
-  if (existingSessionId) {
-    const activePackId =
-      mode === 'credits' &&
-      activeCreditCheckout?.sessionId === existingSessionId
-        ? activeCreditCheckout.packId
-        : null;
-    // The user picked a different pack while one was waiting: they changed
-    // their mind, so the new pack replaces the old session.
-    // A different number of the same pack is a different purchase too: the
-    // open Stripe page charges another amount than the one just shown.
-    const choseAnotherPack =
-      requestedPackId != null &&
-      activePackId != null &&
-      (requestedPackId !== activePackId ||
-        requestedQuantity !== (activeCreditCheckout?.quantity ?? 1));
-    const replace =
-      checkoutUiTransitions[mode] === 'unresolved' || choseAnotherPack;
-    if (!replace && activePackId != null && activeCreditCheckout) {
-      // Same pack again: the Stripe tab was probably closed. Reopen it.
-      const { url } = activeCreditCheckout;
-      void shell.openExternal(url).catch(error => {
-        log.warn('[credit-handler] Reopening the checkout page failed:', error);
-      });
-    }
-    if (replace) {
-      log.info(
-        `[credit-handler] Replacing ${choseAnotherPack ? 'pending' : 'stale unresolved'} ${mode} checkout session before starting a new one.`
-      );
-      clearActiveCheckoutSession(mode, existingSessionId);
-      markCheckoutTransition(mode, null);
-    } else {
+  const decision = decideCreditCheckoutCollision({
+    inFlight: Boolean(checkoutCreationInFlight[mode]),
+    mode,
+    existingSessionId,
+    activeCreditCheckout,
+    transition: checkoutUiTransitions[mode],
+    requestedPackId,
+    requestedQuantity,
+  });
+
+  if (decision.action === 'block') {
+    if (existingSessionId) {
       log.warn(
         `[credit-handler] ${mode} checkout requested while another session is active; re-asserting its state.`
       );
-      reassertCheckoutTransition(mode);
-      return false;
     }
+    reassertCheckoutTransition(mode);
+    return false;
   }
+
+  if (decision.action === 'reopen') {
+    // Same pack and quantity again: the Stripe tab was probably closed. Reopen it.
+    void shell.openExternal(decision.url).catch(error => {
+      log.warn('[credit-handler] Reopening the checkout page failed:', error);
+    });
+    log.warn(
+      `[credit-handler] ${mode} checkout requested while another session is active; re-asserting its state.`
+    );
+    reassertCheckoutTransition(mode);
+    return false;
+  }
+
+  if (decision.action === 'replace' && existingSessionId) {
+    log.info(
+      `[credit-handler] Replacing ${decision.reason === 'changed_pack_or_quantity' ? 'pending' : 'stale unresolved'} ${mode} checkout session before starting a new one.`
+    );
+    clearActiveCheckoutSession(mode, existingSessionId);
+    markCheckoutTransition(mode, null);
+  }
+
   checkoutCreationInFlight[mode] = true;
   return true;
 }
@@ -1183,12 +1185,11 @@ export async function handleCreateCheckoutSession(
     // The server must have made the session for the number of packs just
     // shown. A server that does not know about multiples would charge for
     // one, so never open a page whose amount differs from the offer.
-    if (quantity > 1 && response.data?.quantity !== quantity) {
-      countAnonymousUsage(CHECKOUT_PACK_COUNT_MISMATCH);
-      throw new Error(
-        `Checkout was created for ${String(response.data?.quantity ?? 1)} pack(s), not the ${quantity} requested.`
-      );
-    }
+    assertCheckoutSessionPackCount({
+      requestedQuantity: quantity,
+      responseQuantity: response.data?.quantity,
+      onMismatch: () => countAnonymousUsage(CHECKOUT_PACK_COUNT_MISMATCH),
+    });
 
     // Expecting backend to respond with { url: 'https://checkout.stripe.com/…' }
     if (response.data?.url) {

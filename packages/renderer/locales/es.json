@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Tu clave API de ElevenLabs es inválida o ha expirado. Por favor verifica tu clave en Configuración.",
       "elevenlabsRateLimit": "Se alcanzó el límite de solicitudes de ElevenLabs. Por favor espera un momento e intenta de nuevo.",
       "elevenlabsInsufficientQuota": "Tu cuenta de ElevenLabs no tiene créditos suficientes. Por favor agrega créditos en elevenlabs.io.",
-      "genericApiError": "La solicitud API falló. Por favor verifica tu clave API y el estado de tu cuenta."
+      "genericApiError": "La solicitud API falló. Por favor verifica tu clave API y el estado de tu cuenta.",
+      "geminiKeyInvalid": "Tu clave API de Google Gemini es inválida o ha expirado. Por favor verifica tu clave en Configuración.",
+      "geminiRateLimit": "Se alcanzó el límite de solicitudes de Google Gemini. Por favor espera un momento e intenta de nuevo.",
+      "geminiInsufficientQuota": "Se agotó tu cuota de la API de Google Gemini. Revisa la facturación en aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "La transcripción (ElevenLabs Scribe) no está disponible temporalmente o no se pudo conectar tras varios intentos. Vuelve a intentarlo en unos minutos.",
@@ -725,7 +728,13 @@
       "dubbingRequiresElevenLabs": "El doblaje solo usa ElevenLabs. Añade una clave API de ElevenLabs para doblar con tus propias claves. Sin ella, el doblaje usa tus minutos de Stage5, que no se usan mientras tus propias claves estén activadas.",
       "runtimeFallback": "Alternativa en tiempo de ejecución en modo clave API",
       "videoSuggestionLegacyFollowDraft": "Se conserva tu ajuste anterior: sigue tu modelo de traducción de borrador hasta que elijas un modelo aquí.",
-      "videoSuggestionLegacyFollowReview": "Se conserva tu ajuste anterior: sigue tu modelo de traducción de revisión hasta que elijas un modelo aquí."
+      "videoSuggestionLegacyFollowReview": "Se conserva tu ajuste anterior: sigue tu modelo de traducción de revisión hasta que elijas un modelo aquí.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Requiere el desbloqueo de claves de API y tu clave de Google Gemini.",
+      "summaryRequiresGemini": "Requiere el desbloqueo de claves de API y tu clave de Google Gemini."
     },
     "apiKeyGuide": {
       "title": "Cómo obtener claves de API",
@@ -734,13 +743,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "Claves API",
         "createNewSecretKey": "Crear nueva clave secreta",
         "createKey": "Crear clave",
-        "profileApiKey": "Perfil + clave API"
+        "profileApiKey": "Perfil + clave API",
+        "createApiKey": "Crear clave de API"
       },
       "openai": {
         "step1": "Ve a",
@@ -767,6 +778,13 @@
         "step4": "Añade un método de pago en la configuración de suscripción (requerido para uso de API más allá del nivel gratuito)",
         "step5": "Copia tu clave de API y pégala en Stage5",
         "audioDescription": "ElevenLabs se encarga de toda la transcripción (Scribe) y el doblaje. Sin tu propia clave de ElevenLabs, ambos usan tus minutos de Stage5, que no se usan mientras tus propias claves estén activadas."
+      },
+      "gemini": {
+        "step1": "Ve a",
+        "step2": "Inicia sesión con tu cuenta de Google",
+        "step3": "Haz clic en",
+        "step4": "Activa la facturación en Google Cloud / AI Studio si necesitas límites más altos",
+        "step5": "Copia la clave (empieza por AIza) y pégala en Stage5"
       }
     },
     "apiKey": {
@@ -797,11 +815,11 @@
       "signOut": "Cerrar sesión"
     },
     "agentControl": {
-      "description": "Permite que Claude Code, Claude Desktop, Codex u otro agente MCP controlen Translator en esta computadora. Al activarlo, los agentes pueden descargar videos, gestionar tu biblioteca, editar y traducir subtítulos y exportar archivos a las carpetas permitidas.",
+      "description": "Permite que Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity u otro agente MCP controlen Translator en esta computadora. Al activarlo, los agentes pueden descargar videos, gestionar tu biblioteca, editar y traducir subtítulos y exportar archivos a las carpetas permitidas.",
       "enableLabel": "Permitir que agentes controlen esta aplicación",
       "enableAria": "Activar el control de agentes",
       "connection": {
-        "title": "Conectar Claude Code, Claude Desktop o Codex",
+        "title": "Conectar Claude Code, Claude Desktop, Codex, Gemini CLI o Antigravity",
         "instructions": "Haz clic en un botón para registrar el servidor MCP “translator”. Para otros agentes, añade un servidor MCP STDIO llamado “translator” con esta ruta del iniciador y reinicia el agente para que aparezcan las herramientas nuevas.",
         "copyPath": "Copiar ruta",
         "copied": "Copiada",
@@ -821,7 +839,9 @@
         "failedCli": "No se pudo conectar {{app}} automáticamente. Ejecuta esto en una terminal:",
         "failedGeneric": "No se pudo conectar {{app}}. Vuelve a intentarlo.",
         "appNotFound": "{{app}} no está instalado en esta computadora. Instálalo, ábrelo una vez y vuelve a conectar.",
-        "download": "Descargar {{app}}"
+        "download": "Descargar {{app}}",
+        "connectGeminiCli": "Conectar Gemini CLI",
+        "connectAntigravity": "Conectar Antigravity"
       },
       "status": {
         "enabled": "Activado",
@@ -854,7 +874,7 @@
         "addDirectory": "No se pudo añadir la carpeta.",
         "removeDirectory": "No se pudo eliminar la carpeta."
       },
-      "pitch": "Traduce gratis con la suscripción de Claude o Codex que ya tienes.",
+      "pitch": "Traduce gratis con la suscripción de Claude, Codex o Gemini que ya tienes.",
       "freeTitle": "Traduce gratis con tu propia IA"
     },
     "creditTransfer": {
@@ -944,7 +964,8 @@
       "contact": "Contactar a soporte",
       "retry": "Reintentar",
       "supportSubject": "No puedo comprar minutos en Translator"
-    }
+    },
+    "usingGemini": "Usando Gemini"
   },
   "branding": {
     "translator": "translator",

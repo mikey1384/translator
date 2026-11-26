@@ -1,7 +1,10 @@
 import {
+  AI_MODELS,
   getStage5ReviewOption,
   STAGE5_CREDIT_MODELS,
+  type ByoGeminiReviewModel,
 } from '../../shared/constants/index.js';
+import type { ByoTextProviderPreference } from '../store/settings-schema.js';
 
 export type ReviewModelConfig = {
   model: string;
@@ -24,33 +27,48 @@ export function resolveStage5TranslationReviewModelConfig(_options: {
 
 export function resolveByoTranslationReviewModelConfig({
   prefersClaude,
+  preferredProvider,
   canUseAnthropicByo,
   canUseOpenAiByo,
+  canUseGeminiByo = false,
+  geminiReviewModel = AI_MODELS.GEMINI_NEON,
 }: {
   prefersClaude: boolean;
+  preferredProvider?: ByoTextProviderPreference;
   canUseAnthropicByo: boolean;
   canUseOpenAiByo: boolean;
+  canUseGeminiByo?: boolean;
+  geminiReviewModel?: ByoGeminiReviewModel;
 }): ReviewModelConfig {
   const openAiReview = getStage5ReviewOption('openai');
   const anthropicReview = getStage5ReviewOption('anthropic');
+  const effectivePreference: ByoTextProviderPreference =
+    preferredProvider ?? (prefersClaude ? 'anthropic' : 'openai');
 
-  if (prefersClaude && canUseAnthropicByo) {
+  if (effectivePreference === 'gemini' && canUseGeminiByo) {
+    return { model: geminiReviewModel };
+  }
+  if (effectivePreference === 'anthropic' && canUseAnthropicByo) {
     return { model: anthropicReview.model };
   }
-
-  if (!prefersClaude && canUseOpenAiByo) {
+  if (effectivePreference === 'openai' && canUseOpenAiByo) {
     return { model: openAiReview.model };
   }
 
   if (canUseOpenAiByo) {
     return { model: openAiReview.model };
   }
-
   if (canUseAnthropicByo) {
     return { model: anthropicReview.model };
   }
+  if (canUseGeminiByo) {
+    return { model: geminiReviewModel };
+  }
 
-  return prefersClaude
+  if (effectivePreference === 'gemini') {
+    return { model: geminiReviewModel };
+  }
+  return effectivePreference === 'anthropic'
     ? { model: anthropicReview.model }
     : { model: openAiReview.model };
 }

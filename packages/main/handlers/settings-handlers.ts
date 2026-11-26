@@ -7,6 +7,10 @@ export type { SettingsStoreType } from '../store/settings-store.js';
 import type { SettingsStoreType } from '../store/settings-store.js';
 import {
   APP_SETTINGS_DEFAULTS,
+  normalizeByoGeminiDraftModelSetting,
+  normalizeByoGeminiReviewModelSetting,
+  normalizeByoGeminiSummaryModelSetting,
+  normalizeByoTextProviderSetting,
   normalizeByoVideoSuggestionModelSetting,
   normalizeDubbingProviderSetting,
   normalizeStage5VideoSuggestionModeSetting,
@@ -14,6 +18,10 @@ import {
   normalizeTranscriptionProviderSetting,
   normalizeVideoSuggestionModelPreferenceSetting,
   normalizeVideoSuggestionRecencySetting,
+  type ByoGeminiDraftModel,
+  type ByoGeminiReviewModel,
+  type ByoGeminiSummaryModel,
+  type ByoTextProviderPreference,
   type ByoVideoSuggestionModel,
   type DubbingProviderPreference,
   type Stage5VideoSuggestionMode,
@@ -48,17 +56,26 @@ import { getSystemPreferredLanguages } from '../utils/ui-language.js';
 export interface AllByoSettings {
   openAiKeyPresent: boolean;
   anthropicKeyPresent: boolean;
+  geminiKeyPresent: boolean;
   elevenLabsKeyPresent: boolean;
   // Individual provider toggles
   useByoOpenAi: boolean;
   useByoAnthropic: boolean;
+  useByoGemini: boolean;
   useByoElevenLabs: boolean;
   // Global API-key toggle
   useApiKeysMode: boolean;
-  // Claude preferences
+  // Legacy Claude booleans
   preferClaudeTranslation: boolean;
   preferClaudeReview: boolean;
   preferClaudeSummary: boolean;
+  // 3-provider BYO text preferences & Gemini tiers
+  preferredTranslationProvider: ByoTextProviderPreference;
+  preferredReviewProvider: ByoTextProviderPreference;
+  preferredSummaryProvider: ByoTextProviderPreference;
+  byoGeminiDraftModel: ByoGeminiDraftModel;
+  byoGeminiReviewModel: ByoGeminiReviewModel;
+  byoGeminiSummaryModel: ByoGeminiSummaryModel;
   // Active model preference derived from mode-specific settings.
   videoSuggestionModelPreference: VideoSuggestionModelPreferenceValue;
   stage5VideoSuggestionMode: Stage5VideoSuggestionMode;
@@ -293,6 +310,78 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
+  /* ─────────── Gemini API key ─────────── */
+  function getGeminiApiKey(): string | null {
+    try {
+      const stored = store.get('geminiApiKey', null);
+      if (typeof stored !== 'string' || stored.length === 0) return null;
+      if (!isEncrypted(stored)) {
+        store.set('geminiApiKey', null);
+        return null;
+      }
+      return decryptString(stored) || null;
+    } catch (err) {
+      log.error('[settings] Failed to read stored Gemini API key:', err);
+      return null;
+    }
+  }
+
+  async function setGeminiApiKey(
+    _evt: any,
+    apiKey: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (typeof apiKey !== 'string' || !apiKey.trim()) {
+        store.set('geminiApiKey', null);
+        return { success: true };
+      }
+      const trimmed = apiKey.trim();
+      const encrypted = encryptString(trimmed);
+      store.set('geminiApiKey', encrypted);
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist Gemini API key:', err);
+      return { success: false, error: err?.message || 'Failed to save key' };
+    }
+  }
+
+  async function clearGeminiApiKey(): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      store.set('geminiApiKey', null);
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to clear Gemini API key:', err);
+      return { success: false, error: err?.message || 'Failed to clear key' };
+    }
+  }
+
+  function getUseByoGemini(): boolean {
+    try {
+      return Boolean(
+        store.get('useByoGemini', APP_SETTINGS_DEFAULTS.useByoGemini)
+      );
+    } catch (err) {
+      log.error('[settings] Failed to read BYO Gemini toggle:', err);
+      return APP_SETTINGS_DEFAULTS.useByoGemini;
+    }
+  }
+
+  function setUseByoGemini(value: boolean): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set('useByoGemini', Boolean(value));
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist BYO Gemini toggle:', err);
+      return { success: false, error: err?.message || 'Failed to save toggle' };
+    }
+  }
+
   /* ─────────── ElevenLabs API key ─────────── */
   function getElevenLabsApiKey(): string | null {
     try {
@@ -439,7 +528,12 @@ export function buildSettingsHandlers(opts: {
     error?: string;
   } {
     try {
-      store.set('preferClaudeTranslation', Boolean(value));
+      const boolVal = Boolean(value);
+      store.set('preferClaudeTranslation', boolVal);
+      store.set(
+        'preferredTranslationProvider',
+        boolVal ? 'anthropic' : 'openai'
+      );
       return { success: true };
     } catch (err: any) {
       log.error(
@@ -473,7 +567,9 @@ export function buildSettingsHandlers(opts: {
     error?: string;
   } {
     try {
-      store.set('preferClaudeReview', Boolean(value));
+      const boolVal = Boolean(value);
+      store.set('preferClaudeReview', boolVal);
+      store.set('preferredReviewProvider', boolVal ? 'anthropic' : 'openai');
       return { success: true };
     } catch (err: any) {
       log.error('[settings] Failed to persist Claude review preference:', err);
@@ -504,13 +600,208 @@ export function buildSettingsHandlers(opts: {
     error?: string;
   } {
     try {
-      store.set('preferClaudeSummary', Boolean(value));
+      const boolVal = Boolean(value);
+      store.set('preferClaudeSummary', boolVal);
+      store.set('preferredSummaryProvider', boolVal ? 'anthropic' : 'openai');
       return { success: true };
     } catch (err: any) {
       log.error('[settings] Failed to persist Claude summary preference:', err);
       return {
         success: false,
         error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  /* ─────────── 3-provider BYO text preferences & Gemini tiers ─────────── */
+  function getPreferredTranslationProvider(): ByoTextProviderPreference {
+    const fallback: ByoTextProviderPreference = getPreferClaudeTranslation()
+      ? 'anthropic'
+      : 'openai';
+    try {
+      return normalizeByoTextProviderSetting(
+        store.get('preferredTranslationProvider'),
+        fallback
+      );
+    } catch {
+      return fallback;
+    }
+  }
+
+  function setPreferredTranslationProvider(value: unknown): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      const normalized = normalizeByoTextProviderSetting(value, 'openai');
+      store.set('preferredTranslationProvider', normalized);
+      if (normalized === 'anthropic' || normalized === 'openai') {
+        store.set('preferClaudeTranslation', normalized === 'anthropic');
+      }
+      return { success: true };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  function getPreferredReviewProvider(): ByoTextProviderPreference {
+    const fallback: ByoTextProviderPreference = getPreferClaudeReview()
+      ? 'anthropic'
+      : 'openai';
+    try {
+      return normalizeByoTextProviderSetting(
+        store.get('preferredReviewProvider'),
+        fallback
+      );
+    } catch {
+      return fallback;
+    }
+  }
+
+  function setPreferredReviewProvider(value: unknown): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      const normalized = normalizeByoTextProviderSetting(value, 'openai');
+      store.set('preferredReviewProvider', normalized);
+      if (normalized === 'anthropic' || normalized === 'openai') {
+        store.set('preferClaudeReview', normalized === 'anthropic');
+      }
+      return { success: true };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  function getPreferredSummaryProvider(): ByoTextProviderPreference {
+    const fallback: ByoTextProviderPreference = getPreferClaudeSummary()
+      ? 'anthropic'
+      : 'openai';
+    try {
+      return normalizeByoTextProviderSetting(
+        store.get('preferredSummaryProvider'),
+        fallback
+      );
+    } catch {
+      return fallback;
+    }
+  }
+
+  function setPreferredSummaryProvider(value: unknown): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      const normalized = normalizeByoTextProviderSetting(value, 'anthropic');
+      store.set('preferredSummaryProvider', normalized);
+      if (normalized === 'anthropic' || normalized === 'openai') {
+        store.set('preferClaudeSummary', normalized === 'anthropic');
+      }
+      return { success: true };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  function getByoGeminiDraftModel(): ByoGeminiDraftModel {
+    try {
+      return normalizeByoGeminiDraftModelSetting(
+        store.get(
+          'byoGeminiDraftModel',
+          APP_SETTINGS_DEFAULTS.byoGeminiDraftModel
+        )
+      );
+    } catch {
+      return APP_SETTINGS_DEFAULTS.byoGeminiDraftModel;
+    }
+  }
+
+  function setByoGeminiDraftModel(value: unknown): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set(
+        'byoGeminiDraftModel',
+        normalizeByoGeminiDraftModelSetting(value)
+      );
+      return { success: true };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || 'Failed to save model',
+      };
+    }
+  }
+
+  function getByoGeminiReviewModel(): ByoGeminiReviewModel {
+    try {
+      return normalizeByoGeminiReviewModelSetting(
+        store.get(
+          'byoGeminiReviewModel',
+          APP_SETTINGS_DEFAULTS.byoGeminiReviewModel
+        )
+      );
+    } catch {
+      return APP_SETTINGS_DEFAULTS.byoGeminiReviewModel;
+    }
+  }
+
+  function setByoGeminiReviewModel(value: unknown): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set(
+        'byoGeminiReviewModel',
+        normalizeByoGeminiReviewModelSetting(value)
+      );
+      return { success: true };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || 'Failed to save model',
+      };
+    }
+  }
+
+  function getByoGeminiSummaryModel(): ByoGeminiSummaryModel {
+    try {
+      return normalizeByoGeminiSummaryModelSetting(
+        store.get(
+          'byoGeminiSummaryModel',
+          APP_SETTINGS_DEFAULTS.byoGeminiSummaryModel
+        )
+      );
+    } catch {
+      return APP_SETTINGS_DEFAULTS.byoGeminiSummaryModel;
+    }
+  }
+
+  function setByoGeminiSummaryModel(value: unknown): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set(
+        'byoGeminiSummaryModel',
+        normalizeByoGeminiSummaryModelSetting(value)
+      );
+      return { success: true };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || 'Failed to save model',
       };
     }
   }
@@ -905,6 +1196,18 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
+  function hasGeminiApiKeyStored(): boolean {
+    try {
+      const stored = store.get('geminiApiKey', null);
+      return (
+        typeof stored === 'string' && stored.length > 0 && isV2Encrypted(stored)
+      );
+    } catch (err) {
+      log.error('[settings] Failed to check if Gemini API key is stored:', err);
+      return false;
+    }
+  }
+
   function hasElevenLabsApiKeyStored(): boolean {
     try {
       const stored = store.get('elevenLabsApiKey', null);
@@ -929,17 +1232,26 @@ export function buildSettingsHandlers(opts: {
     return {
       openAiKeyPresent: hasApiKeyStored(),
       anthropicKeyPresent: hasAnthropicApiKeyStored(),
+      geminiKeyPresent: hasGeminiApiKeyStored(),
       elevenLabsKeyPresent: hasElevenLabsApiKeyStored(),
       // Individual toggles
       useByoOpenAi: getUseByoOpenAi(),
       useByoAnthropic: getUseByoAnthropic(),
+      useByoGemini: getUseByoGemini(),
       useByoElevenLabs: getUseByoElevenLabs(),
       // Global API-key toggle
       useApiKeysMode: getApiKeyModeEnabled(),
-      // Claude preferences
+      // Legacy Claude booleans
       preferClaudeTranslation: getPreferClaudeTranslation(),
       preferClaudeReview: getPreferClaudeReview(),
       preferClaudeSummary: getPreferClaudeSummary(),
+      // 3-provider BYO text preferences & Gemini tiers
+      preferredTranslationProvider: getPreferredTranslationProvider(),
+      preferredReviewProvider: getPreferredReviewProvider(),
+      preferredSummaryProvider: getPreferredSummaryProvider(),
+      byoGeminiDraftModel: getByoGeminiDraftModel(),
+      byoGeminiReviewModel: getByoGeminiReviewModel(),
+      byoGeminiSummaryModel: getByoGeminiSummaryModel(),
       videoSuggestionModelPreference: getVideoSuggestionModelPreference(),
       stage5VideoSuggestionMode: getStage5VideoSuggestionMode(),
       byoVideoSuggestionModel: getByoVideoSuggestionModel(),
@@ -955,6 +1267,7 @@ export function buildSettingsHandlers(opts: {
     const keysToMigrate = [
       { key: 'apiKey', name: 'OpenAI' },
       { key: 'anthropicApiKey', name: 'Anthropic' },
+      { key: 'geminiApiKey', name: 'Gemini' },
       { key: 'elevenLabsApiKey', name: 'ElevenLabs' },
     ] as const;
 
@@ -1163,6 +1476,11 @@ export function buildSettingsHandlers(opts: {
     setUseByoOpenAi,
     getUseByoAnthropic,
     setUseByoAnthropic,
+    getGeminiApiKey,
+    setGeminiApiKey,
+    clearGeminiApiKey,
+    getUseByoGemini,
+    setUseByoGemini,
     getElevenLabsApiKey,
     setElevenLabsApiKey,
     clearElevenLabsApiKey,
@@ -1176,6 +1494,18 @@ export function buildSettingsHandlers(opts: {
     setPreferClaudeReview,
     getPreferClaudeSummary,
     setPreferClaudeSummary,
+    getPreferredTranslationProvider,
+    setPreferredTranslationProvider,
+    getPreferredReviewProvider,
+    setPreferredReviewProvider,
+    getPreferredSummaryProvider,
+    setPreferredSummaryProvider,
+    getByoGeminiDraftModel,
+    setByoGeminiDraftModel,
+    getByoGeminiReviewModel,
+    setByoGeminiReviewModel,
+    getByoGeminiSummaryModel,
+    setByoGeminiSummaryModel,
     getStage5VideoSuggestionMode,
     setStage5VideoSuggestionMode,
     getByoVideoSuggestionModel,

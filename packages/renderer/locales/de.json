@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Dein ElevenLabs-API-Schlüssel ist ungültig oder abgelaufen. Prüf ihn in den Einstellungen.",
       "elevenlabsRateLimit": "ElevenLabs-Ratenlimit erreicht. Warte einen Moment und versuch es noch mal.",
       "elevenlabsInsufficientQuota": "Dein ElevenLabs-Konto hat nicht genug Guthaben. Lade es auf elevenlabs.io auf.",
-      "genericApiError": "API-Anfrage fehlgeschlagen. Prüf deinen API-Schlüssel und deinen Kontostatus."
+      "genericApiError": "API-Anfrage fehlgeschlagen. Prüf deinen API-Schlüssel und deinen Kontostatus.",
+      "geminiKeyInvalid": "Dein Google-Gemini-API-Schlüssel ist ungültig oder abgelaufen. Prüf ihn in den Einstellungen.",
+      "geminiRateLimit": "Google-Gemini-Ratenlimit erreicht. Warte einen Moment und versuch es noch mal.",
+      "geminiInsufficientQuota": "Dein Google-Gemini-API-Kontingent ist aufgebraucht. Prüf die Abrechnung auf aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Die Transkription (ElevenLabs Scribe) ist vorübergehend nicht verfügbar oder konnte nach mehreren Versuchen nicht erreicht werden. Bitte versuche es in ein paar Minuten erneut.",
@@ -723,7 +726,13 @@
       "dubbingRequiresElevenLabs": "Synchronfassungen laufen nur über ElevenLabs. Füge einen ElevenLabs-API-Schlüssel hinzu, um mit deinen eigenen Schlüsseln zu synchronisieren. Ohne ihn nutzen Synchronfassungen deine Stage5-Minuten, die nicht verwendet werden, solange deine eigenen Schlüssel aktiv sind.",
       "runtimeFallback": "Laufzeit-Fallback im API-Schlüssel-Modus",
       "videoSuggestionLegacyFollowDraft": "Deine frühere Einstellung bleibt erhalten: Bis du hier ein Modell auswählst, gilt dein Übersetzungsmodell für den Entwurf.",
-      "videoSuggestionLegacyFollowReview": "Deine frühere Einstellung bleibt erhalten: Bis du hier ein Modell auswählst, gilt dein Übersetzungsmodell für die Prüfung."
+      "videoSuggestionLegacyFollowReview": "Deine frühere Einstellung bleibt erhalten: Bis du hier ein Modell auswählst, gilt dein Übersetzungsmodell für die Prüfung.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Braucht die API-Schlüssel-Freischaltung und deinen Google-Gemini-Schlüssel.",
+      "summaryRequiresGemini": "Braucht die API-Schlüssel-Freischaltung und deinen Google-Gemini-Schlüssel."
     },
     "apiKeyGuide": {
       "title": "So bekommst du API-Schlüssel",
@@ -732,13 +741,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API-Schlüssel",
         "createNewSecretKey": "Neuen geheimen Schlüssel erstellen",
         "createKey": "Schlüssel erstellen",
-        "profileApiKey": "Profil + API-Schlüssel"
+        "profileApiKey": "Profil + API-Schlüssel",
+        "createApiKey": "API-Schlüssel erstellen"
       },
       "openai": {
         "step1": "Öffne",
@@ -765,6 +776,13 @@
         "step4": "Füge in den Abo-Einstellungen eine Zahlungsmethode hinzu (für die API-Nutzung über das kostenlose Kontingent hinaus erforderlich)",
         "step5": "Kopier deinen API-Schlüssel und füge ihn in Stage5 ein",
         "audioDescription": "ElevenLabs übernimmt die gesamte Transkription (Scribe) und alle Synchronfassungen. Ohne eigenen ElevenLabs-Schlüssel nutzen beide deine Stage5-Minuten, die nicht verwendet werden, solange deine eigenen Schlüssel aktiv sind."
+      },
+      "gemini": {
+        "step1": "Öffne",
+        "step2": "Melde dich mit deinem Google-Konto an",
+        "step3": "Klick auf",
+        "step4": "Aktiviere die Abrechnung in Google Cloud / AI Studio, wenn du höhere Limits brauchst",
+        "step5": "Kopiere den Schlüssel (beginnt mit AIza) und füge ihn in Stage5 ein"
       }
     },
     "apiKey": {
@@ -795,11 +813,11 @@
       "signOut": "Abmelden"
     },
     "agentControl": {
-      "description": "Erlaube Claude Code, Claude Desktop, Codex oder einem anderen MCP-Agenten, Translator auf diesem Computer zu steuern. Wenn aktiviert, können Agenten Videos herunterladen, deine Mediathek verwalten, Untertitel bearbeiten und übersetzen sowie Dateien in zulässige Ordner exportieren.",
+      "description": "Erlaube Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity oder einem anderen MCP-Agenten, Translator auf diesem Computer zu steuern. Wenn aktiviert, können Agenten Videos herunterladen, deine Mediathek verwalten, Untertitel bearbeiten und übersetzen sowie Dateien in zulässige Ordner exportieren.",
       "enableLabel": "Agentensteuerung für diese App zulassen",
       "enableAria": "Agentensteuerung aktivieren",
       "connection": {
-        "title": "Claude Code, Claude Desktop oder Codex verbinden",
+        "title": "Claude Code, Claude Desktop, Codex, Gemini CLI oder Antigravity verbinden",
         "instructions": "Klicke auf eine Schaltfläche, um den MCP-Server „translator“ zu registrieren. Für andere Agenten füge einen STDIO-MCP-Server namens „translator“ mit diesem Startpfad hinzu und starte den Agenten anschließend neu, damit die neuen Tools angezeigt werden.",
         "copyPath": "Pfad kopieren",
         "copied": "Kopiert",
@@ -819,7 +837,9 @@
         "failedCli": "{{app}} konnte nicht automatisch verbunden werden. Führe das in einem Terminal aus:",
         "failedGeneric": "{{app}} konnte nicht verbunden werden. Versuch es noch mal.",
         "appNotFound": "{{app}} ist auf diesem Computer nicht installiert. Installier es, öffne es einmal und verbinde dann noch mal.",
-        "download": "{{app}} herunterladen"
+        "download": "{{app}} herunterladen",
+        "connectGeminiCli": "Gemini CLI verbinden",
+        "connectAntigravity": "Antigravity verbinden"
       },
       "status": {
         "enabled": "Aktiviert",
@@ -852,7 +872,7 @@
         "addDirectory": "Der Ordner konnte nicht hinzugefügt werden.",
         "removeDirectory": "Der Ordner konnte nicht entfernt werden."
       },
-      "pitch": "Übersetze kostenlos mit dem Claude- oder Codex-Abo, das du bereits hast.",
+      "pitch": "Übersetze kostenlos mit dem Claude-, Codex- oder Gemini-Abo, das du bereits hast.",
       "freeTitle": "Mit deiner eigenen KI kostenlos übersetzen"
     },
     "creditTransfer": {
@@ -942,7 +962,8 @@
       "contact": "Support kontaktieren",
       "retry": "Erneut versuchen",
       "supportSubject": "Ich kann in Translator keine Minuten kaufen"
-    }
+    },
+    "usingGemini": "Nutzt Gemini"
   },
   "branding": {
     "translator": "translator",

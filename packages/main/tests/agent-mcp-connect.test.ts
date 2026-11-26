@@ -3,10 +3,13 @@ import test from 'node:test';
 import {
   buildMcpAddArgs,
   connectAgentCli,
+  connectAntigravity,
   connectClaudeDesktop,
+  isAntigravityInstalled,
   isClaudeDesktopInstalled,
   findAgentCli,
   formatCommandForCopy,
+  getAntigravityConfigPath,
   getClaudeDesktopConfigPath,
   mergeClaudeDesktopConfig,
   type ConfigFs,
@@ -342,5 +345,122 @@ test('Claude Desktop counts as installed by its config folder or app bundle', ()
       exists: p => p === '/Users/me/Library/Application Support/Claude',
     }),
     true
+  );
+});
+
+test('Gemini CLI builds user-scoped mcp add args and connects or falls back cleanly', async () => {
+  assert.deepEqual(buildMcpAddArgs('gemini-cli', LAUNCHER), [
+    'mcp',
+    'add',
+    '-s',
+    'user',
+    'translator',
+    LAUNCHER,
+  ]);
+  assert.equal(
+    formatCommandForCopy(
+      'gemini',
+      buildMcpAddArgs('gemini-cli', '/Apps/My Translator/translator-mcp'),
+      'darwin'
+    ),
+    "gemini mcp add -s user translator '/Apps/My Translator/translator-mcp'"
+  );
+
+  const missing = await connectAgentCli({
+    client: 'gemini-cli',
+    launcherPath: LAUNCHER,
+    search: { ...search, isExecutable: () => false },
+    exec: async () => {
+      throw new Error('should not run');
+    },
+  });
+  assert.deepEqual(missing, {
+    status: 'cli-not-found',
+    client: 'gemini-cli',
+    command: `gemini mcp add -s user translator ${LAUNCHER}`,
+  });
+
+  const calls: Array<{ file: string; args: string[] }> = [];
+  const connected = await connectAgentCli({
+    client: 'gemini-cli',
+    launcherPath: LAUNCHER,
+    search: { ...search, isExecutable: p => p === '/usr/bin/gemini' },
+    exec: async (file, args) => {
+      calls.push({ file, args });
+      return { stdout: 'Added MCP server translator', stderr: '' };
+    },
+  });
+  assert.equal(connected.status, 'connected');
+  assert.equal(calls[0].file, '/usr/bin/gemini');
+  assert.deepEqual(calls[0].args, [
+    'mcp',
+    'add',
+    '-s',
+    'user',
+    'translator',
+    LAUNCHER,
+  ]);
+});
+
+test('Antigravity config path, install detection, backup, and merge work cleanly', () => {
+  assert.equal(
+    getAntigravityConfigPath({ platform: 'darwin', homeDir: '/Users/me' }),
+    '/Users/me/.gemini/config/mcp_config.json'
+  );
+  assert.equal(
+    getAntigravityConfigPath({ platform: 'win32', homeDir: 'C:\\Users\\me' }),
+    'C:\\Users\\me\\.gemini\\config\\mcp_config.json'
+  );
+
+  const configPath = '/Users/me/.gemini/config/mcp_config.json';
+  assert.equal(
+    isAntigravityInstalled({
+      platform: 'darwin',
+      env: {},
+      homeDir: '/Users/me',
+      configPath,
+      exists: () => false,
+    }),
+    false
+  );
+  assert.equal(
+    isAntigravityInstalled({
+      platform: 'darwin',
+      env: {},
+      homeDir: '/Users/me',
+      configPath,
+      exists: p => p === '/Users/me/.gemini/antigravity',
+    }),
+    true
+  );
+
+  const memNotInstalled = memoryFs({});
+  assert.equal(
+    connectAntigravity({
+      launcherPath: LAUNCHER,
+      configPath,
+      fsApi: memNotInstalled.api,
+      isInstalled: () => false,
+    }).status,
+    'app-not-found'
+  );
+
+  const mem = memoryFs({
+    [configPath]: '{"mcpServers":{"other":{"command":"x"}}}',
+  });
+  const res = connectAntigravity({
+    launcherPath: LAUNCHER,
+    configPath,
+    fsApi: mem.api,
+    isInstalled: () => true,
+  });
+  assert.equal(res.status, 'connected');
+  assert.deepEqual(JSON.parse(mem.files[configPath]).mcpServers, {
+    other: { command: 'x' },
+    translator: { command: LAUNCHER },
+  });
+  assert.equal(
+    mem.files[`${configPath}.bak`],
+    '{"mcpServers":{"other":{"command":"x"}}}'
   );
 });

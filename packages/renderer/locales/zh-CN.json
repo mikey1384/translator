@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "你的ElevenLabs API密钥无效或已过期。请在设置中检查你的密钥。",
       "elevenlabsRateLimit": "已达到ElevenLabs速率限制。请稍后重试。",
       "elevenlabsInsufficientQuota": "你的ElevenLabs账户余额不足。请到elevenlabs.io充值。",
-      "genericApiError": "API请求失败。请检查你的API密钥和账户状态。"
+      "genericApiError": "API请求失败。请检查你的API密钥和账户状态。",
+      "geminiKeyInvalid": "你的Google Gemini API密钥无效或已过期。请在设置中检查你的密钥。",
+      "geminiRateLimit": "已达到Google Gemini速率限制。请稍后重试。",
+      "geminiInsufficientQuota": "你的Google Gemini API配额已用完。请前往aistudio.google.com检查结算设置。"
     },
     "transcription": {
       "providerUnavailable": "转录服务（ElevenLabs Scribe）暂时不可用，或多次尝试后仍无法连接。请几分钟后重试。",
@@ -716,7 +719,13 @@
       "dubbingRequiresElevenLabs": "配音仅使用 ElevenLabs。添加 ElevenLabs API 密钥，即可用你自己的密钥配音。没有密钥时，配音会使用你的 Stage5 时长；而开启自己的密钥期间不会消耗时长。",
       "runtimeFallback": "API 密钥模式下的运行时备用方案",
       "videoSuggestionLegacyFollowDraft": "已保留你之前的设置：在这里选择模型之前，将沿用你的翻译初稿模型。",
-      "videoSuggestionLegacyFollowReview": "已保留你之前的设置：在这里选择模型之前，将沿用你的翻译审核模型。"
+      "videoSuggestionLegacyFollowReview": "已保留你之前的设置：在这里选择模型之前，将沿用你的翻译审核模型。",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "需要解锁 API 密钥功能，并添加你的 Google Gemini 密钥。",
+      "summaryRequiresGemini": "需要解锁 API 密钥功能，并添加你的 Google Gemini 密钥。"
     },
     "apiKeyGuide": {
       "title": "如何获取API密钥",
@@ -725,13 +734,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic（Claude）",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API 密钥",
         "createNewSecretKey": "创建新的密钥",
         "createKey": "创建密钥",
-        "profileApiKey": "个人资料 + API 密钥"
+        "profileApiKey": "个人资料 + API 密钥",
+        "createApiKey": "创建 API 密钥"
       },
       "openai": {
         "step1": "访问",
@@ -758,6 +769,13 @@
         "step4": "在订阅设置中添加付款方式（超出免费额度使用API需要）",
         "step5": "复制你的API密钥并粘贴到Stage5中",
         "audioDescription": "所有转录（Scribe）和配音均由 ElevenLabs 提供。如果没有你自己的 ElevenLabs 密钥，两者都会使用你的 Stage5 时长；而开启自己的密钥期间不会消耗时长。"
+      },
+      "gemini": {
+        "step1": "访问",
+        "step2": "使用你的 Google 账号登录",
+        "step3": "点击",
+        "step4": "如需更高限额，请在 Google Cloud / AI Studio 中启用结算",
+        "step5": "复制密钥（以 AIza 开头）并粘贴到 Stage5 中"
       }
     },
     "apiKey": {
@@ -788,11 +806,11 @@
       "signOut": "退出登录"
     },
     "agentControl": {
-      "description": "允许 Claude Code、Claude Desktop、Codex 或其他 MCP 智能体在这台电脑上控制 Translator。启用后，智能体可以下载视频、管理你的媒体库、编辑和翻译字幕，并将文件导出到允许的目录。",
+      "description": "允许 Claude Code、Claude Desktop、Codex、Gemini CLI、Antigravity 或其他 MCP 智能体在这台电脑上控制 Translator。启用后，智能体可以下载视频、管理你的媒体库、编辑和翻译字幕，并将文件导出到允许的目录。",
       "enableLabel": "允许智能体控制此应用",
       "enableAria": "启用智能体控制",
       "connection": {
-        "title": "连接 Claude Code、Claude Desktop 或 Codex",
+        "title": "连接 Claude Code、Claude Desktop、Codex、Gemini CLI 或 Antigravity",
         "instructions": "点击按钮即可注册“translator”MCP 服务器。对于其他智能体，请使用此启动器路径添加一个名为“translator”的 STDIO MCP 服务器，然后重启智能体以显示新工具。",
         "copyPath": "复制路径",
         "copied": "已复制",
@@ -812,7 +830,9 @@
         "failedCli": "无法自动连接 {{app}}。请在终端中运行：",
         "failedGeneric": "无法连接 {{app}}。请重试。",
         "appNotFound": "这台电脑上没有安装 {{app}}。请先安装并打开一次，然后再连接。",
-        "download": "下载 {{app}}"
+        "download": "下载 {{app}}",
+        "connectGeminiCli": "连接 Gemini CLI",
+        "connectAntigravity": "连接 Antigravity"
       },
       "status": {
         "enabled": "已启用",
@@ -844,7 +864,7 @@
         "addDirectory": "无法添加文件夹。",
         "removeDirectory": "无法移除文件夹。"
       },
-      "pitch": "用你已有的 Claude 或 Codex 订阅免费翻译。",
+      "pitch": "用你已有的 Claude、Codex 或 Gemini 订阅免费翻译。",
       "freeTitle": "用你自己的 AI 免费翻译"
     },
     "creditTransfer": {
@@ -932,7 +952,8 @@
       "contact": "联系客服",
       "retry": "重试",
       "supportSubject": "我无法在 Translator 中购买时长"
-    }
+    },
+    "usingGemini": "使用Gemini"
   },
   "branding": {
     "translator": "translator",

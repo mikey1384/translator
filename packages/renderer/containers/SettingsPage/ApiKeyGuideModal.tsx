@@ -23,7 +23,7 @@ import {
 interface Props {
   open: boolean;
   onClose: () => void;
-  provider?: 'openai' | 'anthropic' | 'elevenlabs';
+  provider?: 'openai' | 'anthropic' | 'gemini' | 'elevenlabs';
 }
 
 interface GuideSectionProps {
@@ -85,6 +85,7 @@ export default function ApiKeyGuideModal({ open, onClose, provider }: Props) {
   const { t } = useTranslation();
   const openaiRef = useRef<HTMLElement>(null);
   const anthropicRef = useRef<HTMLElement>(null);
+  const geminiRef = useRef<HTMLElement>(null);
   const elevenlabsRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -96,7 +97,9 @@ export default function ApiKeyGuideModal({ open, onClose, provider }: Props) {
           ? openaiRef
           : provider === 'anthropic'
             ? anthropicRef
-            : elevenlabsRef;
+            : provider === 'gemini'
+              ? geminiRef
+              : elevenlabsRef;
       ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
 
@@ -224,6 +227,55 @@ export default function ApiKeyGuideModal({ open, onClose, provider }: Props) {
               {t(
                 'settings.apiKeyGuide.anthropic.step6',
                 'Copy the key (starts with sk-ant-) and paste it in Stage5'
+              )}
+            </li>
+          </ol>
+        </GuideSection>
+
+        <GuideSection
+          sectionRef={geminiRef}
+          divided
+          badgeLabel={t('settings.apiKeyGuide.optional', 'Optional')}
+          badgeVariant="optional"
+          title={t('settings.apiKeyGuide.providers.gemini', 'Google Gemini')}
+        >
+          <ol className={cx(modalGuideListStyles, listSpacingStyles)}>
+            <li>
+              {t('settings.apiKeyGuide.gemini.step1', 'Go to')}{' '}
+              <a
+                href="https://aistudio.google.com/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={modalGuideLinkStyles}
+              >
+                aistudio.google.com/apikey
+              </a>
+            </li>
+            <li>
+              {t(
+                'settings.apiKeyGuide.gemini.step2',
+                'Sign in with your Google account'
+              )}
+            </li>
+            <li>
+              {t('settings.apiKeyGuide.gemini.step3', 'Click')}{' '}
+              <strong>
+                {t(
+                  'settings.apiKeyGuide.labels.createApiKey',
+                  'Create API key'
+                )}
+              </strong>
+            </li>
+            <li>
+              {t(
+                'settings.apiKeyGuide.gemini.step4',
+                'Enable billing on your Google Cloud project (required for Gemini 4 models)'
+              )}
+            </li>
+            <li>
+              {t(
+                'settings.apiKeyGuide.gemini.step5',
+                'Copy the key (starts with AIza) and paste it in Stage5'
               )}
             </li>
           </ol>

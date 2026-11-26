@@ -48,6 +48,7 @@ export default function ByoUnlockCard() {
   const initialize = useAiStore(state => state.initialize);
   const byoUnlocked = useAiStore(state => state.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(state => state.byoAnthropicUnlocked);
+  const byoGeminiUnlocked = useAiStore(state => state.byoGeminiUnlocked);
   const byoElevenLabsUnlocked = useAiStore(
     state => state.byoElevenLabsUnlocked
   );
@@ -66,6 +67,7 @@ export default function ByoUnlockCard() {
   const hasAnyUnlocked = hasAnyByoEntitlementUnlocked({
     byoUnlocked,
     byoAnthropicUnlocked,
+    byoGeminiUnlocked,
     byoElevenLabsUnlocked,
   });
   const hasFullBundleUnlocked = hasFullByoBundleUnlocked({ byoUnlocked });

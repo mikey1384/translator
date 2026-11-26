@@ -12,11 +12,22 @@ import {
   VIDEO_SUGGESTION_DEFAULT_RECENCY,
   VIDEO_SUGGESTION_DEFAULT_TOPIC,
 } from '../../shared/helpers/video-suggestion-defaults.js';
+import {
+  AI_MODELS,
+  BYO_GEMINI_DRAFT_MODELS,
+  BYO_GEMINI_REVIEW_MODELS,
+  BYO_GEMINI_SUMMARY_MODELS,
+  type ByoGeminiDraftModel,
+  type ByoGeminiReviewModel,
+  type ByoGeminiSummaryModel,
+} from '../../shared/constants/index.js';
 import type {
   VideoSuggestionDownloadHistoryItem,
   VideoSuggestionRecency,
 } from '@shared-types/app';
 import type { PendingVideoSuggestionFileDeletionIntent } from '../services/video-suggestion-download-history.js';
+
+export type ByoTextProviderPreference = 'openai' | 'anthropic' | 'gemini';
 
 // Transcription is ElevenLabs Scribe only (OpenAI whisper-1 retires
 // 2027-02-26). 'elevenlabs' = use the BYO ElevenLabs key when it is
@@ -58,14 +69,17 @@ export type AppSettingsSchema = {
   subtitleTargetLanguage: string;
   apiKey: string | null;
   anthropicApiKey: string | null;
+  geminiApiKey: string | null;
   elevenLabsApiKey: string | null;
   videoPlaybackPositions: Record<string, number>;
   byoOpenAiUnlocked: boolean;
   byoAnthropicUnlocked: boolean;
+  byoGeminiUnlocked: boolean;
   byoElevenLabsUnlocked: boolean;
   stage5AnthropicReviewAvailable: boolean;
   useByoOpenAi: boolean;
   useByoAnthropic: boolean;
+  useByoGemini: boolean;
   useByoElevenLabs: boolean;
   // Legacy persisted key for API key mode. Keep the storage key stable to
   // preserve existing user profiles without a migration.
@@ -73,6 +87,14 @@ export type AppSettingsSchema = {
   preferClaudeTranslation: boolean;
   preferClaudeReview: boolean;
   preferClaudeSummary: boolean;
+  // 3-provider BYO text preferences (when absent, derived from legacy preferClaude*).
+  preferredTranslationProvider?: ByoTextProviderPreference;
+  preferredReviewProvider?: ByoTextProviderPreference;
+  preferredSummaryProvider?: ByoTextProviderPreference;
+  // Per-stage BYO Gemini model tiers.
+  byoGeminiDraftModel: ByoGeminiDraftModel;
+  byoGeminiReviewModel: ByoGeminiReviewModel;
+  byoGeminiSummaryModel: ByoGeminiSummaryModel;
   // Legacy unified preference kept for backward-compat migration only.
   videoSuggestionModelPreference: VideoSuggestionModelPreferenceValue;
   // Stage5 credits path: standard vs high (GPT-5.1 vs GPT-5.5).
@@ -102,19 +124,25 @@ export const APP_SETTINGS_DEFAULTS: AppSettingsSchema = {
   subtitleTargetLanguage: 'original',
   apiKey: null,
   anthropicApiKey: null,
+  geminiApiKey: null,
   elevenLabsApiKey: null,
   videoPlaybackPositions: {},
   byoOpenAiUnlocked: false,
   byoAnthropicUnlocked: false,
+  byoGeminiUnlocked: false,
   byoElevenLabsUnlocked: false,
   stage5AnthropicReviewAvailable: false,
   useByoOpenAi: false,
   useByoAnthropic: false,
+  useByoGemini: false,
   useByoElevenLabs: false,
   useByoMaster: false,
   preferClaudeTranslation: false,
   preferClaudeReview: false,
   preferClaudeSummary: true,
+  byoGeminiDraftModel: AI_MODELS.GEMINI_HYDROGEN,
+  byoGeminiReviewModel: AI_MODELS.GEMINI_NEON,
+  byoGeminiSummaryModel: AI_MODELS.GEMINI_NEON,
   videoSuggestionModelPreference: 'default',
   // Default the video-search agent's reasoning to the GPT-5.5 review tier.
   // 'standard' (GPT-5.1) remains user-selectable as a cost downgrade.
@@ -189,6 +217,46 @@ export function normalizeStage5DubbingTtsProviderSetting(
   return 'elevenlabs';
 }
 
+export function normalizeByoTextProviderSetting(
+  value: unknown,
+  fallback: ByoTextProviderPreference
+): ByoTextProviderPreference {
+  if (value === 'openai' || value === 'anthropic' || value === 'gemini') {
+    return value;
+  }
+  return fallback;
+}
+
+export function normalizeByoGeminiDraftModelSetting(
+  value: unknown,
+  fallback: ByoGeminiDraftModel = APP_SETTINGS_DEFAULTS.byoGeminiDraftModel
+): ByoGeminiDraftModel {
+  return BYO_GEMINI_DRAFT_MODELS.includes(value as ByoGeminiDraftModel)
+    ? (value as ByoGeminiDraftModel)
+    : fallback;
+}
+
+export function normalizeByoGeminiReviewModelSetting(
+  value: unknown,
+  fallback: ByoGeminiReviewModel = APP_SETTINGS_DEFAULTS.byoGeminiReviewModel
+): ByoGeminiReviewModel {
+  return BYO_GEMINI_REVIEW_MODELS.includes(value as ByoGeminiReviewModel)
+    ? (value as ByoGeminiReviewModel)
+    : fallback;
+}
+
+export function normalizeByoGeminiSummaryModelSetting(
+  value: unknown,
+  fallback: ByoGeminiSummaryModel = APP_SETTINGS_DEFAULTS.byoGeminiSummaryModel
+): ByoGeminiSummaryModel {
+  return BYO_GEMINI_SUMMARY_MODELS.includes(value as ByoGeminiSummaryModel)
+    ? (value as ByoGeminiSummaryModel)
+    : fallback;
+}
+
+export type { ByoGeminiDraftModel };
+export type { ByoGeminiReviewModel };
+export type { ByoGeminiSummaryModel };
 export type { ByoVideoSuggestionModel };
 export type { Stage5VideoSuggestionMode };
 export type { VideoSuggestionModelPreferenceValue };

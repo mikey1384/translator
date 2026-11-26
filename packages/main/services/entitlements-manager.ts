@@ -14,6 +14,7 @@ import {
 export interface EntitlementsSnapshot {
   byoOpenAi: boolean;
   byoAnthropic: boolean;
+  byoGemini: boolean;
   byoElevenLabs: boolean;
   stage5AnthropicReviewAvailable: boolean;
   fetchedAt?: string;
@@ -28,12 +29,16 @@ export function initEntitlementsManager(store: SettingsStoreType) {
 export function getCachedEntitlements(): EntitlementsSnapshot {
   const byoOpenAi = storeRef?.get('byoOpenAiUnlocked', false) ?? false;
   const byoAnthropic = storeRef?.get('byoAnthropicUnlocked', false) ?? false;
+  const byoGemini =
+    storeRef?.get('byoGeminiUnlocked', Boolean(byoOpenAi)) ??
+    Boolean(byoOpenAi);
   const byoElevenLabs = storeRef?.get('byoElevenLabsUnlocked', false) ?? false;
   const stage5AnthropicReviewAvailable =
     storeRef?.get('stage5AnthropicReviewAvailable', false) ?? false;
   return {
     byoOpenAi: Boolean(byoOpenAi),
     byoAnthropic: Boolean(byoAnthropic),
+    byoGemini: Boolean(byoGemini) || Boolean(byoOpenAi),
     byoElevenLabs: Boolean(byoElevenLabs),
     stage5AnthropicReviewAvailable: Boolean(stage5AnthropicReviewAvailable),
     fetchedAt: undefined,
@@ -44,6 +49,7 @@ export function setByoUnlocked(
   entitlements: {
     byoOpenAi?: boolean;
     byoAnthropic?: boolean;
+    byoGemini?: boolean;
     byoElevenLabs?: boolean;
     stage5AnthropicReviewAvailable?: boolean;
   },
@@ -57,6 +63,11 @@ export function setByoUnlocked(
     }
     if (entitlements.byoAnthropic !== undefined) {
       storeRef.set('byoAnthropicUnlocked', Boolean(entitlements.byoAnthropic));
+    }
+    if (entitlements.byoGemini !== undefined) {
+      storeRef.set('byoGeminiUnlocked', Boolean(entitlements.byoGemini));
+    } else if (entitlements.byoOpenAi !== undefined) {
+      storeRef.set('byoGeminiUnlocked', Boolean(entitlements.byoOpenAi));
     }
     if (entitlements.byoElevenLabs !== undefined) {
       storeRef.set(
@@ -72,12 +83,18 @@ export function setByoUnlocked(
     }
   }
 
+  const resolvedOpenAi = Boolean(
+    entitlements.byoOpenAi ?? storeRef?.get('byoOpenAiUnlocked', false)
+  );
   const snapshot: EntitlementsSnapshot = {
-    byoOpenAi: Boolean(
-      entitlements.byoOpenAi ?? storeRef?.get('byoOpenAiUnlocked', false)
-    ),
+    byoOpenAi: resolvedOpenAi,
     byoAnthropic: Boolean(
       entitlements.byoAnthropic ?? storeRef?.get('byoAnthropicUnlocked', false)
+    ),
+    byoGemini: Boolean(
+      entitlements.byoGemini ??
+      storeRef?.get('byoGeminiUnlocked', resolvedOpenAi) ??
+      resolvedOpenAi
     ),
     byoElevenLabs: Boolean(
       entitlements.byoElevenLabs ??
@@ -154,6 +171,9 @@ async function fetchEntitlementsFromServerUncached(): Promise<EntitlementsSnapsh
     const byoAnthropic = Boolean(
       data?.entitlements?.byoAnthropic ?? data?.byoAnthropic ?? false
     );
+    const byoGemini = Boolean(
+      data?.entitlements?.byoGemini ?? data?.byoGemini ?? byoOpenAi
+    );
     const byoElevenLabs = Boolean(
       data?.entitlements?.byoElevenLabs ?? data?.byoElevenLabs ?? false
     );
@@ -167,6 +187,7 @@ async function fetchEntitlementsFromServerUncached(): Promise<EntitlementsSnapsh
     return {
       byoOpenAi,
       byoAnthropic,
+      byoGemini,
       byoElevenLabs,
       stage5AnthropicReviewAvailable,
     };
@@ -187,6 +208,7 @@ export async function syncEntitlements(
         {
           byoOpenAi: snapshot.byoOpenAi,
           byoAnthropic: snapshot.byoAnthropic,
+          byoGemini: snapshot.byoGemini,
           byoElevenLabs: snapshot.byoElevenLabs,
           stage5AnthropicReviewAvailable:
             snapshot.stage5AnthropicReviewAvailable,
@@ -201,6 +223,7 @@ export async function syncEntitlements(
         {
           byoOpenAi: snapshot.byoOpenAi,
           byoAnthropic: snapshot.byoAnthropic,
+          byoGemini: snapshot.byoGemini,
           byoElevenLabs: snapshot.byoElevenLabs,
           stage5AnthropicReviewAvailable:
             snapshot.stage5AnthropicReviewAvailable,

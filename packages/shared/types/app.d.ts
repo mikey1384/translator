@@ -690,19 +690,36 @@ declare module '@shared-types/app' {
     total?: number;
   }) => void;
 
+  export type ByoTextProviderPreference = 'openai' | 'anthropic' | 'gemini';
+  export type ByoGeminiDraftModel =
+    | 'gemini-3.5-flash-lite'
+    | 'gemini-4-hydrogen'
+    | 'gemini-4-neon';
+  export type ByoGeminiReviewModel = 'gemini-4-neon' | 'gemini-4-carbon';
+  export type ByoGeminiSummaryModel =
+    | 'gemini-4-hydrogen'
+    | 'gemini-4-neon'
+    | 'gemini-4-carbon';
+
   export type VideoSuggestionModelPreference =
     | 'default'
     | 'quality'
     | 'gpt-6.1-sol'
     | 'gpt-5.5'
     | 'claude-sonnet-5-5'
-    | 'claude-opus-5-5';
+    | 'claude-opus-5-5'
+    | 'gemini-4-hydrogen'
+    | 'gemini-4-neon'
+    | 'gemini-4-carbon';
   export type Stage5VideoSuggestionMode = 'standard' | 'high';
   export type ByoVideoSuggestionModel =
     | 'gpt-6.1-sol'
     | 'gpt-5.5'
     | 'claude-sonnet-5-5'
     | 'claude-opus-5-5'
+    | 'gemini-4-hydrogen'
+    | 'gemini-4-neon'
+    | 'gemini-4-carbon'
     // Migration-only compatibility states for legacy unified preferences.
     | 'follow-draft'
     | 'follow-review';
@@ -1372,14 +1389,22 @@ declare module '@shared-types/app' {
   export interface AllByoSettings {
     openAiKeyPresent: boolean;
     anthropicKeyPresent: boolean;
+    geminiKeyPresent: boolean;
     elevenLabsKeyPresent: boolean;
     useByoOpenAi: boolean;
     useByoAnthropic: boolean;
+    useByoGemini: boolean;
     useByoElevenLabs: boolean;
     useApiKeysMode: boolean;
     preferClaudeTranslation: boolean;
     preferClaudeReview: boolean;
     preferClaudeSummary: boolean;
+    preferredTranslationProvider: ByoTextProviderPreference;
+    preferredReviewProvider: ByoTextProviderPreference;
+    preferredSummaryProvider: ByoTextProviderPreference;
+    byoGeminiDraftModel: ByoGeminiDraftModel;
+    byoGeminiReviewModel: ByoGeminiReviewModel;
+    byoGeminiSummaryModel: ByoGeminiSummaryModel;
     videoSuggestionModelPreference: VideoSuggestionModelPreference;
     stage5VideoSuggestionMode: Stage5VideoSuggestionMode;
     byoVideoSuggestionModel: ByoVideoSuggestionModel;
@@ -1391,6 +1416,7 @@ declare module '@shared-types/app' {
   export interface EntitlementsSnapshot {
     byoOpenAi: boolean;
     byoAnthropic: boolean;
+    byoGemini?: boolean;
     byoElevenLabs: boolean;
     stage5AnthropicReviewAvailable: boolean;
     fetchedAt?: string;
@@ -1437,7 +1463,12 @@ declare module '@shared-types/app' {
     everPaid?: boolean;
   };
 
-  export type AgentMcpClientId = 'claude-code' | 'codex' | 'claude-desktop';
+  export type AgentMcpClientId =
+    | 'claude-code'
+    | 'codex'
+    | 'gemini-cli'
+    | 'antigravity'
+    | 'claude-desktop';
 
   export type AgentMcpConnectResult = {
     status:
@@ -1984,6 +2015,23 @@ declare module '@shared-types/app' {
       callback: (payload: { hasKey: boolean }) => void
     ) => () => void;
 
+    // Gemini API key methods
+    getGeminiApiKey: () => Promise<StoredApiKeySummary>;
+    setGeminiApiKey: (
+      apiKey: string
+    ) => Promise<{ success: boolean; error?: string }>;
+    clearGeminiApiKey: () => Promise<{ success: boolean; error?: string }>;
+    validateGeminiApiKey: (
+      apiKey?: string
+    ) => Promise<{ ok: boolean; error?: string }>;
+    getByoGeminiEnabled: () => Promise<boolean>;
+    setByoGeminiEnabled: (
+      enabled: boolean
+    ) => Promise<{ success: boolean; error?: string }>;
+    onGeminiApiKeyChanged: (
+      callback: (payload: { hasKey: boolean }) => void
+    ) => () => void;
+
     // ElevenLabs API key methods
     getElevenLabsApiKey: () => Promise<StoredApiKeySummary>;
     setElevenLabsApiKey: (
@@ -2019,6 +2067,30 @@ declare module '@shared-types/app' {
     getPreferClaudeSummary: () => Promise<boolean>;
     setPreferClaudeSummary: (
       prefer: boolean
+    ) => Promise<{ success: boolean; error?: string }>;
+    getPreferredTranslationProvider: () => Promise<ByoTextProviderPreference>;
+    setPreferredTranslationProvider: (
+      provider: ByoTextProviderPreference
+    ) => Promise<{ success: boolean; error?: string }>;
+    getPreferredReviewProvider: () => Promise<ByoTextProviderPreference>;
+    setPreferredReviewProvider: (
+      provider: ByoTextProviderPreference
+    ) => Promise<{ success: boolean; error?: string }>;
+    getPreferredSummaryProvider: () => Promise<ByoTextProviderPreference>;
+    setPreferredSummaryProvider: (
+      provider: ByoTextProviderPreference
+    ) => Promise<{ success: boolean; error?: string }>;
+    getByoGeminiDraftModel: () => Promise<ByoGeminiDraftModel>;
+    setByoGeminiDraftModel: (
+      model: ByoGeminiDraftModel
+    ) => Promise<{ success: boolean; error?: string }>;
+    getByoGeminiReviewModel: () => Promise<ByoGeminiReviewModel>;
+    setByoGeminiReviewModel: (
+      model: ByoGeminiReviewModel
+    ) => Promise<{ success: boolean; error?: string }>;
+    getByoGeminiSummaryModel: () => Promise<ByoGeminiSummaryModel>;
+    setByoGeminiSummaryModel: (
+      model: ByoGeminiSummaryModel
     ) => Promise<{ success: boolean; error?: string }>;
     getStage5VideoSuggestionMode: () => Promise<Stage5VideoSuggestionMode>;
     setStage5VideoSuggestionMode: (

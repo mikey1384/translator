@@ -18,6 +18,7 @@ import {
 import {
   ANTHROPIC_WEB_SEARCH_USD_PER_CALL,
   ELEVENLABS_PLAN_TIERS,
+  GEMINI_WEB_SEARCH_USD_PER_CALL,
   OPENAI_WEB_SEARCH_USD_PER_CALL,
   VENDOR_TOKEN_MODEL_PRICING,
   VENDOR_TRANSCRIPTION_MODEL_PRICING,
@@ -141,7 +142,9 @@ export function estimateVideoSuggestionUsdPerSearch(model: string): number {
 
   const webSearchUsd = normalized.startsWith('claude-')
     ? ANTHROPIC_WEB_SEARCH_USD_PER_CALL
-    : OPENAI_WEB_SEARCH_USD_PER_CALL;
+    : normalized.startsWith('gemini-')
+      ? GEMINI_WEB_SEARCH_USD_PER_CALL
+      : OPENAI_WEB_SEARCH_USD_PER_CALL;
 
   return modelUsd + VIDEO_SUGGESTION_WEB_SEARCH_CALLS_PER_SEARCH * webSearchUsd;
 }

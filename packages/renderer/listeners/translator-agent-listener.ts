@@ -4228,9 +4228,13 @@ async function settingsSnapshot({
       : null,
     performanceAndQuality: {
       qualityTranslation: ui.qualityTranslation,
-      reviewProvider: ai.preferClaudeReview ? 'anthropic' : 'openai',
+      reviewProvider:
+        ai.preferredReviewProvider ??
+        (ai.preferClaudeReview ? 'anthropic' : 'openai'),
       summaryQuality: ui.summaryEffortLevel,
-      summaryProvider: ai.preferClaudeSummary ? 'anthropic' : 'openai',
+      summaryProvider:
+        ai.preferredSummaryProvider ??
+        (ai.preferClaudeSummary ? 'anthropic' : 'openai'),
       stage5DubbingTtsProvider: ai.stage5DubbingTtsProvider,
       stage5VideoSuggestionMode: ai.stage5VideoSuggestionMode,
       dubVoice: ui.dubVoice,
@@ -4243,23 +4247,35 @@ async function settingsSnapshot({
       entitlements: {
         openai: ai.byoUnlocked,
         anthropic: ai.byoAnthropicUnlocked,
+        gemini: ai.byoGeminiUnlocked,
         elevenlabs: ai.byoElevenLabsUnlocked,
       },
       keyPresent: {
         openai: ai.keyPresent,
         anthropic: ai.anthropicKeyPresent,
+        gemini: ai.geminiKeyPresent,
         elevenlabs: ai.elevenLabsKeyPresent,
       },
       enabled: {
         openai: ai.useByo,
         anthropic: ai.useByoAnthropic,
+        gemini: ai.useByoGemini,
         elevenlabs: ai.useByoElevenLabs,
       },
-      translationDraftProvider: ai.preferClaudeTranslation
-        ? 'anthropic'
-        : 'openai',
-      reviewProvider: ai.preferClaudeReview ? 'anthropic' : 'openai',
-      summaryProvider: ai.preferClaudeSummary ? 'anthropic' : 'openai',
+      translationDraftProvider:
+        ai.preferredTranslationProvider ??
+        (ai.preferClaudeTranslation ? 'anthropic' : 'openai'),
+      reviewProvider:
+        ai.preferredReviewProvider ??
+        (ai.preferClaudeReview ? 'anthropic' : 'openai'),
+      summaryProvider:
+        ai.preferredSummaryProvider ??
+        (ai.preferClaudeSummary ? 'anthropic' : 'openai'),
+      geminiModels: {
+        draft: ai.byoGeminiDraftModel,
+        review: ai.byoGeminiReviewModel,
+        summary: ai.byoGeminiSummaryModel,
+      },
       transcriptionProvider: ai.preferredTranscriptionProvider,
       dubbingProvider: ai.preferredDubbingProvider,
       videoSuggestionModel: ai.byoVideoSuggestionModel,
@@ -4310,14 +4326,24 @@ async function mcpContext({
     ai.anthropicKeyPresent &&
     ai.byoAnthropicUnlocked
   );
+  const geminiByo = Boolean(
+    ai.useApiKeysMode &&
+    ai.useByoGemini &&
+    ai.geminiKeyPresent &&
+    ai.byoGeminiUnlocked
+  );
   const elevenLabsByo = Boolean(
     ai.useApiKeysMode &&
     ai.useByoElevenLabs &&
     ai.elevenLabsKeyPresent &&
     ai.byoElevenLabsUnlocked
   );
-  const draftProvider = ai.preferClaudeTranslation ? 'anthropic' : 'openai';
-  const summaryProvider = ai.preferClaudeSummary ? 'anthropic' : 'openai';
+  const draftProvider =
+    ai.preferredTranslationProvider ??
+    (ai.preferClaudeTranslation ? 'anthropic' : 'openai');
+  const summaryProvider =
+    ai.preferredSummaryProvider ??
+    (ai.preferClaudeSummary ? 'anthropic' : 'openai');
   // Transcription is ElevenLabs Scribe only: BYO ElevenLabs when usable,
   // else Stage5 credits (also Scribe). An OpenAI key never transcribes.
   const transcriptionProvider =
@@ -4333,15 +4359,19 @@ async function mcpContext({
     String(ai.byoVideoSuggestionModel || '')
   )
     ? 'anthropic'
-    : 'openai';
+    : /gemini/i.test(String(ai.byoVideoSuggestionModel || ''))
+      ? 'gemini'
+      : 'openai';
   const byoFor = (provider: string) =>
     provider === 'openai'
       ? openAiByo
       : provider === 'anthropic'
         ? anthropicByo
-        : provider === 'elevenlabs'
-          ? elevenLabsByo
-          : false;
+        : provider === 'gemini'
+          ? geminiByo
+          : provider === 'elevenlabs'
+            ? elevenLabsByo
+            : false;
   const creditContext = (settings as any)?.credits || null;
   const runtimeAccount = (runtime as any)?.stage5?.account || null;
   const stage5ConnectionVerified = creditContext?.authoritative === true;

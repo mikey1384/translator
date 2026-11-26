@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Váš ElevenLabs API klíč je neplatný nebo vypršel. Zkontrolujte prosím svůj klíč v Nastavení.",
       "elevenlabsRateLimit": "Dosažen limit ElevenLabs. Počkejte prosím chvíli a zkuste to znovu.",
       "elevenlabsInsufficientQuota": "Váš ElevenLabs účet má nedostatečné kredity. Přidejte prosím kredity na elevenlabs.io.",
-      "genericApiError": "API požadavek selhal. Zkontrolujte prosím svůj API klíč a stav účtu."
+      "genericApiError": "API požadavek selhal. Zkontrolujte prosím svůj API klíč a stav účtu.",
+      "geminiKeyInvalid": "Váš klíč Google Gemini API je neplatný nebo vypršel. Zkontrolujte prosím svůj klíč v Nastavení.",
+      "geminiRateLimit": "Dosažen limit Google Gemini. Počkejte prosím chvíli a zkuste to znovu.",
+      "geminiInsufficientQuota": "Vaše kvóta Google Gemini API byla vyčerpána. Zkontrolujte prosím fakturaci na aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Přepis (ElevenLabs Scribe) je dočasně nedostupný nebo se ani po několika pokusech nepodařilo připojit. Zkuste to prosím znovu za několik minut.",
@@ -730,7 +733,13 @@
       "dubbingRequiresElevenLabs": "Dabing používá pouze ElevenLabs. Pro dabing s vlastními klíči přidejte API klíč ElevenLabs. Bez něj dabing čerpá vaše minuty Stage5, které se ale při zapnutých vlastních klíčích nepoužívají.",
       "runtimeFallback": "Záložní řešení za běhu v režimu API klíčů",
       "videoSuggestionLegacyFollowDraft": "Vaše dřívější nastavení zůstává: řídí se modelem pro koncept překladu, dokud tady nevyberete model.",
-      "videoSuggestionLegacyFollowReview": "Vaše dřívější nastavení zůstává: řídí se modelem pro kontrolu překladu, dokud tady nevyberete model."
+      "videoSuggestionLegacyFollowReview": "Vaše dřívější nastavení zůstává: řídí se modelem pro kontrolu překladu, dokud tady nevyberete model.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Vyžaduje odemčení API klíčů a váš klíč Google Gemini.",
+      "summaryRequiresGemini": "Vyžaduje odemčení API klíčů a váš klíč Google Gemini."
     },
     "apiKeyGuide": {
       "title": "Jak získat API klíče",
@@ -739,13 +748,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API klíče",
         "createNewSecretKey": "Vytvořit nový tajný klíč",
         "createKey": "Vytvořit klíč",
-        "profileApiKey": "Profil + API klíč"
+        "profileApiKey": "Profil + API klíč",
+        "createApiKey": "Vytvořit klíč API"
       },
       "openai": {
         "step1": "Přejděte na",
@@ -772,6 +783,13 @@
         "step4": "Přidejte platební metodu v nastavení předplatného (vyžadováno pro použití API nad rámec bezplatné úrovně)",
         "step5": "Zkopírujte svůj API klíč a vložte ho do Stage5",
         "audioDescription": "ElevenLabs zajišťuje veškerý přepis (Scribe) i dabing. Bez vlastního klíče ElevenLabs obojí čerpá vaše minuty Stage5, které se ale při zapnutých vlastních klíčích nepoužívají."
+      },
+      "gemini": {
+        "step1": "Přejděte na",
+        "step2": "Přihlaste se svým účtem Google",
+        "step3": "Klikněte na",
+        "step4": "Pokud potřebujete vyšší limity, zapněte fakturaci v Google Cloud / AI Studio",
+        "step5": "Zkopírujte klíč (začíná AIza) a vložte jej do Stage5"
       }
     },
     "apiKey": {
@@ -802,11 +820,11 @@
       "signOut": "Odhlásit se"
     },
     "agentControl": {
-      "description": "Povolte Claude Code, Claude Desktop, Codexu nebo jinému agentovi MCP ovládat Translator na tomto počítači. Po zapnutí mohou agenti stahovat videa, spravovat vaši knihovnu, upravovat a překládat titulky a exportovat soubory do povolených složek.",
+      "description": "Povolte Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravityu nebo jinému agentovi MCP ovládat Translator na tomto počítači. Po zapnutí mohou agenti stahovat videa, spravovat vaši knihovnu, upravovat a překládat titulky a exportovat soubory do povolených složek.",
       "enableLabel": "Povolit agentům ovládat tuto aplikaci",
       "enableAria": "Zapnout ovládání agenty",
       "connection": {
-        "title": "Připojit Claude Code, Claude Desktop nebo Codex",
+        "title": "Připojit Claude Code, Claude Desktop, Codex, Gemini CLI nebo Antigravity",
         "instructions": "Kliknutím na tlačítko zaregistrujete server MCP „translator“. U jiných agentů přidejte server MCP typu STDIO s názvem „translator“ s touto cestou ke spouštěči a poté agenta restartujte, aby se zobrazily nové nástroje.",
         "copyPath": "Kopírovat cestu",
         "copied": "Zkopírováno",
@@ -826,7 +844,9 @@
         "failedCli": "{{app}} se nepodařilo připojit automaticky. Spusťte v terminálu:",
         "failedGeneric": "{{app}} se nepodařilo připojit. Zkuste to znovu.",
         "appNotFound": "{{app}} na tomto počítači není nainstalovaný. Nainstalujte ho, jednou otevřete a pak se připojte znovu.",
-        "download": "Stáhnout {{app}}"
+        "download": "Stáhnout {{app}}",
+        "connectGeminiCli": "Připojit Gemini CLI",
+        "connectAntigravity": "Připojit Antigravity"
       },
       "status": {
         "enabled": "Zapnuto",
@@ -860,7 +880,7 @@
         "addDirectory": "Složku se nepodařilo přidat.",
         "removeDirectory": "Složku se nepodařilo odebrat."
       },
-      "pitch": "Překládejte zdarma s předplatným Claude nebo Codex, které už máte.",
+      "pitch": "Překládejte zdarma s předplatným Claude, Codex nebo Gemini, které už máte.",
       "freeTitle": "Překládejte zdarma s vlastní AI"
     },
     "creditTransfer": {
@@ -948,7 +968,8 @@
       "contact": "Napsat podpoře",
       "retry": "Zkusit znovu",
       "supportSubject": "Nemůžu si v Translatoru koupit minuty"
-    }
+    },
+    "usingGemini": "Používá se Gemini"
   },
   "branding": {
     "translator": "translator",

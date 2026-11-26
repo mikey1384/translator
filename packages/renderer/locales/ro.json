@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Cheia ta API ElevenLabs este invalidă sau expirată. Verifică cheia în Setări.",
       "elevenlabsRateLimit": "S-a atins limita de solicitări ElevenLabs. Te rugăm să aștepți un moment și să încerci din nou.",
       "elevenlabsInsufficientQuota": "Contul tău ElevenLabs nu are suficiente credite. Adaugă credite la elevenlabs.io.",
-      "genericApiError": "Cererea API a eșuat. Verifică cheia API și starea contului."
+      "genericApiError": "Cererea API a eșuat. Verifică cheia API și starea contului.",
+      "geminiKeyInvalid": "Cheia ta API Google Gemini este invalidă sau expirată. Verifică cheia în Setări.",
+      "geminiRateLimit": "S-a atins limita de solicitări Google Gemini. Te rugăm să aștepți un moment și să încerci din nou.",
+      "geminiInsufficientQuota": "Cota ta Google Gemini API a fost epuizată. Verifică facturarea la aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Transcrierea (ElevenLabs Scribe) este temporar indisponibilă sau nu a putut fi accesată după mai multe încercări. Te rugăm să încerci din nou peste câteva minute.",
@@ -729,7 +732,13 @@
       "dubbingRequiresElevenLabs": "Dublarea folosește doar ElevenLabs. Adaugă o cheie API ElevenLabs ca să dublezi cu propriile chei. Fără ea, dublarea folosește minutele tale Stage5, care nu sunt folosite cât timp propriile chei sunt activate.",
       "runtimeFallback": "Rezervă la rulare în modul cheie API",
       "videoSuggestionLegacyFollowDraft": "Setarea ta anterioară s-a păstrat: urmează modelul tău de traducere ciornă până alegi un model aici.",
-      "videoSuggestionLegacyFollowReview": "Setarea ta anterioară s-a păstrat: urmează modelul tău de traducere pentru revizuire până alegi un model aici."
+      "videoSuggestionLegacyFollowReview": "Setarea ta anterioară s-a păstrat: urmează modelul tău de traducere pentru revizuire până alegi un model aici.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Necesită deblocarea cheilor API și cheia ta Google Gemini.",
+      "summaryRequiresGemini": "Necesită deblocarea cheilor API și cheia ta Google Gemini."
     },
     "apiKeyGuide": {
       "title": "Cum obții chei API",
@@ -738,13 +747,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "Chei API",
         "createNewSecretKey": "Creează cheie secretă nouă",
         "createKey": "Creează cheie",
-        "profileApiKey": "Profil + cheie API"
+        "profileApiKey": "Profil + cheie API",
+        "createApiKey": "Creează cheie API"
       },
       "openai": {
         "step1": "Accesează",
@@ -771,6 +782,13 @@
         "step4": "Adaugă o metodă de plată în setările de abonament (necesar pentru utilizarea API peste nivelul gratuit)",
         "step5": "Copiază cheia API și lipește-o în Stage5",
         "audioDescription": "ElevenLabs asigură toată transcrierea (Scribe) și dublarea. Fără propria cheie ElevenLabs, ambele folosesc minutele tale Stage5, care nu sunt folosite cât timp propriile chei sunt activate."
+      },
+      "gemini": {
+        "step1": "Accesează",
+        "step2": "Conectează-te cu contul tău Google",
+        "step3": "Apasă pe",
+        "step4": "Activează facturarea în Google Cloud / AI Studio dacă ai nevoie de limite mai mari",
+        "step5": "Copiază cheia (începe cu AIza) și lipește-o în Stage5"
       }
     },
     "apiKey": {
@@ -801,11 +819,11 @@
       "signOut": "Deconectează-te"
     },
     "agentControl": {
-      "description": "Permite ca Claude Code, Claude Desktop, Codex sau alt agent MCP să controleze Translator pe acest calculator. Când opțiunea este activată, agenții pot descărca videoclipuri, gestiona biblioteca, edita și traduce subtitrări și exporta fișiere în dosarele permise.",
+      "description": "Permite ca Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity sau alt agent MCP să controleze Translator pe acest calculator. Când opțiunea este activată, agenții pot descărca videoclipuri, gestiona biblioteca, edita și traduce subtitrări și exporta fișiere în dosarele permise.",
       "enableLabel": "Permite agenților să controleze această aplicație",
       "enableAria": "Activează controlul agenților",
       "connection": {
-        "title": "Conectează Claude Code, Claude Desktop sau Codex",
+        "title": "Conectează Claude Code, Claude Desktop, Codex, Gemini CLI sau Antigravity",
         "instructions": "Apasă un buton pentru a înregistra serverul MCP „translator”. Pentru alți agenți, adaugă un server MCP STDIO numit „translator” cu această cale de lansare, apoi repornește agentul ca să apară noile instrumente.",
         "copyPath": "Copiază calea",
         "copied": "Copiat",
@@ -825,7 +843,9 @@
         "failedCli": "Nu s-a putut conecta automat {{app}}. Rulează asta într-un terminal:",
         "failedGeneric": "Nu s-a putut conecta {{app}}. Încearcă din nou.",
         "appNotFound": "{{app}} nu este instalat pe acest calculator. Instalează-l, deschide-l o dată, apoi încearcă din nou să-l conectezi.",
-        "download": "Descarcă {{app}}"
+        "download": "Descarcă {{app}}",
+        "connectGeminiCli": "Conectează Gemini CLI",
+        "connectAntigravity": "Conectează Antigravity"
       },
       "status": {
         "enabled": "Activat",
@@ -858,7 +878,7 @@
         "addDirectory": "Dosarul nu a putut fi adăugat.",
         "removeDirectory": "Dosarul nu a putut fi eliminat."
       },
-      "pitch": "Tradu gratuit cu abonamentul Claude sau Codex pe care îl ai deja.",
+      "pitch": "Tradu gratuit cu abonamentul Claude, Codex sau Gemini pe care îl ai deja.",
       "freeTitle": "Tradu gratuit cu AI-ul tău"
     },
     "creditTransfer": {
@@ -948,7 +968,8 @@
       "contact": "Contactează asistența",
       "retry": "Încearcă din nou",
       "supportSubject": "Nu pot cumpăra minute în Translator"
-    }
+    },
+    "usingGemini": "Se folosește Gemini"
   },
   "branding": {
     "translator": "translator",

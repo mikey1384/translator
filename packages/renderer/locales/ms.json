@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Kunci API ElevenLabs anda tidak sah atau telah tamat tempoh. Sila semak kunci anda dalam Tetapan.",
       "elevenlabsRateLimit": "Had kadar ElevenLabs dicapai. Sila tunggu sebentar dan cuba lagi.",
       "elevenlabsInsufficientQuota": "Akaun ElevenLabs anda tidak mempunyai kredit yang mencukupi. Sila tambah kredit di elevenlabs.io.",
-      "genericApiError": "Permintaan API gagal. Sila semak kunci API dan status akaun anda."
+      "genericApiError": "Permintaan API gagal. Sila semak kunci API dan status akaun anda.",
+      "geminiKeyInvalid": "Kunci API Google Gemini anda tidak sah atau telah tamat tempoh. Sila semak kunci anda dalam Tetapan.",
+      "geminiRateLimit": "Had kadar Google Gemini dicapai. Sila tunggu sebentar dan cuba lagi.",
+      "geminiInsufficientQuota": "Kuota API Google Gemini anda telah habis. Sila semak pengebilan di aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Transkripsi (ElevenLabs Scribe) tidak tersedia buat sementara waktu atau tidak dapat dihubungi selepas beberapa percubaan. Sila cuba lagi dalam beberapa minit.",
@@ -716,7 +719,13 @@
       "dubbingRequiresElevenLabs": "Alih suara hanya menggunakan ElevenLabs. Tambah kunci API ElevenLabs untuk alih suara dengan kunci anda sendiri. Tanpanya, alih suara menggunakan minit Stage5 anda, yang tidak digunakan semasa kunci anda sendiri dihidupkan.",
       "runtimeFallback": "Sandaran masa jalan dalam mod kunci API",
       "videoSuggestionLegacyFollowDraft": "Tetapan anda sebelum ini dikekalkan: ini mengikut model terjemahan draf anda sehingga anda memilih model di sini.",
-      "videoSuggestionLegacyFollowReview": "Tetapan anda sebelum ini dikekalkan: ini mengikut model terjemahan semakan anda sehingga anda memilih model di sini."
+      "videoSuggestionLegacyFollowReview": "Tetapan anda sebelum ini dikekalkan: ini mengikut model terjemahan semakan anda sehingga anda memilih model di sini.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Memerlukan buka kunci API dan kunci Google Gemini anda.",
+      "summaryRequiresGemini": "Memerlukan buka kunci API dan kunci Google Gemini anda."
     },
     "apiKeyGuide": {
       "title": "Cara mendapatkan kunci API",
@@ -725,13 +734,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "Kunci API",
         "createNewSecretKey": "Cipta kunci rahsia baharu",
         "createKey": "Cipta kunci",
-        "profileApiKey": "Profil + kunci API"
+        "profileApiKey": "Profil + kunci API",
+        "createApiKey": "Cipta kunci API"
       },
       "openai": {
         "step1": "Pergi ke",
@@ -758,6 +769,13 @@
         "step4": "Tambah kaedah pembayaran dalam tetapan Langganan (diperlukan untuk penggunaan API melebihi peringkat percuma)",
         "step5": "Salin kunci API anda dan tampal dalam Stage5",
         "audioDescription": "ElevenLabs mengendalikan semua transkripsi (Scribe) dan alih suara. Tanpa kunci ElevenLabs anda sendiri, kedua-duanya menggunakan minit Stage5 anda, yang tidak digunakan semasa kunci anda sendiri dihidupkan."
+      },
+      "gemini": {
+        "step1": "Pergi ke",
+        "step2": "Log masuk dengan akaun Google anda",
+        "step3": "Klik",
+        "step4": "Dayakan pengebilan di Google Cloud / AI Studio jika anda perlukan had lebih tinggi",
+        "step5": "Salin kunci (bermula dengan AIza) dan tampalkannya dalam Stage5"
       }
     },
     "apiKey": {
@@ -788,11 +806,11 @@
       "signOut": "Log keluar"
     },
     "agentControl": {
-      "description": "Benarkan Claude Code, Claude Desktop, Codex atau ejen MCP lain mengawal Translator pada komputer ini. Apabila didayakan, ejen boleh memuat turun video, mengurus pustaka anda, menyunting dan menterjemah sari kata, serta mengeksport fail ke direktori yang dibenarkan.",
+      "description": "Benarkan Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity atau ejen MCP lain mengawal Translator pada komputer ini. Apabila didayakan, ejen boleh memuat turun video, mengurus pustaka anda, menyunting dan menterjemah sari kata, serta mengeksport fail ke direktori yang dibenarkan.",
       "enableLabel": "Benarkan kawalan ejen untuk aplikasi ini",
       "enableAria": "Dayakan kawalan ejen",
       "connection": {
-        "title": "Sambungkan Claude Code, Claude Desktop atau Codex",
+        "title": "Sambungkan Claude Code, Claude Desktop, Codex, Gemini CLI atau Antigravity",
         "instructions": "Klik butang untuk mendaftarkan pelayan MCP “translator”. Untuk ejen lain, tambah pelayan STDIO MCP bernama “translator” dengan laluan pelancar ini, kemudian mulakan semula ejen supaya alatan baharu muncul.",
         "copyPath": "Salin laluan",
         "copied": "Disalin",
@@ -812,7 +830,9 @@
         "failedCli": "Tidak dapat menyambungkan {{app}} secara automatik. Jalankan ini dalam terminal:",
         "failedGeneric": "Tidak dapat menyambungkan {{app}}. Cuba lagi.",
         "appNotFound": "{{app}} tidak dipasang pada komputer ini. Pasangkannya, buka sekali, kemudian sambung semula.",
-        "download": "Muat turun {{app}}"
+        "download": "Muat turun {{app}}",
+        "connectGeminiCli": "Sambungkan Gemini CLI",
+        "connectAntigravity": "Sambungkan Antigravity"
       },
       "status": {
         "enabled": "Didayakan",
@@ -844,7 +864,7 @@
         "addDirectory": "Folder gagal ditambah.",
         "removeDirectory": "Folder gagal dialih keluar."
       },
-      "pitch": "Terjemah secara percuma dengan langganan Claude atau Codex yang sudah anda miliki.",
+      "pitch": "Terjemah secara percuma dengan langganan Claude, Codex atau Gemini yang sudah anda miliki.",
       "freeTitle": "Terjemah percuma dengan AI sendiri"
     },
     "creditTransfer": {
@@ -932,7 +952,8 @@
       "contact": "Hubungi sokongan",
       "retry": "Cuba lagi",
       "supportSubject": "Saya tidak dapat membeli minit dalam Translator"
-    }
+    },
+    "usingGemini": "Menggunakan Gemini"
   },
   "branding": {
     "translator": "translator",

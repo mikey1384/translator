@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "آپ کی ElevenLabs API کلید غلط یا ختم ہو چکی ہے۔ براہ کرم ترتیبات میں اپنی کلید چیک کریں۔",
       "elevenlabsRateLimit": "ElevenLabs کی شرح حد تک پہنچ گئی۔ براہ کرم تھوڑی دیر انتظار کریں اور دوبارہ کوشش کریں۔",
       "elevenlabsInsufficientQuota": "آپ کے ElevenLabs اکاؤنٹ میں ناکافی کریڈٹس ہیں۔ براہ کرم elevenlabs.io پر کریڈٹس شامل کریں۔",
-      "genericApiError": "API درخواست ناکام ہوئی۔ براہ کرم اپنی API کلید اور اکاؤنٹ کی حیثیت چیک کریں۔"
+      "genericApiError": "API درخواست ناکام ہوئی۔ براہ کرم اپنی API کلید اور اکاؤنٹ کی حیثیت چیک کریں۔",
+      "geminiKeyInvalid": "آپ کی Google Gemini API کلید غلط یا ختم ہو چکی ہے۔ براہ کرم ترتیبات میں اپنی کلید چیک کریں۔",
+      "geminiRateLimit": "Google Gemini کی شرح حد تک پہنچ گئی۔ براہ کرم تھوڑی دیر انتظار کریں اور دوبارہ کوشش کریں۔",
+      "geminiInsufficientQuota": "آپ کا Google Gemini API کوٹہ ختم ہو چکا ہے۔ براہ کرم aistudio.google.com پر بلنگ چیک کریں۔"
     },
     "transcription": {
       "providerUnavailable": "ٹرانسکرپشن (ElevenLabs Scribe) عارضی طور پر دستیاب نہیں ہے یا کئی کوششوں کے بعد بھی اس سے رابطہ نہیں ہو سکا۔ براہ کرم چند منٹ بعد دوبارہ کوشش کریں۔",
@@ -721,7 +724,13 @@
       "dubbingRequiresElevenLabs": "ڈبنگ صرف ElevenLabs استعمال کرتی ہے۔ اپنی کلیدوں سے ڈب کرنے کے لیے ElevenLabs API کلید شامل کریں۔ اس کے بغیر ڈبنگ آپ کے Stage5 منٹ استعمال کرتی ہے، جو آپ کی اپنی کلیدیں آن ہونے پر استعمال نہیں ہوتے۔",
       "runtimeFallback": "API کلید موڈ میں رن ٹائم متبادل",
       "videoSuggestionLegacyFollowDraft": "آپ کی پچھلی ترتیب برقرار ہے: جب تک آپ یہاں کوئی ماڈل منتخب نہ کریں، یہ آپ کے ڈرافٹ ترجمہ ماڈل کی پیروی کرتی ہے۔",
-      "videoSuggestionLegacyFollowReview": "آپ کی پچھلی ترتیب برقرار ہے: جب تک آپ یہاں کوئی ماڈل منتخب نہ کریں، یہ آپ کے جائزہ ترجمہ ماڈل کی پیروی کرتی ہے۔"
+      "videoSuggestionLegacyFollowReview": "آپ کی پچھلی ترتیب برقرار ہے: جب تک آپ یہاں کوئی ماڈل منتخب نہ کریں، یہ آپ کے جائزہ ترجمہ ماڈل کی پیروی کرتی ہے۔",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "API کلید ان لاک اور آپ کی Google Gemini کلید درکار ہے۔",
+      "summaryRequiresGemini": "API کلید ان لاک اور آپ کی Google Gemini کلید درکار ہے۔"
     },
     "apiKeyGuide": {
       "title": "API کلیدیں کیسے حاصل کریں",
@@ -730,13 +739,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API کلیدیں",
         "createNewSecretKey": "نئی سیکرٹ کلید بنائیں",
         "createKey": "کلید بنائیں",
-        "profileApiKey": "پروفائل + API کلید"
+        "profileApiKey": "پروفائل + API کلید",
+        "createApiKey": "API کلید بنائیں"
       },
       "openai": {
         "step1": "جائیں",
@@ -763,6 +774,13 @@
         "step4": "سبسکرپشن ترتیبات میں ادائیگی کا طریقہ شامل کریں (مفت ٹیئر سے آگے API استعمال کے لیے ضروری)",
         "step5": "اپنی API کلید کاپی کریں اور Stage5 میں پیسٹ کریں",
         "audioDescription": "تمام ٹرانسکرپشن (Scribe) اور ڈبنگ ElevenLabs کے ذریعے ہوتی ہے۔ اپنی ElevenLabs کلید کے بغیر دونوں آپ کے Stage5 منٹ استعمال کرتے ہیں، جو آپ کی اپنی کلیدیں آن ہونے پر استعمال نہیں ہوتے۔"
+      },
+      "gemini": {
+        "step1": "جائیں",
+        "step2": "اپنے Google اکاؤنٹ سے سائن ان کریں",
+        "step3": "کلک کریں",
+        "step4": "اگر زیادہ حد درکار ہو تو Google Cloud / AI Studio میں بلنگ فعال کریں",
+        "step5": "کلید کاپی کریں (AIza سے شروع) اور Stage5 میں پیسٹ کریں"
       }
     },
     "apiKey": {
@@ -793,11 +811,11 @@
       "signOut": "سائن آؤٹ"
     },
     "agentControl": {
-      "description": "Claude Code، Claude Desktop، Codex یا کسی دوسرے MCP ایجنٹ کو اس کمپیوٹر پر Translator کنٹرول کرنے کی اجازت دیں۔ فعال ہونے پر ایجنٹس ویڈیوز ڈاؤن لوڈ کر سکتے ہیں، آپ کی لائبریری منظم کر سکتے ہیں، سب ٹائٹلز میں ترمیم اور ان کا ترجمہ کر سکتے ہیں، اور فائلیں اجازت یافتہ فولڈرز میں ایکسپورٹ کر سکتے ہیں۔",
+      "description": "Claude Code، Claude Desktop، Codex، Gemini CLI، Antigravity یا کسی دوسرے MCP ایجنٹ کو اس کمپیوٹر پر Translator کنٹرول کرنے کی اجازت دیں۔ فعال ہونے پر ایجنٹس ویڈیوز ڈاؤن لوڈ کر سکتے ہیں، آپ کی لائبریری منظم کر سکتے ہیں، سب ٹائٹلز میں ترمیم اور ان کا ترجمہ کر سکتے ہیں، اور فائلیں اجازت یافتہ فولڈرز میں ایکسپورٹ کر سکتے ہیں۔",
       "enableLabel": "ایجنٹس کو اس ایپ کو کنٹرول کرنے کی اجازت دیں",
       "enableAria": "ایجنٹ کنٹرول فعال کریں",
       "connection": {
-        "title": "Claude Code، Claude Desktop یا Codex منسلک کریں",
+        "title": "Claude Code، Claude Desktop، Codex، Gemini CLI یا Antigravity منسلک کریں",
         "instructions": "“translator” MCP سرور رجسٹر کرنے کے لیے کسی بٹن پر کلک کریں۔ دوسرے ایجنٹس کے لیے، اس لانچر پاتھ کے ساتھ “translator” نام کا STDIO MCP سرور شامل کریں، پھر ایجنٹ کو دوبارہ شروع کریں تاکہ نئے ٹولز ظاہر ہوں۔",
         "copyPath": "پاتھ کاپی کریں",
         "copied": "کاپی ہو گیا",
@@ -817,7 +835,9 @@
         "failedCli": "{{app}} خود بخود کنکٹ نہیں ہو سکا۔ ٹرمینل میں یہ چلائیں:",
         "failedGeneric": "{{app}} سے کنکٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔",
         "appNotFound": "اس کمپیوٹر پر {{app}} انسٹال نہیں ہے۔ اسے انسٹال کریں، ایک بار کھولیں، پھر دوبارہ کنیکٹ کریں۔",
-        "download": "{{app}} ڈاؤن لوڈ کریں"
+        "download": "{{app}} ڈاؤن لوڈ کریں",
+        "connectGeminiCli": "Gemini CLI منسلک کریں",
+        "connectAntigravity": "Antigravity منسلک کریں"
       },
       "status": {
         "enabled": "فعال",
@@ -849,7 +869,7 @@
         "addDirectory": "فولڈر شامل نہیں ہو سکا۔",
         "removeDirectory": "فولڈر ہٹایا نہیں جا سکا۔"
       },
-      "pitch": "اپنی موجودہ Claude یا Codex سبسکرپشن کے ساتھ مفت ترجمہ کریں۔",
+      "pitch": "اپنی موجودہ Claude، Codex یا Gemini سبسکرپشن کے ساتھ مفت ترجمہ کریں۔",
       "freeTitle": "اپنے AI سے مفت ترجمہ کریں"
     },
     "creditTransfer": {
@@ -937,7 +957,8 @@
       "contact": "سپورٹ سے رابطہ کریں",
       "retry": "دوبارہ کوشش کریں",
       "supportSubject": "Translator میں منٹ خریدنے میں مسئلہ"
-    }
+    },
+    "usingGemini": "Gemini استعمال میں"
   },
   "branding": {
     "translator": "translator",

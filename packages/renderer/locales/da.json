@@ -109,7 +109,10 @@
       "elevenlabsKeyInvalid": "Din ElevenLabs API-nøgle er ugyldig eller udløbet. Kontroller venligst din nøgle i Indstillinger.",
       "elevenlabsRateLimit": "ElevenLabs hastighedsgrænse nået. Vent venligst et øjeblik og prøv igen.",
       "elevenlabsInsufficientQuota": "Din ElevenLabs-konto har utilstrækkelige kreditter. Tilføj venligst kreditter på elevenlabs.io.",
-      "genericApiError": "API-anmodning mislykkedes. Kontroller venligst din API-nøgle og kontostatus."
+      "genericApiError": "API-anmodning mislykkedes. Kontroller venligst din API-nøgle og kontostatus.",
+      "geminiKeyInvalid": "Din Google Gemini API-nøgle er ugyldig eller udløbet. Kontroller venligst din nøgle i Indstillinger.",
+      "geminiRateLimit": "Google Gemini-hastighedsgrænse nået. Vent venligst et øjeblik og prøv igen.",
+      "geminiInsufficientQuota": "Din Google Gemini API-kvote er opbrugt. Tjek venligst fakturering på aistudio.google.com."
     },
     "transcription": {
       "providerUnavailable": "Transskription (ElevenLabs Scribe) er midlertidigt utilgængelig eller kunne ikke nås efter flere forsøg. Prøv igen om et par minutter.",
@@ -723,7 +726,13 @@
       "dubbingRequiresElevenLabs": "Eftersynkronisering bruger kun ElevenLabs. Tilføj en ElevenLabs-API-nøgle for at eftersynkronisere med dine egne nøgler. Uden en bruger eftersynkronisering dine Stage5-minutter, som ikke bruges, mens dine egne nøgler er slået til.",
       "runtimeFallback": "Runtime-fallback i API-nøgletilstand",
       "videoSuggestionLegacyFollowDraft": "Din tidligere indstilling er bevaret: Den følger din oversættelsesmodel til udkast, indtil du vælger en model her.",
-      "videoSuggestionLegacyFollowReview": "Din tidligere indstilling er bevaret: Den følger din oversættelsesmodel til gennemgang, indtil du vælger en model her."
+      "videoSuggestionLegacyFollowReview": "Din tidligere indstilling er bevaret: Den følger din oversættelsesmodel til gennemgang, indtil du vælger en model her.",
+      "geminiFlashLite": "Gemini 3.5 Flash-Lite",
+      "geminiHydrogen": "Gemini 4 Hydrogen",
+      "geminiNeon": "Gemini 4 Neon",
+      "geminiCarbon": "Gemini 4 Carbon",
+      "videoSuggestionModelRequiresGemini": "Kræver API-nøgleoplåsningen og din Google Gemini-nøgle.",
+      "summaryRequiresGemini": "Kræver API-nøgleoplåsningen og din Google Gemini-nøgle."
     },
     "apiKeyGuide": {
       "title": "Sådan får du API-nøgler",
@@ -732,13 +741,15 @@
       "providers": {
         "openai": "OpenAI",
         "anthropicClaude": "Anthropic (Claude)",
-        "elevenlabs": "ElevenLabs"
+        "elevenlabs": "ElevenLabs",
+        "gemini": "Google Gemini"
       },
       "labels": {
         "apiKeys": "API-nøgler",
         "createNewSecretKey": "Opret ny hemmelig nøgle",
         "createKey": "Opret nøgle",
-        "profileApiKey": "Profil + API-nøgle"
+        "profileApiKey": "Profil + API-nøgle",
+        "createApiKey": "Opret API-nøgle"
       },
       "openai": {
         "step1": "Gå til",
@@ -765,6 +776,13 @@
         "step4": "Tilføj en betalingsmetode i Abonnementsindstillinger (påkrævet for API-brug ud over gratis niveau)",
         "step5": "Kopier din API-nøgle og indsæt den i Stage5",
         "audioDescription": "ElevenLabs står for al transskription (Scribe) og eftersynkronisering. Uden din egen ElevenLabs-nøgle bruger begge dine Stage5-minutter, som ikke bruges, mens dine egne nøgler er slået til."
+      },
+      "gemini": {
+        "step1": "Gå til",
+        "step2": "Log ind med din Google-konto",
+        "step3": "Klik på",
+        "step4": "Aktivér fakturering i Google Cloud / AI Studio, hvis du har brug for højere grænser",
+        "step5": "Kopiér nøglen (starter med AIza) og indsæt den i Stage5"
       }
     },
     "apiKey": {
@@ -795,11 +813,11 @@
       "signOut": "Log ud"
     },
     "agentControl": {
-      "description": "Lad Claude Code, Claude Desktop, Codex eller en anden MCP-agent styre Translator på denne computer. Når dette er aktiveret, kan agenter hente videoer, administrere dit bibliotek, redigere og oversætte undertekster og eksportere filer til tilladte mapper.",
+      "description": "Lad Claude Code, Claude Desktop, Codex, Gemini CLI, Antigravity eller en anden MCP-agent styre Translator på denne computer. Når dette er aktiveret, kan agenter hente videoer, administrere dit bibliotek, redigere og oversætte undertekster og eksportere filer til tilladte mapper.",
       "enableLabel": "Tillad agentstyring af denne app",
       "enableAria": "Aktivér agentstyring",
       "connection": {
-        "title": "Forbind Claude Code, Claude Desktop eller Codex",
+        "title": "Forbind Claude Code, Claude Desktop, Codex, Gemini CLI eller Antigravity",
         "instructions": "Klik på en knap for at registrere MCP-serveren “translator”. For andre agenter skal du tilføje en STDIO-MCP-server med navnet “translator” med denne startsti og derefter genstarte agenten, så de nye værktøjer vises.",
         "copyPath": "Kopiér sti",
         "copied": "Kopieret",
@@ -819,7 +837,9 @@
         "failedCli": "Kunne ikke forbinde {{app}} automatisk. Kør dette i en terminal:",
         "failedGeneric": "Kunne ikke forbinde {{app}}. Prøv igen.",
         "appNotFound": "{{app}} er ikke installeret på denne computer. Installer det, åbn det én gang, og forbind så igen.",
-        "download": "Hent {{app}}"
+        "download": "Hent {{app}}",
+        "connectGeminiCli": "Forbind Gemini CLI",
+        "connectAntigravity": "Forbind Antigravity"
       },
       "status": {
         "enabled": "Aktiveret",
@@ -852,7 +872,7 @@
         "addDirectory": "Mappen kunne ikke tilføjes.",
         "removeDirectory": "Mappen kunne ikke fjernes."
       },
-      "pitch": "Oversæt gratis med det Claude- eller Codex-abonnement, du allerede har.",
+      "pitch": "Oversæt gratis med det Claude-, Codex- eller Gemini-abonnement, du allerede har.",
       "freeTitle": "Oversæt gratis med din egen AI"
     },
     "creditTransfer": {
@@ -942,7 +962,8 @@
       "contact": "Kontakt support",
       "retry": "Prøv igen",
       "supportSubject": "Jeg kan ikke købe minutter i Translator"
-    }
+    },
+    "usingGemini": "Bruger Gemini"
   },
   "branding": {
     "translator": "translator",

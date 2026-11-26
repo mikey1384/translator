@@ -5,7 +5,38 @@ export const AI_MODELS = {
   CLAUDE_SONNET: 'claude-sonnet-5-5',
   CLAUDE_OPUS: 'claude-opus-5-5',
   CLAUDE_HAIKU: 'claude-haiku-5-5',
+  GEMINI_FLASH_LITE: 'gemini-3.5-flash-lite',
+  GEMINI_HYDROGEN: 'gemini-4-hydrogen',
+  GEMINI_NEON: 'gemini-4-neon',
+  GEMINI_CARBON: 'gemini-4-carbon',
 } as const;
+
+export const BYO_GEMINI_DRAFT_MODELS = [
+  AI_MODELS.GEMINI_FLASH_LITE,
+  AI_MODELS.GEMINI_HYDROGEN,
+  AI_MODELS.GEMINI_NEON,
+] as const;
+
+export type ByoGeminiDraftModel = (typeof BYO_GEMINI_DRAFT_MODELS)[number];
+
+export const BYO_GEMINI_REVIEW_MODELS = [
+  AI_MODELS.GEMINI_NEON,
+  AI_MODELS.GEMINI_CARBON,
+] as const;
+
+export type ByoGeminiReviewModel = (typeof BYO_GEMINI_REVIEW_MODELS)[number];
+
+export const BYO_GEMINI_SUMMARY_MODELS = [
+  AI_MODELS.GEMINI_HYDROGEN,
+  AI_MODELS.GEMINI_NEON,
+  AI_MODELS.GEMINI_CARBON,
+] as const;
+
+export type ByoGeminiSummaryModel = (typeof BYO_GEMINI_SUMMARY_MODELS)[number];
+
+export function isGeminiModelId(model?: string): boolean {
+  return normalizeAiModelId(model).toLowerCase().startsWith('gemini-');
+}
 
 // GPT high tier for API-key users (and the Stage5 fallback when Anthropic is
 // unavailable). Not deprecated; moving it to GPT-6 is a separate change.
@@ -35,7 +66,9 @@ export function toStage5CreditModel(model: string): string {
   if (normalized.startsWith('claude-')) return normalized;
   if (
     normalized === STAGE5_REVIEW_TRANSLATION_MODEL ||
-    normalized === 'gpt-5.4'
+    normalized === 'gpt-5.4' ||
+    normalized === AI_MODELS.GEMINI_NEON ||
+    normalized === AI_MODELS.GEMINI_CARBON
   ) {
     return STAGE5_CREDIT_MODELS.HIGH;
   }
@@ -126,6 +159,22 @@ export const STAGE5_TRANSLATION_MODEL_PRICING = {
   [AI_MODELS.CLAUDE_HAIKU]: {
     in: 0.1 / 1_000_000,
     out: 0.5 / 1_000_000,
+  },
+  [AI_MODELS.GEMINI_FLASH_LITE]: {
+    in: 0.3 / 1_000_000,
+    out: 2.5 / 1_000_000,
+  },
+  [AI_MODELS.GEMINI_HYDROGEN]: {
+    in: 1.5 / 1_000_000,
+    out: 7.5 / 1_000_000,
+  },
+  [AI_MODELS.GEMINI_NEON]: {
+    in: 3 / 1_000_000,
+    out: 15 / 1_000_000,
+  },
+  [AI_MODELS.GEMINI_CARBON]: {
+    in: 4 / 1_000_000,
+    out: 20 / 1_000_000,
   },
 } as const;
 

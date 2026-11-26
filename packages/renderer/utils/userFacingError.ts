@@ -143,6 +143,9 @@ export const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   [ERROR_CODES.ANTHROPIC_RATE_LIMIT]: 'errors.byo.anthropicRateLimit',
   [ERROR_CODES.ANTHROPIC_INSUFFICIENT_QUOTA]:
     'errors.byo.anthropicInsufficientQuota',
+  [ERROR_CODES.GEMINI_KEY_INVALID]: 'errors.byo.geminiKeyInvalid',
+  [ERROR_CODES.GEMINI_RATE_LIMIT]: 'errors.byo.geminiRateLimit',
+  [ERROR_CODES.GEMINI_INSUFFICIENT_QUOTA]: 'errors.byo.geminiInsufficientQuota',
   [ERROR_CODES.ELEVENLABS_KEY_INVALID]: 'errors.byo.elevenlabsKeyInvalid',
   [ERROR_CODES.ELEVENLABS_RATE_LIMIT]: 'errors.byo.elevenlabsRateLimit',
   [ERROR_CODES.ELEVENLABS_INSUFFICIENT_QUOTA]:
@@ -167,6 +170,7 @@ export const ERROR_CODE_I18N_PARAMS: Record<string, Record<string, unknown>> = {
 const RETRYABLE_CODES = new Set<string>([
   ERROR_CODES.OPENAI_RATE_LIMIT,
   ERROR_CODES.ANTHROPIC_RATE_LIMIT,
+  ERROR_CODES.GEMINI_RATE_LIMIT,
   ERROR_CODES.ELEVENLABS_RATE_LIMIT,
   ERROR_CODES.TRANSCRIPTION_PROVIDER_UNAVAILABLE,
 ]);

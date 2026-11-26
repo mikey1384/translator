@@ -48,7 +48,8 @@ export function isProviderRateLimitError(err: unknown): boolean {
   const msg = String((err as any)?.message || err || '');
   return (
     msg.includes(ERROR_CODES.OPENAI_RATE_LIMIT) ||
-    msg.includes(ERROR_CODES.ANTHROPIC_RATE_LIMIT)
+    msg.includes(ERROR_CODES.ANTHROPIC_RATE_LIMIT) ||
+    msg.includes(ERROR_CODES.GEMINI_RATE_LIMIT)
   );
 }
 

@@ -27,6 +27,7 @@ export default function ApiKeyModeToggle() {
 
   const byoUnlocked = useAiStore(state => state.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(state => state.byoAnthropicUnlocked);
+  const byoGeminiUnlocked = useAiStore(state => state.byoGeminiUnlocked);
   const byoElevenLabsUnlocked = useAiStore(
     state => state.byoElevenLabsUnlocked
   );
@@ -35,6 +36,7 @@ export default function ApiKeyModeToggle() {
   const setUseApiKeysMode = useAiStore(state => state.setUseApiKeysMode);
   const keyPresent = useAiStore(state => state.keyPresent);
   const anthropicKeyPresent = useAiStore(state => state.anthropicKeyPresent);
+  const geminiKeyPresent = useAiStore(state => state.geminiKeyPresent);
   const elevenLabsKeyPresent = useAiStore(state => state.elevenLabsKeyPresent);
 
   // Effective BYO unlocked state (respects admin preview mode)
@@ -42,6 +44,7 @@ export default function ApiKeyModeToggle() {
     hasAnyByoEntitlementUnlocked({
       byoUnlocked,
       byoAnthropicUnlocked,
+      byoGeminiUnlocked,
       byoElevenLabsUnlocked,
     }) && !adminByoPreviewMode;
 
@@ -53,14 +56,17 @@ export default function ApiKeyModeToggle() {
   const savedKeysCount = [
     keyPresent,
     anthropicKeyPresent,
+    geminiKeyPresent,
     elevenLabsKeyPresent,
   ].filter(Boolean).length;
   const coverageReady = hasApiKeyModeConfiguredCoverage({
     byoUnlocked,
     byoAnthropicUnlocked,
+    byoGeminiUnlocked,
     byoElevenLabsUnlocked,
     keyPresent,
     anthropicKeyPresent,
+    geminiKeyPresent,
     elevenLabsKeyPresent,
   });
 
@@ -74,9 +80,11 @@ export default function ApiKeyModeToggle() {
         !hasApiKeyModeConfiguredCoverage({
           byoUnlocked,
           byoAnthropicUnlocked,
+          byoGeminiUnlocked,
           byoElevenLabsUnlocked,
           keyPresent,
           anthropicKeyPresent,
+          geminiKeyPresent,
           elevenLabsKeyPresent,
         })
       ) {
@@ -134,7 +142,7 @@ export default function ApiKeyModeToggle() {
                 : t('settings.apiKeyMode.noKeys', 'No keys configured')
               : t(
                   'settings.apiKeyMode.requirementTranslation',
-                  'Needs an OpenAI or Anthropic key for translation'
+                  'Needs an OpenAI, Anthropic, or Google Gemini key for translation'
                 )}
           </span>
           <span className={settingsMetaTextStyles}>
