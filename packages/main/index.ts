@@ -144,9 +144,11 @@ import {
   trackUrlDownloadFunnelEvent,
 } from './services/product-analytics.js';
 import {
+  BOOKMARKLET_URL_OPENED,
   handoffTranslationStartEvent,
   isRendererHandoffFunnelEvent,
 } from './services/handoff-funnel.js';
+import { parseOpenVideoDeepLink } from './utils/open-video-deep-link.js';
 import { countAnonymousUsage } from './services/anonymous-usage-counts.js';
 import {
   classifyTranslationOutcome,
@@ -240,6 +242,9 @@ let filePathToOpenOnLoad: string | null = null;
 // loading first from claiming a file intended for the active tab.
 let filePathTargetWebContentsId: number | null = null;
 let checkoutReturnUrlToOpenOnLoad: string | null = null;
+let videoUrlToOpenOnLoad: string | null = null;
+let videoUrlTargetWebContentsId: number | null = null;
+let videoUrlQueuedAlreadyCounted = false;
 log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
 
 initEntitlementsManager(settingsStore);
@@ -437,6 +442,53 @@ function handleCheckoutReturnUrl(rawUrl: string): boolean {
   return true;
 }
 
+function handleOpenVideoDeepLink(rawUrl: string): boolean {
+  const targetUrl = parseOpenVideoDeepLink(rawUrl);
+  if (!targetUrl) {
+    if (
+      String(rawUrl || '')
+        .trim()
+        .toLowerCase()
+        .startsWith(`${CHECKOUT_RETURN_PROTOCOL}://open`)
+    ) {
+      log.warn('[main.ts] Rejected invalid open-video deep link URL.');
+    }
+    return false;
+  }
+
+  log.info('[main.ts] Validated open-video deep link received.');
+
+  if (!app.isReady()) {
+    videoUrlToOpenOnLoad = targetUrl;
+    videoUrlTargetWebContentsId = null;
+    videoUrlQueuedAlreadyCounted = false;
+    return true;
+  }
+
+  const activeTab = getActiveAppWebContents();
+  if (
+    !mainWindow ||
+    mainWindow.isDestroyed() ||
+    !activeTab ||
+    activeTab.isLoading()
+  ) {
+    videoUrlToOpenOnLoad = targetUrl;
+    videoUrlTargetWebContentsId = activeTab?.id ?? null;
+    videoUrlQueuedAlreadyCounted = false;
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      ensureMainWindow().catch(err =>
+        log.error('[main.ts] Error creating window for video deep link:', err)
+      );
+    }
+    return true;
+  }
+
+  focusMainWindow();
+  activeTab.send('deep-link-open-video-url', targetUrl);
+  countAnonymousUsage(BOOKMARKLET_URL_OPENED);
+  return true;
+}
+
 registerCheckoutReturnProtocol();
 
 if (!app.requestSingleInstanceLock()) {
@@ -451,7 +503,14 @@ const checkoutReturnUrlFromPrimaryInstance = findCheckoutReturnUrl(
   nodeProcess.argv
 );
 if (checkoutReturnUrlFromPrimaryInstance) {
-  checkoutReturnUrlToOpenOnLoad = checkoutReturnUrlFromPrimaryInstance;
+  const openVideoTarget = parseOpenVideoDeepLink(
+    checkoutReturnUrlFromPrimaryInstance
+  );
+  if (openVideoTarget) {
+    videoUrlToOpenOnLoad = openVideoTarget;
+  } else {
+    checkoutReturnUrlToOpenOnLoad = checkoutReturnUrlFromPrimaryInstance;
+  }
 }
 
 const fileArgFromPrimaryInstance = nodeProcess.argv
@@ -474,7 +533,11 @@ app.on('second-instance', (_event, commandLine, _workingDirectory) => {
   log.info(`[main.ts] Command line: ${commandLine.join(' ')}`);
 
   const checkoutReturnUrl = findCheckoutReturnUrl(commandLine);
-  if (checkoutReturnUrl && handleCheckoutReturnUrl(checkoutReturnUrl)) {
+  if (
+    checkoutReturnUrl &&
+    (handleCheckoutReturnUrl(checkoutReturnUrl) ||
+      handleOpenVideoDeepLink(checkoutReturnUrl))
+  ) {
     return;
   }
 
@@ -517,7 +580,9 @@ app.on('second-instance', (_event, commandLine, _workingDirectory) => {
 
 app.on('open-url', (event, url) => {
   event.preventDefault();
-  handleCheckoutReturnUrl(url);
+  if (!handleCheckoutReturnUrl(url)) {
+    handleOpenVideoDeepLink(url);
+  }
 });
 
 let mainWindow: BrowserWindow | null = null;
@@ -1836,6 +1901,34 @@ try {
     (_event, value: string) =>
       settingsHandlers.setVideoSuggestionPreferenceTopic(value)
   );
+  ipcMain.handle(
+    'open-deep-link-video-in-new-tab',
+    async (_event, rawUrl: string) => {
+      const normalized = String(rawUrl || '').trim();
+      const targetUrl = parseOpenVideoDeepLink(
+        `${CHECKOUT_RETURN_PROTOCOL}://open?url=${encodeURIComponent(normalized)}`
+      );
+      if (!targetUrl) {
+        log.warn(
+          '[main.ts] Rejected invalid open-deep-link-video-in-new-tab URL.'
+        );
+        return false;
+      }
+
+      videoUrlToOpenOnLoad = targetUrl;
+      videoUrlTargetWebContentsId = null;
+      videoUrlQueuedAlreadyCounted = true;
+      focusMainWindow();
+      await tabManager.createTab({ activate: true });
+      if (videoUrlToOpenOnLoad === targetUrl) {
+        videoUrlToOpenOnLoad = null;
+        videoUrlTargetWebContentsId = null;
+        videoUrlQueuedAlreadyCounted = false;
+        return false;
+      }
+      return true;
+    }
+  );
 
   // Transcription provider preference handlers
   ipcMain.handle('get-preferred-transcription-provider', () =>
@@ -2202,6 +2295,34 @@ async function createWindow(): Promise<BrowserWindow> {
             }
             filePathToOpenOnLoad = null;
             filePathTargetWebContentsId = null;
+          }
+        }
+
+        // Consume a queued open-video deep link in its intended tab (whether
+        // the initial startup tab or a fresh Home tab opened on warm launch).
+        if (videoUrlToOpenOnLoad) {
+          const targetGone =
+            videoUrlTargetWebContentsId !== null &&
+            !tabManager
+              .getAllTabWebContents()
+              .some(t => t.id === videoUrlTargetWebContentsId);
+          const isIntendedTab =
+            videoUrlTargetWebContentsId === null ||
+            videoUrlTargetWebContentsId === wc.id ||
+            targetGone;
+          if (isIntendedTab) {
+            const queuedVideoUrl = videoUrlToOpenOnLoad;
+            const alreadyCounted = videoUrlQueuedAlreadyCounted;
+            videoUrlToOpenOnLoad = null;
+            videoUrlTargetWebContentsId = null;
+            videoUrlQueuedAlreadyCounted = false;
+            log.info('[main.ts] Processing queued open-video deep link URL.');
+            if (!wc.isDestroyed()) {
+              wc.send('deep-link-open-video-url', queuedVideoUrl);
+              if (!alreadyCounted) {
+                countAnonymousUsage(BOOKMARKLET_URL_OPENED);
+              }
+            }
           }
         }
 

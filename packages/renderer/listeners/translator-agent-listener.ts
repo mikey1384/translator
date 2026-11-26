@@ -3723,14 +3723,24 @@ async function cancelHistoryProcessing(
     };
   }
 
-  const cancellation =
+  const rawCancellation =
     activeHistoryJob.kind === 'merge'
       ? await subtitleRendererClient.cancelMerge(activeHistoryJob.operationId)
       : await OperationIPC.cancel(activeHistoryJob.operationId);
   const accepted =
-    'accepted' in cancellation
-      ? cancellation.accepted
-      : cancellation.success === true;
+    'accepted' in rawCancellation
+      ? rawCancellation.accepted === true
+      : rawCancellation.success === true;
+  const cancellation = {
+    ...rawCancellation,
+    accepted,
+    reason:
+      'reason' in rawCancellation && rawCancellation.reason
+        ? rawCancellation.reason
+        : accepted
+          ? 'accepted'
+          : 'not_found',
+  };
   if (accepted) {
     historyJobs.markCancelling(
       activeHistoryJob.historyId,
@@ -3830,10 +3840,22 @@ async function cancelAgentProcessing(input?: {
       cancelRequested: true,
     };
   }
-  await Promise.all(
+  const cancelResults = await Promise.all(
     [...ids].map(id => OperationIPC.cancel(id).catch(() => undefined))
   );
-  return agentProcessingSnapshot();
+  const accepted =
+    cancelResults.some(result => result?.success === true) ||
+    (ids.size > 0 && agentProcessingState.status === 'cancelling') ||
+    (requestedOperationId !== '' &&
+      agentProcessingState.id === requestedOperationId &&
+      agentProcessingState.status === 'cancelling');
+  return {
+    ...agentProcessingSnapshot(),
+    cancellation: {
+      accepted,
+      reason: accepted ? 'accepted' : 'not_found',
+    },
+  };
 }
 
 async function subtitleBatchSnapshot(input?: {

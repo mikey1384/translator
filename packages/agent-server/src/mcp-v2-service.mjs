@@ -190,6 +190,7 @@ function plannedSubtitleOutputFontSize(baseFontSize, videoHeight) {
 export function resolvePlannedSubtitleRenderSpec({
   requestedOutputs = {},
   profile = {},
+  preferProfileRendering = false,
   planning = {},
   translationProvider = 'agent',
   sourceMetadata = {},
@@ -236,11 +237,16 @@ export function resolvePlannedSubtitleRenderSpec({
     translationProvider === 'none'
       ? 'original'
       : requestedDisplayMode ||
-        preview.display_mode ||
-        profileRendering.display_mode ||
+        (preferProfileRendering
+          ? profileRendering.display_mode || preview.display_mode
+          : preview.display_mode || profileRendering.display_mode) ||
         'translation';
   const style =
-    requestedStyle || preview.style || profileRendering.style || 'Default';
+    requestedStyle ||
+    (preferProfileRendering
+      ? profileRendering.style || preview.style
+      : preview.style || profileRendering.style) ||
+    'Default';
   const profileFontSize = finiteSubtitleBaseFontSize(
     profileRendering.font_size
   );
@@ -249,8 +255,9 @@ export function resolvePlannedSubtitleRenderSpec({
   }
   const baseFontSize =
     requestedFontSize ??
-    previewFontSize ??
-    profileFontSize ??
+    (preferProfileRendering
+      ? (profileFontSize ?? previewFontSize)
+      : (previewFontSize ?? profileFontSize)) ??
     DEFAULT_SUBTITLE_BASE_FONT_SIZE;
   if (!SUBTITLE_DISPLAY_MODES.has(displayMode)) {
     throw new Error('The resolved subtitle display mode is unsupported.');
@@ -301,26 +308,44 @@ export function resolvePlannedSubtitleRenderSpec({
           ? 'workflow'
           : requestedDisplayMode
             ? 'request'
-            : preview.display_mode
-              ? 'translator_preview'
-              : profileRendering.display_mode
+            : preferProfileRendering
+              ? profileRendering.display_mode
                 ? 'project_profile'
-                : 'default',
+                : preview.display_mode
+                  ? 'translator_preview'
+                  : 'default'
+              : preview.display_mode
+                ? 'translator_preview'
+                : profileRendering.display_mode
+                  ? 'project_profile'
+                  : 'default',
       style: requestedStyle
         ? 'request'
-        : preview.style
-          ? 'translator_preview'
-          : profileRendering.style
+        : preferProfileRendering
+          ? profileRendering.style
             ? 'project_profile'
-            : 'default',
+            : preview.style
+              ? 'translator_preview'
+              : 'default'
+          : preview.style
+            ? 'translator_preview'
+            : profileRendering.style
+              ? 'project_profile'
+              : 'default',
       base_font_size_px:
         requestedFontSize !== null
           ? 'request'
-          : previewFontSize !== null
-            ? 'translator_preview'
-            : profileFontSize !== null
+          : preferProfileRendering
+            ? profileFontSize !== null
               ? 'project_profile'
-              : 'default',
+              : previewFontSize !== null
+                ? 'translator_preview'
+                : 'default'
+            : previewFontSize !== null
+              ? 'translator_preview'
+              : profileFontSize !== null
+                ? 'project_profile'
+                : 'default',
     },
   };
 }
@@ -3192,6 +3217,7 @@ export class McpV2Service {
     const subtitleRenderSpec = resolvePlannedSubtitleRenderSpec({
       requestedOutputs,
       profile,
+      preferProfileRendering: Boolean(request.project_profile),
       planning: context.planning,
       translationProvider,
       sourceMetadata: probe.metadata,
@@ -6382,12 +6408,44 @@ export class McpV2Service {
     job_id: jobId,
     batch_id: batchId,
     translations,
+    translations_path: translationsPath,
   }) {
-    const accepted = this.store.submitTranslationBatch(
-      jobId,
-      batchId,
-      translations
-    );
+    if (translations && translationsPath) {
+      throw new TypeError(
+        'Provide either inline translations or translations_path, not both.'
+      );
+    }
+    let resolvedTranslations = translations;
+    if (translationsPath) {
+      const currentJob = this.store.requireJob(jobId);
+      const plan = this.store.getPlan(currentJob.plan_hash);
+      const file = path.resolve(String(translationsPath));
+      if (plan) {
+        await assertPlannedOutputIsolation(plan, [file]);
+      }
+      const stat = await fs.stat(file);
+      if (!stat.isFile() || stat.size > 32 * 1024 * 1024) {
+        throw new Error(
+          'Translations file must be a regular JSON file smaller than 32 MiB.'
+        );
+      }
+      const parsed = JSON.parse(await fs.readFile(file, 'utf8'));
+      const rawItems = Array.isArray(parsed)
+        ? parsed
+        : (parsed?.translations ?? parsed?.cues ?? parsed?.segments);
+      if (!Array.isArray(rawItems) || rawItems.length === 0) {
+        throw new TypeError(
+          'translations_path must contain a non-empty JSON array of { id, text } or { id, translation } items.'
+        );
+      }
+      resolvedTranslations = rawItems.map(item => ({
+        id: item?.id,
+        text: item?.text ?? item?.translation,
+      }));
+    }
+    const accepted = batchId
+      ? this.store.submitTranslationBatch(jobId, batchId, resolvedTranslations)
+      : this.store.submitTranslationFile(jobId, resolvedTranslations);
     let job = this.store.requireJob(jobId);
     if (!accepted.reused) {
       const stage = job.stages[job.stage_index];

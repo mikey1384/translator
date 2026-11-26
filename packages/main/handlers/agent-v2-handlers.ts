@@ -61,6 +61,7 @@ import {
   parseExpectedAgentFileFingerprint,
   verifyAgentTranscodeSourceSnapshot,
 } from '../utils/agent-transcode-source.js';
+import { buildAgentPresetEncodePlan } from '../utils/agent-preset-encode.js';
 
 const execFileAsync = promisify(execFile);
 const MAX_PROBE_BUFFER_BYTES = 24 * 1024 * 1024;
@@ -1420,16 +1421,7 @@ export function createAgentV2Handlers({ ffmpeg }: AgentV2Services) {
         );
       }
       const metadata = await ffmpeg.getVideoMetadata(sourcePath);
-      const filters =
-        definition.width && definition.height
-          ? [
-              `scale=w='min(iw,${definition.width})':h='min(ih,${definition.height})':force_original_aspect_ratio=decrease:force_divisible_by=2`,
-              'setsar=1',
-            ]
-          : ['setsar=1'];
-      if (preset.startsWith('x_') && Number(metadata.frameRate) > 30) {
-        filters.push('fps=30');
-      }
+      const sourceProbe = await detailedProbe(ffmpeg.ffprobePath, sourcePath);
       const temporaryPath = assertAgentOutputPathAuthorized(
         path.join(
           path.dirname(outputPath),
@@ -1437,46 +1429,23 @@ export function createAgentV2Handlers({ ffmpeg }: AgentV2Services) {
         ),
         'Preset video temporary output'
       );
-      const args = [
-        '-y',
-        '-i',
+      const encodePlan = buildAgentPresetEncodePlan({
         sourcePath,
-        '-map',
-        '0:v:0',
-        '-map',
-        '0:a:0?',
-        '-vf',
-        filters.join(','),
-        '-c:v',
-        'libx264',
-        '-profile:v',
-        'high',
-        '-preset',
-        preset === 'preview_low_resolution' ? 'veryfast' : 'medium',
-        '-pix_fmt',
-        'yuv420p',
-        ...(definition.videoBitrate
-          ? [
-              '-b:v',
-              definition.videoBitrate,
-              '-maxrate',
-              definition.videoBitrate,
-              '-bufsize',
-              `${Number.parseFloat(definition.videoBitrate) * 2}M`,
-            ]
-          : ['-crf', String(definition.crf ?? 20)]),
-        '-c:a',
-        'aac',
-        '-b:a',
-        definition.audioBitrate || '192k',
-        '-ar',
-        '48000',
-        '-movflags',
-        '+faststart',
-        '-progress',
-        'pipe:1',
         temporaryPath,
-      ];
+        preset,
+        definition,
+        probe: {
+          format: sourceProbe.format,
+          video: sourceProbe.video
+            ? {
+                ...sourceProbe.video,
+                rotation: metadata.rotation ?? 0,
+              }
+            : null,
+          audio: sourceProbe.audio,
+        },
+        frameRate: metadata.frameRate,
+      });
       if (activeTranscodeOutputPaths.has(outputPathIdentity)) {
         throw new Error(
           `Another Translator operation is already writing this preset output: ${outputPath}`
@@ -1491,58 +1460,74 @@ export function createAgentV2Handlers({ ffmpeg }: AgentV2Services) {
             throw new Error(`Preset output already exists: ${outputPath}`);
           }
         }
-        await ffmpeg.run(args, {
-          operationId,
-          totalDuration: metadata.duration,
-          progress: percent => {
-            const elapsedSeconds = (Date.now() - startedAt) / 1000;
-            const estimatedRemainingSeconds =
-              percent > 0
-                ? Math.max(0, elapsedSeconds * (100 / percent - 1))
-                : null;
-            const estimatedFramesProcessed =
-              metadata.frameRate && metadata.duration
-                ? Math.round(
-                    metadata.frameRate * metadata.duration * (percent / 100)
-                  )
-                : null;
-            let outputBytes = 0;
-            try {
-              outputBytes = fsSync.statSync(temporaryPath).size;
-            } catch {
-              // The first progress event can precede creation of the output.
-            }
-            onProgress?.({
-              percent,
-              elapsed_seconds: Math.round(elapsedSeconds),
-              estimated_remaining_seconds:
-                estimatedRemainingSeconds == null
-                  ? null
-                  : Math.round(estimatedRemainingSeconds),
-              estimated_frames_processed: estimatedFramesProcessed,
-              encoding_frames_per_second:
-                estimatedFramesProcessed !== null && elapsedSeconds > 0
-                  ? Number(
-                      (estimatedFramesProcessed / elapsedSeconds).toFixed(2)
+        const runWithProgress = (ffmpegArgs: string[]) =>
+          ffmpeg.run(ffmpegArgs, {
+            operationId,
+            totalDuration: metadata.duration,
+            progress: percent => {
+              const elapsedSeconds = (Date.now() - startedAt) / 1000;
+              const estimatedRemainingSeconds =
+                percent > 0
+                  ? Math.max(0, elapsedSeconds * (100 / percent - 1))
+                  : null;
+              const estimatedFramesProcessed =
+                metadata.frameRate && metadata.duration
+                  ? Math.round(
+                      metadata.frameRate * metadata.duration * (percent / 100)
                     )
-                  : null,
-              encoding_speed_realtime:
-                metadata.duration && elapsedSeconds > 0
-                  ? Number(
-                      (
-                        (metadata.duration * (percent / 100)) /
-                        elapsedSeconds
-                      ).toFixed(2)
-                    )
-                  : null,
-              output_bytes: outputBytes,
-              estimated_final_bytes:
-                outputBytes > 0 && percent > 0
-                  ? Math.ceil(outputBytes * (100 / percent))
-                  : null,
-            });
-          },
-        });
+                  : null;
+              let outputBytes = 0;
+              try {
+                outputBytes = fsSync.statSync(temporaryPath).size;
+              } catch {
+                // The first progress event can precede creation of the output.
+              }
+              onProgress?.({
+                percent,
+                elapsed_seconds: Math.round(elapsedSeconds),
+                estimated_remaining_seconds:
+                  estimatedRemainingSeconds == null
+                    ? null
+                    : Math.round(estimatedRemainingSeconds),
+                estimated_frames_processed: estimatedFramesProcessed,
+                encoding_frames_per_second:
+                  estimatedFramesProcessed !== null && elapsedSeconds > 0
+                    ? Number(
+                        (estimatedFramesProcessed / elapsedSeconds).toFixed(2)
+                      )
+                    : null,
+                encoding_speed_realtime:
+                  metadata.duration && elapsedSeconds > 0
+                    ? Number(
+                        (
+                          (metadata.duration * (percent / 100)) /
+                          elapsedSeconds
+                        ).toFixed(2)
+                      )
+                    : null,
+                output_bytes: outputBytes,
+                estimated_final_bytes:
+                  outputBytes > 0 && percent > 0
+                    ? Math.ceil(outputBytes * (100 / percent))
+                    : null,
+              });
+            },
+          });
+        try {
+          await runWithProgress(encodePlan.primaryArgs);
+        } catch (encodeError: any) {
+          if (
+            !encodePlan.fallbackArgs ||
+            encodeError?.name === 'AbortError' ||
+            String(encodeError?.message || '')
+              .toLowerCase()
+              .includes('cancelled')
+          ) {
+            throw encodeError;
+          }
+          await fs.rm(temporaryPath, { force: true }).catch(() => {});
+          await runWithProgress(encodePlan.fallbackArgs);
+        }
         const sourceAfter = await fs.stat(sourcePath, { bigint: true });
         let sourceMetadataRevalidatedBySha256 = false;
         let sourceVerified = sourceAfter.isFile();

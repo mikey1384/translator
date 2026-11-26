@@ -697,12 +697,13 @@ export const MCP_V2_TOOL_DEFINITIONS = Object.freeze({
   },
   submit_translation_batch: {
     description:
-      'Validate and atomically accept exactly one issued translation batch. Missing, duplicate, extra, stale, or invented IDs are rejected.',
+      'Validate and atomically accept translations for an issued batch (batch_id + translations or translations_path) or for all pending cues from a local JSON file (translations_path without batch_id). Missing, duplicate, extra, stale, or invented IDs are rejected.',
     inputSchema: {
       type: 'object',
       properties: {
         job_id: jobIdProperty,
         batch_id: { type: 'string', minLength: 8, maxLength: 120 },
+        translations_path: { type: 'string', minLength: 1, maxLength: 4096 },
         translations: {
           type: 'array',
           minItems: 1,
@@ -718,7 +719,7 @@ export const MCP_V2_TOOL_DEFINITIONS = Object.freeze({
           },
         },
       },
-      required: ['job_id', 'batch_id', 'translations'],
+      required: ['job_id'],
       additionalProperties: false,
     },
     billing: 'none',

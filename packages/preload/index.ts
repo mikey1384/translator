@@ -989,6 +989,19 @@ const electronAPI = {
     ipcRenderer.invoke('set-video-suggestion-recency', recency),
   getVideoSuggestionPreferenceTopic: (): Promise<string> =>
     ipcRenderer.invoke('get-video-suggestion-preference-topic'),
+  onDeepLinkOpenVideoUrl: (callback: (url: string) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, url: string) => {
+      if (typeof url === 'string' && url.trim()) {
+        callback(url);
+      }
+    };
+    ipcRenderer.on('deep-link-open-video-url', listener);
+    return () => {
+      ipcRenderer.removeListener('deep-link-open-video-url', listener);
+    };
+  },
+  openDeepLinkVideoInNewTab: (url: string): Promise<boolean> =>
+    ipcRenderer.invoke('open-deep-link-video-in-new-tab', url),
   setVideoSuggestionPreferenceTopic: (
     value: string
   ): Promise<{ success: boolean; error?: string }> =>

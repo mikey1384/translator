@@ -363,19 +363,35 @@ function buildDurableTranscriptionRecoveryKey({
     .digest('hex');
 }
 
-function buildDurableTranscriptionRequestIdempotencyKey({
-  recoveryKey,
-  fallbackIdempotencyKey,
-}: {
-  recoveryKey?: string;
-  fallbackIdempotencyKey?: string;
-}): string | undefined {
-  const normalizedRecoveryKey = String(recoveryKey || '').trim();
-  if (normalizedRecoveryKey) {
-    return `durable-transcription-request-v1:${normalizedRecoveryKey}`;
-  }
-  const normalizedFallback = String(fallbackIdempotencyKey || '').trim();
-  return normalizedFallback || undefined;
+import { buildDurableTranscriptionRequestIdempotencyKey } from '../utils/durable-transcription-idempotency.js';
+export { buildDurableTranscriptionRequestIdempotencyKey };
+
+function getDurableTranscriptionRecoveryNonce(
+  recoveryKey?: string
+): string | undefined {
+  const normalizedKey = String(recoveryKey || '').trim();
+  if (!normalizedKey) return undefined;
+  const raw = durableTranscriptionStore.get('recoveryNonces', {} as any);
+  if (!raw || typeof raw !== 'object') return undefined;
+  const value = (raw as Record<string, unknown>)[normalizedKey];
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+export function rotateDurableTranscriptionRecoveryNonce(
+  recoveryKey?: string
+): string | undefined {
+  const normalizedKey = String(recoveryKey || '').trim();
+  if (!normalizedKey) return undefined;
+  clearDurableTranscriptionResumeJob(normalizedKey);
+  const raw = durableTranscriptionStore.get('recoveryNonces', {} as any);
+  const nonces: Record<string, string> =
+    raw && typeof raw === 'object'
+      ? { ...(raw as Record<string, string>) }
+      : {};
+  const nextNonce = crypto.randomBytes(6).toString('hex');
+  nonces[normalizedKey] = nextNonce;
+  durableTranscriptionStore.set('recoveryNonces', nonces as any);
+  return nextNonce;
 }
 
 async function fetchDurableTranscriptionStatus({
@@ -1285,6 +1301,7 @@ export async function transcribeViaR2({
   idempotencyKey,
   recoverySeed,
   recoverySourcePath,
+  forceNewJob = false,
   signal,
   onProgress,
 }: {
@@ -1297,6 +1314,8 @@ export async function transcribeViaR2({
   recoverySeed?: string;
   /** Stable source path used to reconnect to a detached durable job. */
   recoverySourcePath?: string;
+  /** Explicitly bypass any cached durable job / idempotency key and start fresh. */
+  forceNewJob?: boolean;
   signal?: AbortSignal;
   onProgress?: (stage: string, percent?: number) => void;
 }): Promise<any> {
@@ -1322,12 +1341,21 @@ export async function transcribeViaR2({
     language,
     durationSec,
   });
+  const shouldForceNew =
+    forceNewJob === true ||
+    process.env.STAGE5_FORCE_NEW_TRANSCRIPTION_JOB === '1';
+  const recoveryNonce = shouldForceNew
+    ? rotateDurableTranscriptionRecoveryNonce(recoveryKey)
+    : getDurableTranscriptionRecoveryNonce(recoveryKey);
   const durableRequestIdempotencyKey =
     buildDurableTranscriptionRequestIdempotencyKey({
       recoveryKey,
       fallbackIdempotencyKey: idempotencyKey,
+      nonce: recoveryNonce,
     });
-  const existingResumeJob = getDurableTranscriptionResumeJob(recoveryKey);
+  const existingResumeJob = shouldForceNew
+    ? null
+    : getDurableTranscriptionResumeJob(recoveryKey);
   let durableJobIdForDetach: string | null = null;
 
   onProgress?.('__i18n__:preparing_transcription', 5);

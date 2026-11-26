@@ -214,6 +214,31 @@ export default function AppContent() {
       // Ignore initialization errors
     }
   }, []);
+  // Pre-fill the Home URL input from validated `stage5-translator://open?url=...`
+  // deep links (e.g. browser bookmarklet). Never auto-start or spend credits.
+  // If this tab already has a video/subtitles mounted or an active download,
+  // open a fresh Home tab so the user's open work is never disrupted.
+  useEffect(() => {
+    return SystemIPC.onDeepLinkOpenVideoUrl(url => {
+      const busyOrInWorkspace =
+        Boolean(useVideoStore.getState().url) ||
+        useSubStore.getState().order.length > 0 ||
+        useUrlStore.getState().download.inProgress;
+      if (busyOrInWorkspace) {
+        void SystemIPC.openDeepLinkVideoInNewTab(url);
+        return;
+      }
+      const ui = useUIStore.getState();
+      ui.toggleSettings(false);
+      ui.setGeneratePanelOpen(false);
+      ui.setEditPanelOpen(false);
+      useUrlStore.getState().setUrlInput(url);
+      useUrlStore.getState().clearError();
+      window.dispatchEvent(
+        new CustomEvent('stage5:deep-link-open-video-url', { detail: { url } })
+      );
+    });
+  }, []);
   const showSettings = useUIStore(s => s.showSettings);
   useEffect(() => {
     if (!showSettings) return;

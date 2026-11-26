@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { describe, it } from 'node:test';
 import {
+  BOOKMARKLET_URL_OPENED,
   CHECKOUT_PACK_COUNT_MISMATCH,
   FREE_PREVIEW_DISMISS_REASON_EVENTS,
   HANDOFF_TRANSLATION_STARTED,
@@ -122,10 +123,12 @@ describe('anonymous count batches', () => {
       assert.ok(PROVISIONAL_USAGE_EVENTS.has(e), e);
     for (const e of ['app_open', 'app_first_open', 'transcription_started'])
       assert.ok(!PROVISIONAL_USAGE_EVENTS.has(e), e);
-    // Six handoff names, the five free-preview dismissal reasons and the
-    // checkout pack-count mismatch.
-    assert.equal(PROVISIONAL_USAGE_EVENTS.size, 12);
+    // Six handoff names, the five free-preview dismissal reasons, the
+    // checkout pack-count mismatch, and the bookmarklet deep-link open.
+    assert.equal(PROVISIONAL_USAGE_EVENTS.size, 13);
     assert.ok(PROVISIONAL_USAGE_EVENTS.has(CHECKOUT_PACK_COUNT_MISMATCH));
     assert.ok(!isRendererHandoffFunnelEvent(CHECKOUT_PACK_COUNT_MISMATCH));
+    assert.ok(PROVISIONAL_USAGE_EVENTS.has(BOOKMARKLET_URL_OPENED));
+    assert.ok(!isRendererHandoffFunnelEvent(BOOKMARKLET_URL_OPENED));
   });
 });

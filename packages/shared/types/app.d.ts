@@ -2116,6 +2116,8 @@ declare module '@shared-types/app' {
     setVideoSuggestionPreferenceTopic: (
       value: string
     ) => Promise<{ success: boolean; error?: string }>;
+    onDeepLinkOpenVideoUrl?: (callback: (url: string) => void) => () => void;
+    openDeepLinkVideoInNewTab?: (url: string) => Promise<boolean>;
 
     // Provider preferences
     getPreferredTranscriptionProvider: () => Promise<'elevenlabs' | 'stage5'>;

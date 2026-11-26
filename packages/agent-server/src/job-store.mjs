@@ -2642,6 +2642,118 @@ export class PersistentJobStore {
     });
   }
 
+  submitTranslationFile(jobId, translations) {
+    if (this.requireJob(jobId).subtitle_revision_id) {
+      throw new Error(
+        'Use apply_subtitle_revision to edit the selected reviewed subtitles.'
+      );
+    }
+    if (!Array.isArray(translations) || !translations.length) {
+      throw new TypeError('translations must contain at least one segment.');
+    }
+    const normalized = translations.map(update => ({
+      id: String(update?.id || '').trim(),
+      text: String(update?.text || '').trim(),
+    }));
+    const seen = new Set();
+    for (const update of normalized) {
+      if (!update.id) {
+        throw new TypeError('Translation segment id is required.');
+      }
+      if (update.id.length > 200) {
+        throw new TypeError(
+          'Translation segment id cannot exceed 200 characters.'
+        );
+      }
+      if (!update.text) {
+        throw new TypeError(`Translation is empty for segment: ${update.id}`);
+      }
+      if (update.text.length > 10_000) {
+        throw new TypeError(
+          `Translation exceeds 10,000 characters: ${update.id}`
+        );
+      }
+      if (seen.has(update.id)) {
+        throw new TypeError(`Duplicate segment id: ${update.id}`);
+      }
+      seen.add(update.id);
+    }
+
+    return this.transaction(() => {
+      const job = this.requireJob(jobId);
+      const stage = job.stages?.[Number(job.stage_index)];
+      const correctionReview =
+        stage?.id === 'translation_validation' &&
+        job.status === 'blocked' &&
+        job.error?.code === 'TRANSLATION_VALIDATION_FAILED';
+      const externalTranslation =
+        stage?.id === 'translation_external' &&
+        job.status === 'waiting_for_agent';
+      if (!externalTranslation && !correctionReview) {
+        throw new Error(
+          'The job does not accept bulk translation file submissions in its current state; no segment was changed.'
+        );
+      }
+
+      const sessionRow = this.database
+        .prepare(
+          'SELECT session_json FROM translation_sessions WHERE job_id = ?'
+        )
+        .get(jobId);
+      const session = sessionRow ? parseJson(sessionRow.session_json) : null;
+      if (!session) {
+        throw new Error(`Translation session not found for job: ${jobId}`);
+      }
+      const byId = new Map(
+        session.segments.map(segment => [segment.id, segment])
+      );
+      const extra = normalized
+        .map(item => item.id)
+        .filter(id => !byId.has(id));
+      if (extra.length > 0) {
+        throw new TypeError(
+          `Translation file contains unknown segment IDs: ${extra.slice(0, 10).join(', ')}.`
+        );
+      }
+      if (externalTranslation) {
+        const pendingIds = session.segments
+          .filter(segment => segment.status === 'pending')
+          .map(segment => segment.id);
+        const missingPending = pendingIds.filter(id => !seen.has(id));
+        if (missingPending.length > 0) {
+          throw new TypeError(
+            `Translation file is missing pending segment IDs (${missingPending.length}): ${missingPending.slice(0, 10).join(', ')}.`
+          );
+        }
+      }
+
+      for (const update of normalized) {
+        const segment = byId.get(update.id);
+        if (segment.translation && segment.translation !== update.text) {
+          segment.revision_count = Number(segment.revision_count || 0) + 1;
+        }
+        segment.translation = update.text;
+        segment.status = correctionReview ? 'reviewed' : 'translated';
+      }
+      assertBoundedTranslationSessionText(session.segments);
+      const now = this.timestamp();
+      session.revision = Number(session.revision || 0) + 1;
+      session.updated_at = now;
+      this.database
+        .prepare(
+          `UPDATE translation_sessions SET revision = ?, updated_at = ?, session_json = ?
+           WHERE job_id = ?`
+        )
+        .run(session.revision, now, canonicalJson(session), jobId);
+      return {
+        reused: false,
+        batch_id: 'file',
+        accepted_segment_ids: normalized.map(item => item.id),
+        session: this.summarizeTranslationSession(session),
+      };
+    });
+  }
+
   markTranslationSegmentsForCorrection(jobId, segmentIds) {
     const requested = new Set(
       (Array.isArray(segmentIds) ? segmentIds : [])

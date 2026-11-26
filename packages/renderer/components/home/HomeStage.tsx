@@ -346,6 +346,23 @@ export default function HomeStage() {
   );
   const dragDepth = useRef(0);
   const linkRef = useRef<HTMLInputElement>(null);
+  const primaryActionRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const onDeepLinkUrl = () => {
+      setDropError(null);
+      window.requestAnimationFrame(() => {
+        primaryActionRef.current?.focus();
+      });
+    };
+    window.addEventListener('stage5:deep-link-open-video-url', onDeepLinkUrl);
+    return () => {
+      window.removeEventListener(
+        'stage5:deep-link-open-video-url',
+        onDeepLinkUrl
+      );
+    };
+  }, []);
 
   const language =
     targetLanguage && targetLanguage !== 'original'
@@ -598,6 +615,7 @@ export default function HomeStage() {
           />
           <div className={linkActions}>
             <button
+              ref={primaryActionRef}
               type="submit"
               className={primaryButton}
               disabled={downloadInProgress}

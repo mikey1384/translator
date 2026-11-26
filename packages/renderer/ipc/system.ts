@@ -727,6 +727,22 @@ export function setVideoSuggestionPreferenceTopic(
   return window.electron.setVideoSuggestionPreferenceTopic(value);
 }
 
+export function onDeepLinkOpenVideoUrl(
+  callback: (url: string) => void
+): () => void {
+  if (typeof window.electron?.onDeepLinkOpenVideoUrl !== 'function') {
+    return () => {};
+  }
+  return window.electron.onDeepLinkOpenVideoUrl(callback);
+}
+
+export function openDeepLinkVideoInNewTab(url: string): Promise<boolean> {
+  if (typeof window.electron?.openDeepLinkVideoInNewTab !== 'function') {
+    return Promise.resolve(false);
+  }
+  return window.electron.openDeepLinkVideoInNewTab(url);
+}
+
 // Transcription provider preference
 // Transcription is ElevenLabs Scribe only: 'elevenlabs' = BYO ElevenLabs key
 // when available, otherwise Stage5 credits; 'stage5' = always Stage5 credits.

@@ -231,12 +231,13 @@ function buildServer() {
     'submit_translation_batch',
     {
       description:
-        'Submit an exact issued MCP v2 job batch, or update a legacy local translation session.',
+        'Submit an exact issued MCP v2 job batch (inline translations or translations_path), submit all pending MCP v2 translations from a local JSON file (translations_path without batch_id), or update a legacy local translation session.',
       inputSchema: z.union([
         z
           .object({
             job_id: z.string().min(8).max(80),
-            batch_id: z.string().min(8).max(120),
+            batch_id: z.string().min(8).max(120).optional(),
+            translations_path: z.string().min(1).max(4096).optional(),
             translations: z
               .array(
                 z
@@ -247,7 +248,8 @@ function buildServer() {
                   .strict()
               )
               .min(1)
-              .max(40),
+              .max(40)
+              .optional(),
           })
           .strict(),
         z
@@ -270,12 +272,13 @@ function buildServer() {
       ]),
     },
     async input => {
-      if (input.job_id && input.batch_id) {
+      if (input.job_id) {
         return v2Result(
           await v2Service.execute('submit_translation_batch', {
             job_id: input.job_id,
             batch_id: input.batch_id,
             translations: input.translations,
+            translations_path: input.translations_path,
           })
         );
       }
