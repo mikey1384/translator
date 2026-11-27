@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Rules
 
-- **Never commit, push, or tag without explicit user approval.** Always stage changes and wait for the user to confirm before running `git commit`, `git push`, or `git tag`.
+- **Commits and pushes need no separate approval (Mikey, 2026-11-28); releases do.** Never create a release tag, publish a release or submit to a store without explicit approval. Commit only the task's own files.
 
 ## Overview
 
