@@ -46,6 +46,19 @@ brew install --cask mikey1384/translator/stage5-translator
 winget install Stage5Tools.Translator
 ```
 
+### 1-click browser bookmarklet
+
+Send any video page straight from your browser into Translator (opens a fresh tab if you're already watching something; never auto-spends credits):
+
+1. Create a new bookmark in Chrome, Safari, Firefox, Edge, or Arc named **Open in Translator**.
+2. Paste this as the bookmark URL:
+
+```text
+javascript:void(location.href='stage5-translator://open?url='+encodeURIComponent(location.href))
+```
+
+3. Click it on any video page to pre-fill the URL in Translator and press Enter.
+
 ## Why Translator exists
 
 YouTube has rough auto-translate captions, and most other video sites on the web have **no subtitles at all**. Trying to understand a foreign interview, lecture, or clip usually means juggling a downloader, a transcription site, a translation box, a subtitle editor, and a player.
